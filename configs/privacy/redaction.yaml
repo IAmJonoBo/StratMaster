@@ -1,8 +1,17 @@
-patterns:
-  pii:
-    - EMAIL
-    - PHONE_NUMBER
-policy:
-  redact_pii: true
-  annotate_only: false
-  replacement: "[REDACTED]"
+# Redaction rules for PII/PHI
+rules:
+  - name: email
+    pattern: "(?i)[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}"
+    replacement: "[REDACTED:EMAIL]"
+  - name: phone
+    pattern: "(?:(?:\\+?1[-.\\s]?)?\n?(?:\\(?\\d{3}\\)?|\\d{3})[-.\\s]?\\d{3}[-.\\s]?\\d{4})"
+    replacement: "[REDACTED:PHONE]"
+  - name: ssn
+    pattern: "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+    replacement: "[REDACTED:SSN]"
+  - name: credit_card
+    pattern: "\\b(?:\\d[ -]*?){13,16}\\b"
+    replacement: "[REDACTED:CARD]"
+telemetry:
+  enabled: true
+  otlp_endpoint: http://otel-collector:4317

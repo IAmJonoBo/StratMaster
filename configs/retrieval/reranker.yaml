@@ -1,0 +1,8 @@
+# BGE reranker config
+model: BAAI/bge-reranker-large
+max_length: 1024
+top_k: 10
+batch_size: 16
+telemetry:
+  enabled: true
+  otlp_endpoint: http://otel-collector:4317

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: stratmaster
+version: 0.1.0
+appVersion: "0.1.0"
+description: Helm chart for the StratMaster platform (skeleton)
+type: application
+keywords:
+  - ai
+  - rag
+  - agents
+  - stratmaster
+maintainers:
+  - name: StratMaster Team
+    email: dev@stratmaster.local

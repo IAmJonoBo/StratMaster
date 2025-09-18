@@ -1,0 +1,21 @@
+# SPLADE lexical expansion retrieval config
+index:
+  name: splade-default
+  shards: 1
+  replication: 1
+collection:
+  name: documents
+model:
+  name: naver/splade-cocondenser-ensembledistil
+  max_document_length: 512
+search:
+  k: 50
+  pruning_threshold: 0.001
+storage:
+  backend: opensearch
+  opensearch:
+    host: http://opensearch:9200
+    index_prefix: splade_
+telemetry:
+  enabled: true
+  otlp_endpoint: http://otel-collector:4317

@@ -1,0 +1,23 @@
+# ColBERT retrieval config
+index:
+  name: colbert-default
+  shards: 1
+  replication: 1
+collection:
+  name: documents
+embedding:
+  model: colbert-ir/colbertv2.0
+  dim: 128
+  max_document_length: 512
+search:
+  k: 50
+  max_passages: 4
+  alpha_dense_sparse_mix: 0.7  # used in hybrid mode
+storage:
+  backend: opensearch
+  opensearch:
+    host: http://opensearch:9200
+    index_prefix: colbert_
+telemetry:
+  enabled: true
+  otlp_endpoint: http://otel-collector:4317

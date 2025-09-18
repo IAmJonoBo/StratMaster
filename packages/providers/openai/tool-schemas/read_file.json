@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stratmaster.local/schemas/read_file.json",
+  "title": "Read File",
+  "type": "object",
+  "properties": {
+    "path": { "type": "string", "minLength": 1 },
+    "encoding": {
+      "type": "string",
+      "enum": ["utf-8", "base64"],
+      "default": "utf-8"
+    }
+  },
+  "required": ["path"],
+  "additionalProperties": false
+}

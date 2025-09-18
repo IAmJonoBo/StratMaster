@@ -1,0 +1,17 @@
+# Structured decoding configuration for constrained tool calls
+llm:
+  provider: litellm
+  model: gpt-4o-mini  # placeholder; can be overridden via env
+  temperature: 0.2
+  max_tokens: 1024
+  json_mode: true
+schema_validation:
+  strict: true
+retry:
+  max_attempts: 2
+  backoff: exponential
+  base_delay_ms: 200
+  max_delay_ms: 2000
+telemetry:
+  enabled: true
+  otlp_endpoint: http://otel-collector:4317

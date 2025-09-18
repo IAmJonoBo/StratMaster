@@ -1,0 +1,15 @@
+# Default evaluation thresholds for E5/BGE similarity, answer quality, and grounding
+similarity:
+  embedding_model: BAAI/bge-small-en-v1.5
+  min_cosine: 0.35
+faithfulness:
+  ragas:
+    answer_relevancy_min: 0.6
+    context_relevancy_min: 0.65
+    faithfulness_min: 0.7
+robustness:
+  adversarial_prompt_detection:
+    probability_min: 0.7
+usage_limits:
+  max_tokens_per_response: 2048
+  max_retries: 2
