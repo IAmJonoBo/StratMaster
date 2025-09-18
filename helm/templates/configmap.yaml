@@ -6,4 +6,4 @@ metadata:
     app.kubernetes.io/name: {{ include "stratmaster.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
-  STRUCTURED_DECODING_CONFIG: "/configs/router/structured_decoding.yaml"
+  STRUCTURED_DECODING_CONFIG: /configs/router/structured_decoding.yaml
