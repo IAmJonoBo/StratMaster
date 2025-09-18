@@ -1,6 +1,7 @@
 # StratMaster
 
 ![CI](https://github.com/IAmJonoBo/StratMaster/actions/workflows/ci.yml/badge.svg)
+[![Trunk](https://img.shields.io/badge/Lint-Trunk-blue?logo=trunk)](https://github.com/IAmJonoBo/StratMaster/actions/workflows/trunk.yml)
 
 Initial scaffolding for the StratMaster monorepo. See `PROJECT.md` for the full engineering blueprint.
 
@@ -32,7 +33,7 @@ make bootstrap
 make test
 ```
 
-If you encounter pip/Conda interference on macOS (UnicodeDecodeError in importlib.metadata), use one of these alternatives:
+If you encounter pip/Conda interference on macOS (UnicodeDecodeError in importlib.metadata), use one of these alternatives. Note that CI runs all tests automatically on every push/PR, so local runs are optional.
 
 
 - Use pyenv to install a clean CPython and recreate the venv
@@ -62,3 +63,8 @@ Troubleshooting hints:
 
 - Ensure Docker Desktop is running before `make test-docker`.
 - If using Conda, set `PYTHONNOUSERSITE=1` to reduce user-site contamination.
+
+CI dashboards:
+
+- Lint: [Trunk workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/trunk.yml)
+- Tests/Helm: [CI workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/ci.yml)
