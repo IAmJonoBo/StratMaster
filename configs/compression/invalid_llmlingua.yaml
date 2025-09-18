@@ -1,0 +1,3 @@
+enabled: "yes"  # invalid: should be boolean
+target_token_ratio: "half"  # invalid: should be number
+safety_keywords: password  # invalid: should be a list

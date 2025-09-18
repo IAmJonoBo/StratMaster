@@ -1,0 +1,6 @@
+enabled: true
+target_token_ratio: 0.5
+safety_keywords:
+  - password
+  - secret
+  - key

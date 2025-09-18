@@ -1,0 +1,27 @@
+name: Trunk Lint
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  trunk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Trunk
+        uses: trunk-io/trunk-action@v1
+
+      - name: Run Trunk check
+        run: |
+          trunk --version
+          trunk init --ci || true
+          trunk check --all --no-fix

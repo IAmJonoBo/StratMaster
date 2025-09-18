@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --all-files || (echo "pre-commit found issues" && exit 1)
+      - name: Install packages for tests
+        run: pip install -e packages/api -e packages/mcp-servers/research-mcp
+      - name: Run pytest (if present)
+        run: |
+          pip install pytest
+          pytest -q
+      - name: Helm lint (stratmaster-api)
+        run: |
+          helm lint helm/stratmaster-api
+          helm template helm/stratmaster-api > /dev/null
+      - name: Helm lint (research-mcp)
+        run: |
+          helm lint helm/research-mcp
+          helm template helm/research-mcp > /dev/null

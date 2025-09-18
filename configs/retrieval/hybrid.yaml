@@ -1,0 +1,11 @@
+dense:
+  model: bge-base-en-v1.5
+  k: 50
+sparse:
+  method: bm25
+  k: 100
+alpha: 0.5
+reranker:
+  model_name: bge-reranker-large
+  topk_in: 100
+  topk_out: 20

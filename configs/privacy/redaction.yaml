@@ -1,0 +1,8 @@
+patterns:
+  pii:
+    - EMAIL
+    - PHONE_NUMBER
+policy:
+  redact_pii: true
+  annotate_only: false
+  replacement: "[REDACTED]"

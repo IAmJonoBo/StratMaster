@@ -1,0 +1,26 @@
+tenants:
+  default:
+    providers:
+      local:
+        default: true
+        models:
+          - mixtral-8x22b-instruct
+          - qwen2.5-14b-instruct
+      openai:
+        enabled: false
+        models:
+          - gpt-large-reasoning
+          - text-embedding-3-large
+        egress:
+          allow_domains:
+            - api.openai.com
+        privacy:
+          send_raw_docs: false
+          max_snippet_chars: 2000
+        limits:
+          max_tokens_per_min: 60000
+          budget_usd_month: 100
+structured_outputs:
+  enabled: true
+  backend: outlines
+  strict_json: true

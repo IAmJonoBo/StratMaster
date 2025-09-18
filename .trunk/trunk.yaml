@@ -1,0 +1,44 @@
+# Trunk CLI configuration for consolidated linting and static analysis
+# Docs: https://docs.trunk.io/cli/configuration
+
+version: 0.1
+
+cli:
+  # Pin the CLI to a known-good version for reproducibility
+  version: 1.21.0
+
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.4.0
+      uri: https://github.com/trunk-io/plugins
+
+lint:
+  # Enable linters we use across this monorepo
+  enabled:
+    - ruff
+    - black
+    - mypy
+    - markdownlint
+    - yamllint
+    - shellcheck
+    - hadolint
+  # Global ignores to keep noise low and performance high
+  ignore:
+    - path: .venv/**
+    - path: .git/**
+    - path: node_modules/**
+    - path: .pytest_cache/**
+    - path: .mypy_cache/**
+    - path: .ruff_cache/**
+    - path: .trunk/out/**
+    - path: .trunk/plugins/**
+    - path: .DS_Store
+    - path: "**/._*"
+    - path: .AppleDouble/**
+    - path: .Spotlight-V100/**
+    - path: .Trashes/**
+  # You can customize linter-specific settings here if needed
+  # linters:
+  #   mypy:
+  #     args: ["--strict"]

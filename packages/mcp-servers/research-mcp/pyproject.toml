@@ -1,0 +1,26 @@
+[project]
+name = "research-mcp"
+version = "0.1.0"
+description = "Minimal MCP server: research tools (health/info only for now)"
+requires-python = ">=3.11"
+authors = [{ name = "StratMaster" }]
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "httpx>=0.28",
+]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100

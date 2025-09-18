@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./packages/api
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+    develop:
+      watch:
+        - path: ./packages/api
+          action: sync
+          target: /app
+
+  research-mcp:
+    build: ./packages/mcp-servers/research-mcp
+    ports:
+      - "8081:8081"
+    environment:
+      - PYTHONUNBUFFERED=1
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/research-mcp
+          action: sync
+          target: /app

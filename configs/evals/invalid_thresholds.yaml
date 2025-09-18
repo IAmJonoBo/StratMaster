@@ -1,0 +1,13 @@
+ingestion:
+  parse_success:
+    - too
+    - many
+retrieval:
+  grounding:
+    op: ">="
+    value: 0.8
+reasoning: 123  # invalid: should be a mapping
+recommendations:
+  factscore: null  # invalid: disallow null
+egress:
+  pii_leakage: [0]  # invalid: should be scalar

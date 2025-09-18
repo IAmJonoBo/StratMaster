@@ -1,0 +1,6 @@
+patterns:
+  pii: EMAIL  # invalid: should be a list
+policy:
+  redact_pii: "true"  # invalid: should be boolean
+  annotate_only: "no"  # invalid: should be boolean
+  # missing replacement

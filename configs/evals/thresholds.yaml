@@ -1,0 +1,14 @@
+ingestion:
+  parse_success: ">=0.98"
+  provenance_complete: true
+retrieval:
+  grounding: ">=0.8"
+  recall_at_50: ">=0.9"
+reasoning:
+  self_consistency: ">=0.7"
+  contradiction_rate: "<=0.02"
+recommendations:
+  factscore: ">=0.75"
+  truthfulqa: ">=0.65"
+egress:
+  pii_leakage: 0
