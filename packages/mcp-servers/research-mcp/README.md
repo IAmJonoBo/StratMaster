@@ -14,8 +14,11 @@ Structured MCP server exposing the research tools described in `PROJECT.md`.
 
 Allow-listed domains are supplied via `RESEARCH_MCP_ALLOWLIST` (comma-separated). Defaults to
 `example.com` so the service boots safely without external dependencies. Set
-`RESEARCH_MCP_ENABLE_NETWORK=1` to enable real HTTP calls; otherwise synthetic responses are used.
-Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults to `.cache/research_mcp`).
+`RESEARCH_MCP_ENABLE_NETWORK=1` and provide a SearxNG endpoint (e.g. `SEARXNG_ENDPOINT`) to enable
+real HTTP calls. Optional flags include `RESEARCH_MCP_USE_PLAYWRIGHT=1` for Playwright-based
+rendering and `RESEARCH_MCP_MINIO_*` / `RESEARCH_MCP_ENABLE_OPENLINEAGE` to emit provenance to
+external sinks. Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults to
+`.cache/research_mcp`).
 
 ## Local development
 

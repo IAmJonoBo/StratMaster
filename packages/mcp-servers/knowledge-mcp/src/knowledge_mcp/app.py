@@ -5,11 +5,13 @@ from fastapi import APIRouter, FastAPI
 from .config import load_config
 from .models import (
     ColbertSearchRequest,
+    ConnectorStatus,
     HybridQueryRequest,
     HybridQueryResponse,
     InfoResponse,
     RankingRequest,
     RankingResponse,
+    ServiceInfo,
 )
 from .service import KnowledgeService
 
@@ -25,6 +27,7 @@ def create_app() -> FastAPI:
 
     @app.get("/info", response_model=InfoResponse)
     async def info():
+        connector_status = service.connector_status()
         return InfoResponse(
             name="knowledge-mcp",
             version="0.1.0",
@@ -37,12 +40,13 @@ def create_app() -> FastAPI:
                 "splade.search",
                 "rerank.bge",
             ],
-            service={
-                "collections": [config.vector.collection],
-                "dense_index": config.vector.collection,
-                "sparse_index": config.keyword.index,
-                "graph_space": config.graph.space,
-            },
+            service=ServiceInfo(
+                collections=[config.vector.collection],
+                dense_index=config.vector.collection,
+                sparse_index=config.keyword.index,
+                graph_space=config.graph.space,
+                connectors=connector_status,
+            ),
         )
 
     tools = APIRouter(prefix="/tools", tags=["tools"])

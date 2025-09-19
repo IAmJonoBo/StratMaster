@@ -11,7 +11,10 @@ def main():
     )
     parser.add_argument("--port", type=int, default=8001, help="Port to listen on")
     args = parser.parse_args()
-    print(f"[research-mcp] Stub server would start on port {args.port} (TODO)")
+    print(
+        f"[research-mcp] Stub server would start on port {args.port} "
+        "(TODO[SP2-210]: launch uvicorn create_app(); see docs/backlog.md#todo-sp2-210-research-mcp-clibootstrap)"
+    )
 
 
 if __name__ == "__main__":

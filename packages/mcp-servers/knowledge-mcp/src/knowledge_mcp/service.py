@@ -6,6 +6,7 @@ swapped with real vector/keyword/graph backends (Qdrant, OpenSearch, NebulaGraph
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Iterable
 
@@ -13,6 +14,7 @@ from .config import AppConfig
 from .connectors import ConnectorBundle
 from .models import (
     CommunitySummariesResponse,
+    ConnectorStatus,
     GraphSummary,
     HybridQueryRequest,
     HybridQueryResponse,
@@ -21,27 +23,75 @@ from .models import (
     RetrievalHit,
 )
 
+try:  # pragma: no cover - optional dependency
+    from opentelemetry import metrics
+except ImportError:  # pragma: no cover
+    metrics = None
+
+
+if metrics is not None:  # pragma: no cover - requires OTEL SDK
+    _METER = metrics.get_meter(__name__)
+    _DEGRADED_COUNTER = _METER.create_counter(
+        "knowledge_mcp.connector.degraded",
+        unit="1",
+        description="Count of connector degradations falling back to synthetic responses",
+    )
+    _SUCCESS_COUNTER = _METER.create_counter(
+        "knowledge_mcp.connector.success",
+        unit="1",
+        description="Count of successful connector round-trips",
+    )
+else:
+    _DEGRADED_COUNTER = None
+    _SUCCESS_COUNTER = None
+
 
 class KnowledgeService:
     def __init__(self, config: AppConfig):
         self.config = config
         self.connectors = ConnectorBundle.from_config(config)
+        self._connector_status_cache = self.connectors.as_statuses()
+        self._logger = logging.getLogger(__name__)
 
     # ------------------------------------------------------------------
     # Hybrid retrieval
     # ------------------------------------------------------------------
     def hybrid_query(self, payload: HybridQueryRequest) -> HybridQueryResponse:
         dense_hits = list(self._dense_hits(payload.query, payload.top_k))
-        if self.connectors.qdrant.client:
-            dense_hits = (
-                list(self._qdrant_hits(payload.query, payload.top_k)) or dense_hits
-            )
+        if self.connectors.qdrant.enabled:
+            dense_results = list(self._qdrant_hits(payload.query, payload.top_k))
+            if dense_results:
+                dense_hits = dense_results
+                self._record_success("vector")
+            elif not self.connectors.qdrant.available:
+                self._logger.warning(
+                    "Qdrant connector unavailable; using synthetic dense hits",
+                    extra={
+                        "event": "connector.degraded",
+                        "connector": "vector",
+                        "tenant_id": payload.tenant_id,
+                        "query": payload.query,
+                    },
+                )
+                self._record_degraded("vector")
 
         sparse_hits = list(self._sparse_hits(payload.query, payload.top_k))
-        if self.connectors.opensearch.client:
-            sparse_hits = (
-                list(self._opensearch_hits(payload.query, payload.top_k)) or sparse_hits
-            )
+        if self.connectors.opensearch.enabled:
+            sparse_results = list(self._opensearch_hits(payload.query, payload.top_k))
+            if sparse_results:
+                sparse_hits = sparse_results
+                self._record_success("keyword")
+            elif not self.connectors.opensearch.available:
+                self._logger.warning(
+                    "OpenSearch connector unavailable; using synthetic sparse hits",
+                    extra={
+                        "event": "connector.degraded",
+                        "connector": "keyword",
+                        "tenant_id": payload.tenant_id,
+                        "query": payload.query,
+                    },
+                )
+                self._record_degraded("keyword")
         combined = self._blend_hits(
             dense_hits,
             sparse_hits,
@@ -49,6 +99,7 @@ class KnowledgeService:
             payload.alpha_dense,
             payload.alpha_sparse,
         )
+        self._refresh_connector_status()
         return HybridQueryResponse(
             hits=combined,
             dense_score_weight=payload.alpha_dense,
@@ -67,6 +118,7 @@ class KnowledgeService:
             )
             for i in range(1, min(payload.top_k, 5) + 1)
         ]
+        self._refresh_connector_status()
         return HybridQueryResponse(
             hits=hits, dense_score_weight=1.0, sparse_score_weight=0.0
         )
@@ -83,6 +135,7 @@ class KnowledgeService:
             )
             for i in range(1, min(payload.top_k, 5) + 1)
         ]
+        self._refresh_connector_status()
         return HybridQueryResponse(
             hits=hits, dense_score_weight=0.0, sparse_score_weight=1.0
         )
@@ -99,6 +152,7 @@ class KnowledgeService:
             )
             for idx, doc in enumerate(payload.documents, start=1)
         ]
+        self._refresh_connector_status()
         return RankingResponse(reranked=reranked)
 
     # ------------------------------------------------------------------
@@ -109,6 +163,17 @@ class KnowledgeService:
     ) -> CommunitySummariesResponse:
         summaries = list(self.connectors.nebula.community_summaries(limit))
         if not summaries:
+            if self.connectors.nebula.enabled and not self.connectors.nebula.available:
+                self._logger.warning(
+                    "NebulaGraph connector unavailable; using synthetic graph summaries",
+                    extra={
+                        "event": "connector.degraded",
+                        "connector": "graph",
+                        "tenant_id": tenant_id,
+                        "limit": limit,
+                    },
+                )
+                self._record_degraded("graph")
             summaries = [
                 GraphSummary(
                     community_id=f"comm-{i}",
@@ -118,10 +183,39 @@ class KnowledgeService:
                 )
                 for i in range(1, limit + 1)
             ]
+        else:
+            self._record_success("graph")
+        self._refresh_connector_status()
         return CommunitySummariesResponse(
             generated_at=datetime.now(tz=timezone.utc),
             summaries=summaries,
         )
+
+    # ------------------------------------------------------------------
+    # Diagnostics
+    # ------------------------------------------------------------------
+    def connector_status(self) -> dict[str, ConnectorStatus]:
+        """Return connector status map as Pydantic models for the /info endpoint."""
+        # refresh cached status for any runtime degradations
+        self._connector_status_cache = self.connectors.as_statuses()
+        return {
+            name: ConnectorStatus(**payload)
+            for name, payload in self._connector_status_cache.items()
+        }
+
+    def _refresh_connector_status(self) -> None:
+        """Update cached connector status after tool execution."""
+        self._connector_status_cache = self.connectors.as_statuses()
+
+    @staticmethod
+    def _record_success(connector: str) -> None:
+        if _SUCCESS_COUNTER is not None:  # pragma: no cover - metrics optional
+            _SUCCESS_COUNTER.add(1, attributes={"connector": connector})
+
+    @staticmethod
+    def _record_degraded(connector: str) -> None:
+        if _DEGRADED_COUNTER is not None:  # pragma: no cover - metrics optional
+            _DEGRADED_COUNTER.add(1, attributes={"connector": connector})
 
     # ------------------------------------------------------------------
     # Internal helpers

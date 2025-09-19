@@ -13,11 +13,12 @@ OpenAI provider shims.
 
 ### Environment configuration
 
-- `ROUTER_MCP_PROVIDER` (default `local`)
+- `ROUTER_MCP_PROVIDER` (default `local`; set `openai`/`litellm`/`vllm` to enable provider routing)
 - `ROUTER_MCP_COMPLETION_MODEL` (default `mixtral-8x7b`)
 - `ROUTER_MCP_EMBEDDING_MODEL` (default `bge-small`)
 - `ROUTER_MCP_RERANK_MODEL` (default `bge-reranker-large`)
 - `ROUTER_MCP_TEMPERATURE` (default `0.2`)
+- `ROUTER_MCP_PROVIDER_BASE_URL`, `ROUTER_MCP_PROVIDER_API_KEY` for remote providers (optional)
 
 ## Local development
 

@@ -1,13 +1,27 @@
-# compression-mcp — Stub
+# compression-mcp
 
-Scope: Expose LLMLingua-based prompt compression as an MCP tool to reduce token costs while preserving essential meaning.
+Compression MCP server exposing an LLMLingua-compatible `compress.prompt` tool. When LLMLingua is
+not installed, the service falls back to a deterministic truncation strategy so local development
+remains dependency-light.
 
-Planned tools:
+## Capabilities
 
-- compress.prompt(text, target_tokens, mode)
+- `POST /tools/compress` — compresses text to a target token budget (mode defaults to `summary`)
+- Health: `GET /healthz`
 
-Notes:
+### Environment configuration
 
-- Apply only to narrative prompts; never compress provenance or numeric results.
-- Log compression efficiency and quality deltas (Ragas/FActScore) as per blueprint.
-- Enforce per-tenant policies/limits before invoking.
+- `COMPRESSION_MCP_ENABLE_LLMLINGUA` (default `0`)
+- `COMPRESSION_MCP_PROVIDER` (default `llmlingua`)
+
+## Local development
+
+```bash
+python -m compression_mcp --port 8085
+```
+
+Run tests from the repo root:
+
+```bash
+PYTHONPATH=packages/mcp-servers/compression-mcp/src pytest packages/mcp-servers/compression-mcp/tests -q
+```

@@ -18,6 +18,10 @@ def test_info_lists_capabilities(client=client()):
     body = resp.json()
     assert "knowledge-mcp" in body["name"]
     assert "vector.search" in body["capabilities"]
+    connectors = body["service"]["connectors"]
+    assert connectors["vector"]["enabled"] is False
+    assert connectors["vector"]["available"] is False
+    assert "keyword" in connectors and "graph" in connectors
 
 
 def test_hybrid_query_returns_hits(client=client()):
@@ -66,3 +70,18 @@ def test_hybrid_query_with_connectors_enabled(monkeypatch):
     )
     assert resp.status_code == 200
     assert resp.json()["hits"]
+
+
+def test_info_exposes_connector_status(monkeypatch):
+    monkeypatch.setenv("KNOWLEDGE_MCP_VECTOR_ENABLE", "1")
+    monkeypatch.setenv("KNOWLEDGE_MCP_KEYWORD_ENABLE", "1")
+    monkeypatch.setenv("KNOWLEDGE_MCP_GRAPH_ENABLE", "1")
+    info_resp = client().get("/info")
+    assert info_resp.status_code == 200
+    connectors = info_resp.json()["service"]["connectors"]
+    assert connectors["vector"]["enabled"] is True
+    assert connectors["keyword"]["enabled"] is True
+    assert connectors["graph"]["enabled"] is True
+    # optional dependencies are absent in unit tests, so availability should be false
+    assert connectors["vector"]["available"] is False
+    assert connectors["vector"]["last_error"]

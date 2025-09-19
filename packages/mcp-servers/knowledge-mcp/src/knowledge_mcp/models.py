@@ -75,6 +75,14 @@ class CommunitySummariesResponse(BaseModel):
     summaries: list[GraphSummary]
 
 
+class ConnectorStatus(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool
+    available: bool
+    last_error: str | None = None
+
+
 class ServiceInfo(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -82,6 +90,7 @@ class ServiceInfo(BaseModel):
     dense_index: str
     sparse_index: str
     graph_space: str
+    connectors: dict[str, ConnectorStatus] = Field(default_factory=dict)
 
 
 class InfoResponse(BaseModel):
