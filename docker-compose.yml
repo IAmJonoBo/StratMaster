@@ -1,10 +1,18 @@
+version: "3.9"
+
 services:
   api:
     build: ./packages/api
     ports:
       - "8080:8080"
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: "1"
+      STRATMASTER_API_DB_URL: postgresql+psycopg://postgres:postgres@postgres:5432/stratmaster
+      LANGFUSE_SERVER_URL: http://langfuse:3000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
     develop:
       watch:
         - path: ./packages/api
@@ -16,9 +24,223 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: "1"
+      RESEARCH_MCP_ALLOWLIST: example.com
+      RESEARCH_MCP_CACHE_DIR: /cache
+      RESEARCH_MCP_ENABLE_NETWORK: "1"
+      SEARXNG_ENDPOINT: http://searxng:8080/search
+    volumes:
+      - research_cache:/cache
     develop:
       watch:
         - path: ./packages/mcp-servers/research-mcp
           action: sync
           target: /app
+
+  knowledge-mcp:
+    build: ./packages/mcp-servers/knowledge-mcp
+    ports:
+      - "8082:8082"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      KNOWLEDGE_MCP_VECTOR_HOST: http://qdrant:6333
+      KNOWLEDGE_MCP_VECTOR_COLLECTION: default
+      KNOWLEDGE_MCP_KEYWORD_HOST: http://opensearch:9200
+      KNOWLEDGE_MCP_KEYWORD_INDEX: documents
+      KNOWLEDGE_MCP_GRAPH_HOST: nebula://nebula:9669
+      KNOWLEDGE_MCP_GRAPH_SPACE: knowledge
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/knowledge-mcp
+          action: sync
+          target: /app
+
+  router-mcp:
+    build: ./packages/mcp-servers/router-mcp
+    ports:
+      - "8083:8083"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ROUTER_MCP_PROVIDER: local
+      ROUTER_MCP_COMPLETION_MODEL: mixtral-8x7b
+      ROUTER_MCP_EMBEDDING_MODEL: bge-small
+      ROUTER_MCP_RERANK_MODEL: bge-reranker-large
+      ROUTER_MCP_TEMPERATURE: "0.2"
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/router-mcp
+          action: sync
+          target: /app
+
+  evals-mcp:
+    build: ./packages/mcp-servers/evals-mcp
+    ports:
+      - "8084:8084"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      EVALS_MCP_RAGAS_THRESHOLD: "0.75"
+      EVALS_MCP_FACTSCORE_THRESHOLD: "0.7"
+      EVALS_MCP_TRUTHFULQA_THRESHOLD: "0.65"
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/evals-mcp
+          action: sync
+          target: /app
+
+  compression-mcp:
+    build: ./packages/mcp-servers/compression-mcp
+    ports:
+      - "8085:8085"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      COMPRESSION_MCP_ENABLE_LLMLINGUA: "0"
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/compression-mcp
+          action: sync
+          target: /app
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: stratmaster
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: stratmaster
+      MINIO_ROOT_PASSWORD: stratmaster123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  searxng:
+    image: searxng/searxng:latest
+    environment:
+      SEARXNG_HOSTNAME: http://searxng:8080
+    ports:
+      - "8100:8080"
+
+  temporal:
+    image: temporalio/auto-setup:1.23.0
+    environment:
+      DB_PORT: 5432
+      DB_HOST: postgres
+      DB_NAME: temporal
+      DB_USER: postgres
+      DB_PWD: postgres
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
+      VISIBILITY_DB_NAME: temporal_visibility
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/web:1.21.0
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    depends_on:
+      temporal:
+        condition: service_started
+    ports:
+      - "8088:8080"
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/langfuse
+      NEXTAUTH_SECRET: insecure_dev_secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.103.1
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./configs/otel/collector.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8089:8080"
+
+  nebula:
+    image: vesoft/nebula-standalone:latest
+    environment:
+      USER: root
+    ports:
+      - "9669:9669"
+      - "19669:19669"
+      - "29669:29669"
+    volumes:
+      - nebula_data:/data
+
+  vllm:
+    image: vllm/vllm-openai:latest
+    environment:
+      VLLM_CPU: "1"
+      VLLM_MODEL: facebook/opt-1.3b
+    ports:
+      - "8000:8000"
+
+  playwright-worker:
+    image: mcr.microsoft.com/playwright/python:v1.48.0-jammy
+    profiles: [workers]
+    command: sleep infinity
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  opensearch_data:
+  minio_data:
+  research_cache:
+  nebula_data:

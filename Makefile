@@ -1,4 +1,13 @@
-.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs
+
+dev.up:
+	docker compose up -d
+
+dev.down:
+	docker compose down
+
+dev.logs:
+	docker compose logs -f
 
 api.run:
 	[ -d .venv ] || python -m venv .venv

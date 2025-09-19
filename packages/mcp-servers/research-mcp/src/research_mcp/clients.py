@@ -4,12 +4,19 @@ from __future__ import annotations
 
 import json
 import logging
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import urlencode
 
-from .config import AppConfig, CrawlerSettings, MetasearchSettings, StorageSettings
+from .config import (
+    AppConfig,
+    CrawlerSettings,
+    MetasearchSettings,
+    ProvenanceSettings,
+    StorageSettings,
+)
 from .models import CachedPageResource, ProvenanceResource, SearchResult
 
 logger = logging.getLogger(__name__)
@@ -18,6 +25,16 @@ try:  # pragma: no cover - optional dependency
     import httpx
 except ImportError:  # pragma: no cover
     httpx = None
+
+try:  # pragma: no cover - optional dependency
+    from playwright.sync_api import sync_playwright
+except ImportError:  # pragma: no cover
+    sync_playwright = None
+
+try:  # pragma: no cover - optional dependency
+    import boto3
+except ImportError:  # pragma: no cover
+    boto3 = None
 
 
 def _utcnow() -> datetime:
@@ -82,6 +99,26 @@ class CrawlerClient:
         self.settings = settings
 
     def fetch(self, url: str, render_js: bool = False) -> str:
+        if (
+            render_js
+            and self.settings.use_playwright
+            and sync_playwright is not None
+            and self.settings.use_network
+        ):
+            with suppress(Exception):  # pragma: no cover - network path
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(headless=True)
+                    try:
+                        page = browser.new_page(user_agent=self.settings.user_agent)
+                        page.goto(url, wait_until="networkidle")
+                        content = page.content()
+                        return content
+                    finally:  # pragma: no cover
+                        browser.close()
+            logger.warning(
+                "Playwright rendering unavailable; falling back to HTTP fetch"
+            )
+
         if self.settings.use_network and httpx is not None:
             try:
                 headers = {"User-Agent": self.settings.user_agent}
@@ -142,3 +179,55 @@ class ClientBundle:
         self.metasearch = MetasearchClient(config.metasearch)
         self.crawler = CrawlerClient(config.crawler)
         self.storage = StorageClient(config.storage)
+        self.provenance = ProvenanceEmitter(config.provenance)
+
+
+class ProvenanceEmitter:
+    """Writes provenance artefacts to external sinks (MinIO/OpenLineage)."""
+
+    def __init__(self, settings: ProvenanceSettings):
+        self.settings = settings
+
+    def emit(self, page: CachedPageResource, cache_key: str) -> None:
+        self._upload_minio(page, cache_key)
+        self._emit_openlineage(page, cache_key)
+
+    def _upload_minio(self, page: CachedPageResource, cache_key: str) -> None:
+        if not (self.settings.minio_endpoint and self.settings.minio_bucket):
+            return
+        if boto3 is None:  # pragma: no cover - dependency missing
+            logger.warning("boto3 not available; skipping MinIO provenance upload")
+            return
+        try:
+            s3 = boto3.resource(  # type: ignore[attr-defined]
+                "s3",
+                endpoint_url=self.settings.minio_endpoint,
+                aws_access_key_id=self.settings.minio_access_key,
+                aws_secret_access_key=self.settings.minio_secret_key,
+            )
+            body = json.dumps(
+                {
+                    "url": str(page.url),
+                    "fetched_at": page.fetched_at.isoformat(),
+                    "sha256": page.sha256,
+                    "cache_key": cache_key,
+                }
+            ).encode("utf-8")
+            s3.Object(self.settings.minio_bucket, f"provenance/{cache_key}.json").put(  # type: ignore[attr-defined]
+                Body=body,
+                ContentType="application/json",
+            )
+        except Exception as exc:  # pragma: no cover - network path
+            logger.warning("failed to upload provenance to MinIO", exc_info=exc)
+
+    def _emit_openlineage(self, page: CachedPageResource, cache_key: str) -> None:
+        if not self.settings.enable_openlineage:
+            return
+        logger.debug(
+            "openlineage-event",
+            extra={
+                "event": "provenance",
+                "cache_key": cache_key,
+                "sha256": page.sha256,
+            },
+        )

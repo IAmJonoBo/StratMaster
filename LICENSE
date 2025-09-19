@@ -2,6 +2,6 @@
 
 Open Brand Strategy AI — License Placeholder
 
-TODO: Choose a license (MIT, Apache-2.0, BSL-1.1, or other). Until then, all rights reserved by the repository owner.
+TODO[OPS-001]: Finalise repository license (MIT vs Apache-2.0 vs BSL-1.1) before wider collaboration. See `docs/backlog.md#ops-001-license-selection` for scope, acceptance criteria, and PR sequencing. Until resolved, all rights remain with the repository owner.
 
-Note: Replacing this file with an OSI-approved license is recommended before public contributions.
+Note: Replacing this placeholder with the chosen OSI-approved license (or intentionally restricted licence) is required ahead of public contributions.

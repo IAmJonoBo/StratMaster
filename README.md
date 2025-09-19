@@ -23,9 +23,9 @@ make dev.down    # tear everything down
 
 The API is available on <http://localhost:8080>, Research MCP on <http://localhost:8081>,
 Knowledge MCP on <http://localhost:8082>, Router MCP on <http://localhost:8083>, Evals MCP on
-<http://localhost:8084>, Temporal UI on <http://localhost:8088>, Langfuse on
-<http://localhost:3000>, MinIO console on <http://localhost:9001>, and Keycloak on
-<http://localhost:8089> (admin/admin).
+<http://localhost:8084>, Compression MCP on <http://localhost:8085>, Temporal UI on
+<http://localhost:8088>, Langfuse on <http://localhost:3000>, MinIO console on
+<http://localhost:9001>, and Keycloak on <http://localhost:8089> (admin/admin).
 
 See `packages/api/README.md` for Python-only development instructions.
 

@@ -36,6 +36,7 @@ class CrawlerSettings:
     allowlist: List[str] = field(default_factory=lambda: ["example.com"])
     blocklist: List[str] = field(default_factory=list)
     use_network: bool = False
+    use_playwright: bool = False
 
 
 @dataclass
@@ -48,10 +49,20 @@ class StorageSettings:
 
 
 @dataclass
+class ProvenanceSettings:
+    minio_endpoint: str | None = None
+    minio_access_key: str | None = None
+    minio_secret_key: str | None = None
+    minio_bucket: str | None = None
+    enable_openlineage: bool = False
+
+
+@dataclass
 class AppConfig:
     metasearch: MetasearchSettings
     crawler: CrawlerSettings
     storage: StorageSettings
+    provenance: ProvenanceSettings
 
 
 def load_config() -> AppConfig:
@@ -69,7 +80,20 @@ def load_config() -> AppConfig:
         allowlist=allowlist,
         blocklist=blocklist,
         use_network=_bool_env("RESEARCH_MCP_ENABLE_NETWORK", False),
+        use_playwright=_bool_env("RESEARCH_MCP_USE_PLAYWRIGHT", False),
     )
     storage = StorageSettings()
     storage.base_path.mkdir(parents=True, exist_ok=True)
-    return AppConfig(metasearch=metasearch, crawler=crawler, storage=storage)
+    provenance = ProvenanceSettings(
+        minio_endpoint=os.getenv("RESEARCH_MCP_MINIO_ENDPOINT"),
+        minio_access_key=os.getenv("RESEARCH_MCP_MINIO_ACCESS_KEY"),
+        minio_secret_key=os.getenv("RESEARCH_MCP_MINIO_SECRET_KEY"),
+        minio_bucket=os.getenv("RESEARCH_MCP_MINIO_BUCKET"),
+        enable_openlineage=_bool_env("RESEARCH_MCP_ENABLE_OPENLINEAGE", False),
+    )
+    return AppConfig(
+        metasearch=metasearch,
+        crawler=crawler,
+        storage=storage,
+        provenance=provenance,
+    )

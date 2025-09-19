@@ -1,7 +1,12 @@
+# trunk-ignore-all(prettier)
+# trunk-ignore-all(yamllint)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "stratmaster.fullname" . }}-default-deny-egress
+  name: '{{ include "stratmaster.fullname" . }}-default-deny-egress'
+  labels:
+    app.kubernetes.io/name: '{{ include "stratmaster.name" . }}'
+    app.kubernetes.io/instance: '{{ .Release.Name }}'
 spec:
   podSelector: {}
   policyTypes:

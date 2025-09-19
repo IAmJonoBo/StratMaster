@@ -40,6 +40,7 @@ class ResearchService:
             sha256=sha,
         )
         self.clients.storage.store_page(cache_key, page)
+        self.clients.provenance.emit(page, cache_key)
         return CrawlResponse(
             url=url,
             status="fetched",

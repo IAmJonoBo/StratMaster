@@ -14,6 +14,7 @@ dependencies = [
   "pydantic>=2.7.0",
   "httpx>=0.24",
   "PyYAML>=6.0",
+  "langgraph>=0.0.55",
 ]
 
 [tool.ruff]
@@ -21,7 +22,7 @@ line-length = 100
 select = ["E", "F", "I", "B", "UP"]
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

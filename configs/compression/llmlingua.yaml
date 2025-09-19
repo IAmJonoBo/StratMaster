@@ -7,4 +7,4 @@ safety_keywords:
 domains_exempt:
   - provenance
   - numeric_results
-# TODO: tune parameters per task and add eval hooks
+# TODO[COMP-501]: Tune task-specific parameters, wire into eval harness, and document guardrails (see `docs/backlog.md#todo-comp-501-llmlingua-parameter-tuning`).

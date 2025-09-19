@@ -1,5 +1,5 @@
 # Agents (LangGraph) — Stub
 
-- TODO: Define agent nodes and shared state
-- TODO: Add checkpointing and tool mediation
-- TODO: Wire constitutional critic and debate loop
+- TODO[SP3-301a]: Define shared state schema, tool mediation contracts, and LangGraph wiring (`docs/backlog.md#todo-sp3-301-langgraph-agent-graph--shared-state`).
+- TODO[SP3-301b]: Implement checkpointing/resume semantics for agent runs (ties into Temporal backlog).
+- TODO[SP3-302]: Integrate adversary + constitutional critic debate loop with CoVe verification and evaluation gating.

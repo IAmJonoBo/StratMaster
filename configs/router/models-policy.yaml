@@ -20,7 +20,7 @@ tenants:
         limits:
           tpm: 60000
           budget_usd_month: 100
-# TODO: add per-task routing rules (reasoning/embedding/rerank)
+# TODO[SP2-205]: Extend policy with per-task routing (reasoning/embedding/rerank) and validation (see `docs/backlog.md#todo-sp2-205-router-per-task-policies`).
 structured_outputs:
   enabled: true
   backend: outlines
