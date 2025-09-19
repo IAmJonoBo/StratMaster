@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import json
 import os
 import re
 from collections.abc import Callable
@@ -5,18 +8,39 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
 from pydantic import ValidationError
 
+from .models import RecommendationOutcome
+from .models.requests import (
+    DebateRunRequest,
+    DebateRunResponse,
+    EvalRunRequest,
+    EvalRunResponse,
+    ExperimentCreateRequest,
+    ExperimentCreateResponse,
+    ForecastCreateRequest,
+    ForecastCreateResponse,
+    GraphSummariseRequest,
+    GraphSummariseResponse,
+    RecommendationRequest,
+    ResearchPlanRequest,
+    ResearchPlanResponse,
+    ResearchRunRequest,
+    ResearchRunResponse,
+    RetrievalQueryRequest,
+    RetrievalQueryResponse,
+)
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
     PrivacyConfig,
     RetrievalHybridConfig,
 )
-
+from .services import orchestrator_stub
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
+IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9_-]{8,128}$")
 
 
 def _safe_name(name: str) -> str:
@@ -46,7 +70,11 @@ def _validate_retrieval_config(data: Any) -> dict:
             status_code=400,
             detail=f"schema validation error: {ve.errors()}",
         ) from ve
-    return validated.model_dump()
+    payload = validated.model_dump()
+    payload["dense"] = {"model": validated.pipelines.dense_config}
+    payload["sparse"] = {"model": validated.pipelines.sparse_config}
+    payload["reranker"] = {"model": validated.pipelines.reranker_config}
+    return payload
 
 
 def _validate_compression_config(data: Any) -> dict:
@@ -68,7 +96,13 @@ def _validate_privacy_config(data: Any) -> dict:
             status_code=400,
             detail=f"schema validation error: {ve.errors()}",
         ) from ve
-    return validated.model_dump()
+    payload = validated.model_dump()
+    payload["patterns"] = {rule.name: rule.pattern for rule in validated.rules}
+    payload["policy"] = {
+        "redact_pii": True,
+        "replacement": {rule.name: rule.replacement for rule in validated.rules},
+    }
+    return payload
 
 
 def _validate_evals_thresholds(data: Any) -> dict:
@@ -90,8 +124,18 @@ VALIDATORS: dict[str, Callable[[Any], dict]] = {
 }
 
 
+def require_idempotency_key(
+    key: str | None = Header(None, alias="Idempotency-Key"),
+) -> str:
+    if key is None:
+        raise HTTPException(status_code=400, detail="Idempotency-Key header required")
+    if not IDEMPOTENCY_PATTERN.fullmatch(key):
+        raise HTTPException(status_code=400, detail="invalid Idempotency-Key format")
+    return key
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="StratMaster API", version="0.1.0")
+    app = FastAPI(title="StratMaster API", version="0.2.0")
 
     @app.get("/healthz")
     async def healthz():
@@ -112,5 +156,214 @@ def create_app() -> FastAPI:
         else:
             cfg = data
         return {"section": section, "name": safe, "config": cfg}
+
+    def _schemas_dir() -> Path:
+        root = Path(__file__).resolve().parents[4]
+        return root / "packages" / "providers" / "openai" / "tool-schemas"
+
+    def _load_tool_schemas() -> dict[str, Any]:
+        schemas_path = _schemas_dir()
+        if not schemas_path.exists() or not schemas_path.is_dir():
+            raise HTTPException(
+                status_code=500, detail=f"Schemas directory not found: {schemas_path}"
+            )
+        tools: dict[str, Any] = {}
+        for json_file in sorted(schemas_path.glob("*.json")):
+            if json_file.name.startswith("._") or json_file.name.startswith("."):
+                continue
+            try:
+                data = json.loads(json_file.read_text(encoding="utf-8"))
+            except Exception as e:  # pragma: no cover
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to parse {json_file.name}: {e}"
+                ) from e
+            tools[json_file.stem] = data
+        if not tools:
+            raise HTTPException(status_code=500, detail="No tool schemas found")
+        return tools
+
+    @app.get("/providers/openai/tools")
+    async def list_openai_tool_schemas(format: str = "raw"):
+        if format not in ("raw", "openai"):
+            raise HTTPException(
+                status_code=400, detail="format must be 'raw' or 'openai'"
+            )
+        tools = _load_tool_schemas()
+        if format == "raw":
+            return {"schemas": tools, "count": len(tools)}
+        oa_tools: list[dict[str, Any]] = []
+        for name, schema in tools.items():
+            oa_tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": schema.get("description", ""),
+                        "parameters": schema,
+                    },
+                }
+            )
+        return {"tools": oa_tools, "count": len(oa_tools)}
+
+    @app.get("/providers/openai/tools/{name}")
+    async def get_openai_tool_schema(name: str):
+        tools = _load_tool_schemas()
+        schema = tools.get(name)
+        if not schema:
+            raise HTTPException(
+                status_code=404, detail=f"Tool schema not found: {name}"
+            )
+        return schema
+
+    research_router = APIRouter(prefix="/research", tags=["research"])
+
+    @research_router.post("/plan", response_model=ResearchPlanResponse)
+    async def plan_research(
+        payload: ResearchPlanRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        result = orchestrator_stub.plan_research(
+            query=payload.query,
+            tenant_id=payload.tenant_id,
+            max_sources=payload.max_sources,
+        )
+        return ResearchPlanResponse(**result)
+
+    @research_router.post("/run", response_model=ResearchRunResponse)
+    async def run_research(
+        payload: ResearchRunRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        result = orchestrator_stub.run_research(
+            plan_id=payload.plan_id,
+            tenant_id=payload.tenant_id,
+        )
+        return ResearchRunResponse(**result)
+
+    app.include_router(research_router)
+
+    graph_router = APIRouter(prefix="/graph", tags=["graph"])
+
+    @graph_router.post("/summarise", response_model=GraphSummariseResponse)
+    async def summarise_graph(
+        payload: GraphSummariseRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        result = orchestrator_stub.summarise_graph(
+            tenant_id=payload.tenant_id,
+            focus=payload.focus,
+            limit=payload.limit,
+        )
+        return GraphSummariseResponse(**result)
+
+    app.include_router(graph_router)
+
+    debate_router = APIRouter(prefix="/debate", tags=["debate"])
+
+    @debate_router.post("/run", response_model=DebateRunResponse)
+    async def run_debate(
+        payload: DebateRunRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        result = orchestrator_stub.run_debate(
+            tenant_id=payload.tenant_id,
+            hypothesis_id=payload.hypothesis_id,
+            claim_ids=payload.claim_ids,
+            max_turns=payload.max_turns,
+        )
+        return DebateRunResponse(**result)
+
+    app.include_router(debate_router)
+
+    @app.post(
+        "/recommendations",
+        response_model=RecommendationOutcome,
+        tags=["recommendations"],
+    )
+    async def generate_recommendation(
+        payload: RecommendationRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        outcome = orchestrator_stub.generate_recommendation(
+            tenant_id=payload.tenant_id,
+            cep_id=payload.cep_id,
+            jtbd_ids=payload.jtbd_ids,
+            risk_tolerance=payload.risk_tolerance,
+        )
+        return outcome
+
+    retrieval_router = APIRouter(prefix="/retrieval", tags=["retrieval"])
+
+    @retrieval_router.post("/colbert/query", response_model=RetrievalQueryResponse)
+    async def colbert_query(
+        payload: RetrievalQueryRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        records = orchestrator_stub.query_retrieval(
+            tenant_id=payload.tenant_id,
+            query=payload.query,
+            top_k=payload.top_k,
+        )
+        return RetrievalQueryResponse(records=records)
+
+    @retrieval_router.post("/splade/query", response_model=RetrievalQueryResponse)
+    async def splade_query(
+        payload: RetrievalQueryRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        records = orchestrator_stub.query_retrieval(
+            tenant_id=payload.tenant_id,
+            query=payload.query,
+            top_k=payload.top_k,
+        )
+        return RetrievalQueryResponse(records=records)
+
+    app.include_router(retrieval_router)
+
+    experiments_router = APIRouter(prefix="/experiments", tags=["experiments"])
+
+    @experiments_router.post("", response_model=ExperimentCreateResponse)
+    async def create_experiment(
+        payload: ExperimentCreateRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        experiment_id = orchestrator_stub.create_experiment(
+            tenant_id=payload.tenant_id,
+            payload=payload.model_dump(),
+        )
+        return ExperimentCreateResponse(experiment_id=experiment_id)
+
+    app.include_router(experiments_router)
+
+    forecasts_router = APIRouter(prefix="/forecasts", tags=["forecasts"])
+
+    @forecasts_router.post("", response_model=ForecastCreateResponse)
+    async def create_forecast(
+        payload: ForecastCreateRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        forecast = orchestrator_stub.create_forecast(
+            tenant_id=payload.tenant_id,
+            metric_id=payload.metric_id,
+            horizon_days=payload.horizon_days,
+        )
+        return ForecastCreateResponse(forecast=forecast)
+
+    app.include_router(forecasts_router)
+
+    evals_router = APIRouter(prefix="/evals", tags=["evals"])
+
+    @evals_router.post("/run", response_model=EvalRunResponse)
+    async def run_eval(
+        payload: EvalRunRequest,
+        _: str = Depends(require_idempotency_key),
+    ):
+        result = orchestrator_stub.run_eval(
+            tenant_id=payload.tenant_id,
+            suite=payload.suite,
+        )
+        return EvalRunResponse(**result)
+
+    app.include_router(evals_router)
 
     return app

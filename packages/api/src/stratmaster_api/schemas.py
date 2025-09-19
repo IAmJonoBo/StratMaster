@@ -1,68 +1,62 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class DenseConfig(BaseModel):
+class FallbackConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    model: str
-    k: int
+    when_no_results: str
 
 
-class SparseConfig(BaseModel):
+class PipelinesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    method: str
-    k: int
-
-
-class RerankerConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    model_name: str
-    topk_in: int
-    topk_out: int
+    dense_config: str
+    sparse_config: str
+    reranker_config: str
 
 
 class RetrievalHybridConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    dense: DenseConfig
-    sparse: SparseConfig
-    alpha: float
-    reranker: RerankerConfig
+    strategy: str
+    alpha_dense: float
+    alpha_sparse: float
+    limit: int
+    fallback: FallbackConfig
+    pipelines: PipelinesConfig
 
 
-# Compression (LLMLingua) schema
 class CompressionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool
     target_token_ratio: float
     safety_keywords: list[str]
+    domains_exempt: list[str] = Field(default_factory=list)
 
 
-# Privacy/Redaction schema
-class PrivacyPolicy(BaseModel):
+class RedactionRule(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    redact_pii: bool
-    annotate_only: bool
+    name: str
+    pattern: str
     replacement: str
 
 
-class PrivacyPatterns(BaseModel):
+class TelemetryConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    pii: list[str]
+    enabled: bool
+    otlp_endpoint: str
 
 
 class PrivacyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    patterns: PrivacyPatterns
-    policy: PrivacyPolicy
+    rules: list[RedactionRule]
+    telemetry: TelemetryConfig | None = None
 
 
 class EvalsThresholds(BaseModel):

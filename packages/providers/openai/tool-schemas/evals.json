@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stratmaster.dev/schemas/evals.json",
+  "title": "Evals Tool",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["suite"],
+  "properties": {
+    "suite": {
+      "type": "string",
+      "description": "The evaluation suite name (e.g., retrieval, safety, chain)."
+    },
+    "dataset": {
+      "type": "string",
+      "description": "Dataset identifier or path to use for the evaluation."
+    },
+    "thresholds_config": {
+      "type": "string",
+      "description": "Path or key to thresholds YAML (defaults to configs/evals/default_thresholds.yaml)."
+    },
+    "max_examples": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional cap on number of examples to run."
+    }
+  }
+}

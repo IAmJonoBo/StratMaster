@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stratmaster.dev/schemas/graphrag.json",
+  "title": "GraphRAG Tool",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [{ "required": ["query"] }, { "required": ["cypher"] }],
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Natural language query to run over the knowledge graph."
+    },
+    "cypher": {
+      "type": "string",
+      "description": "Raw Cypher to execute against the graph database."
+    },
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10,
+      "description": "Number of results to return."
+    },
+    "rerank": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to apply cross-encoder reranking (BGE)."
+    }
+  }
+}

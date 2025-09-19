@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stratmaster.dev/schemas/retrieval.json",
+  "title": "Retrieval Tool",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["index", "query"],
+  "properties": {
+    "index": {
+      "type": "string",
+      "description": "Which index/pipeline to use: colbert, splade, hybrid."
+    },
+    "query": { "type": "string", "description": "User query to search for." },
+    "filters": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional metadata filters."
+    },
+    "top_k": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 }
+  }
+}

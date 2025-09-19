@@ -1,34 +1,29 @@
 # research-mcp
 
-A minimal MCP server placeholder providing health and info endpoints.
+Structured MCP server exposing the research tools described in `PROJECT.md`.
 
-- Language: Python 3.11+
-- Framework: FastAPI
+## Capabilities
 
-## Run locally
+- `POST /tools/metasearch` — invokes SearxNG (when `RESEARCH_MCP_ENABLE_NETWORK=1`) or returns
+  synthetic results for offline testing
+- `POST /tools/crawl` — fetches pages via HTTP (optional) and persists artefacts; always enforces
+  domain allow-lists
+- `GET /resources/cached_page/{cache_key}` — retrieve cached content for a crawl
+- `GET /resources/provenance/{cache_key}` — retrieve provenance metadata (URL, SHA-256, fetched_at)
+- Health & metadata: `GET /healthz`, `GET /info`
 
-See root Makefile targets to install the monorepo and run tests. This package has its own
-entrypoint for standalone runs.
+Allow-listed domains are supplied via `RESEARCH_MCP_ALLOWLIST` (comma-separated). Defaults to
+`example.com` so the service boots safely without external dependencies. Set
+`RESEARCH_MCP_ENABLE_NETWORK=1` to enable real HTTP calls; otherwise synthetic responses are used.
+Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults to `.cache/research_mcp`).
 
-### Dev run via Makefile
-
-- Shared venv:
-
-```bash
-make research-mcp.run
-```
-
-This will install the package into the shared venv and start a dev server on <http://127.0.0.1:8081>.
-
-### Dev run via Docker
+## Local development
 
 ```bash
-docker build -t research-mcp:dev packages/mcp-servers/research-mcp
-docker run --rm -p 8081:8081 research-mcp:dev
+uvicorn research_mcp.app:create_app --factory --reload --port 8081
 ```
 
-Alternatively, using docker-compose from the repo root:
+Run tests via `pytest` in this package (`make test` at repo root runs them automatically).
 
-```bash
-docker compose up research-mcp
-```
+The current implementation is a placeholder: replace the stub store with real SearxNG +
+Playwright integrations and connect provenance events to OpenLineage before production use.

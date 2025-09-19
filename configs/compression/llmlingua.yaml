@@ -4,3 +4,7 @@ safety_keywords:
   - password
   - secret
   - key
+domains_exempt:
+  - provenance
+  - numeric_results
+# TODO: tune parameters per task and add eval hooks

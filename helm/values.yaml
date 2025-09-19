@@ -41,3 +41,12 @@ langfuse:
 secrets:
   enabled: false
   items: [] # list of {name, key, valueFrom}
+
+# NOTE: Future config mounts
+# In a future iteration, we may mount configs/ as ConfigMaps and allow overriding via values:
+# config:
+#   files:
+#     - name: router-structured
+#       path: configs/router/structured_decoding.yaml
+#     - name: retrieval-colbert
+#       path: configs/retrieval/colbert.yaml

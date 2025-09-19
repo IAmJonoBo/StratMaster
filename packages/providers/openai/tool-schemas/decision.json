@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stratmaster.dev/schemas/decision.json",
+  "title": "Decision Tool",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["question", "options"],
+  "properties": {
+    "question": {
+      "type": "string",
+      "description": "The decision question to answer."
+    },
+    "options": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string" },
+      "description": "List of options being considered."
+    },
+    "criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional criteria to evaluate options against."
+    },
+    "recommendation": {
+      "type": "string",
+      "description": "The recommended option identifier.",
+      "examples": ["option_a"]
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Short justification for the recommendation."
+    }
+  }
+}
