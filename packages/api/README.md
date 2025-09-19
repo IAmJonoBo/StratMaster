@@ -8,9 +8,12 @@ Pydantic v2 data contracts for research artefacts, decision briefs, and retrieva
 - App factory: `stratmaster_api.app:create_app`
 - Data models: `stratmaster_api.models` (Source, Provenance, Claim, Assumption, Hypothesis,
   GraphArtifacts, RetrievalRecord, DecisionBrief, etc.)
-- Stub orchestration service: `stratmaster_api.services.orchestrator_stub`
+- Orchestration service: `stratmaster_api.services.orchestrator_stub` (calls Research,
+  Knowledge, and Evals MCPs when reachable, falls back to synthetic responses offline)
 
-## Endpoints (all POST routes require `Idempotency-Key` header)
+## Endpoints
+
+All POST routes require the `Idempotency-Key` header (8–128 chars, `[A-Za-z0-9_-]`).
 
 - `POST /research/plan` — build a research task list and candidate sources
 - `POST /research/run` — execute a research plan and return claims, assumptions, and graph artefacts
@@ -31,9 +34,13 @@ Pydantic v2 data contracts for research artefacts, decision briefs, and retrieva
 uvicorn stratmaster_api.app:create_app --factory --reload --port 8080
 ```
 
-Use `make api.run` for a convenience wrapper that installs editable deps.
+Or use the Make target, which installs the package in editable mode first:
+
+```bash
+make api.run
+```
 
 ## Tests
 
 `pytest` covers health, OpenAI tool schemas, config validation, idempotency enforcement,
-and the new orchestration endpoints. Run `make test` or `pytest -q` inside the repo.
+and the orchestration endpoints. Run `make test` or `pytest -q` inside the repo.
