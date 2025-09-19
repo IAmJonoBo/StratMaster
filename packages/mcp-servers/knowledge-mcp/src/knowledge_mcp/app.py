@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI
 from .config import load_config
 from .models import (
     ColbertSearchRequest,
+    ConnectorStatus,
     HybridQueryRequest,
     HybridQueryResponse,
     InfoResponse,

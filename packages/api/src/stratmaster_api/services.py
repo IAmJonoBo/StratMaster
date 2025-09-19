@@ -4,12 +4,19 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Callable, Iterable, Sequence
-from datetime import datetime
-from typing import Any, cast
+from datetime import datetime, timezone
+from typing import Any, Iterable, Sequence
 from uuid import uuid4
 
 import httpx
+
+logger = logging.getLogger(__name__)
+
+try:  # pragma: no cover - optional dependency fallback
+    from langgraph.graph import END, StateGraph
+except ImportError:  # pragma: no cover
+    END = "__end__"
+    StateGraph = None  # type: ignore[assignment]
 
 from .models import (
     CEP,
@@ -41,17 +48,9 @@ from .models import (
     WorkflowMetadata,
 )
 
-try:  # pragma: no cover - optional dependency fallback
-    from langgraph.graph import END, StateGraph
-except ImportError:  # pragma: no cover
-    END = "__end__"
-    StateGraph = None  # type: ignore[assignment]
-
-logger = logging.getLogger(__name__)
-
 
 def _utcnow() -> datetime:
-    return datetime.now(tz=datetime.UTC)
+    return datetime.now(tz=timezone.utc)
 
 
 class ResearchMCPClient:
@@ -74,7 +73,7 @@ class ResearchMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
     def crawl(self, url: str) -> dict[str, Any]:
         resp = httpx.post(
@@ -83,7 +82,7 @@ class ResearchMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
 
 class KnowledgeMCPClient:
@@ -108,7 +107,7 @@ class KnowledgeMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
     def community_summaries(self, tenant_id: str, limit: int = 3) -> dict[str, Any]:
         resp = httpx.get(
@@ -117,7 +116,7 @@ class KnowledgeMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
 
 class RouterMCPClient:
@@ -144,7 +143,7 @@ class RouterMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
     def rerank(
         self,
@@ -164,7 +163,7 @@ class RouterMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return cast(dict[str, Any], resp.json())
+        return resp.json()
 
 
 class EvalsMCPClient:
@@ -192,7 +191,7 @@ class EvalsMCPClient:
 class _SequentialPipeline:
     """Fallback pipeline executor when LangGraph is unavailable."""
 
-    def __init__(self, *steps: Callable[[dict[str, Any]], dict[str, Any]]):
+    def __init__(self, *steps):
         self.steps = steps
 
     def invoke(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -218,14 +217,14 @@ class OrchestratorService:
         self.evals_client = evals_client or EvalsMCPClient()
         self._pipeline = self._build_pipeline()
 
-    def _build_pipeline(self) -> Any:
+    def _build_pipeline(self):
         if StateGraph is None:
             return _SequentialPipeline(
                 self._graph_research,
                 self._graph_eval,
                 self._graph_recommend,
             )
-        graph = StateGraph(dict)  # type: ignore[misc]
+        graph: StateGraph = StateGraph(dict)
         graph.add_node("research", self._graph_research)
         graph.add_node("eval", self._graph_eval)
         graph.add_node("recommend", self._graph_recommend)
@@ -857,3 +856,7 @@ class OrchestratorService:
             url=f"https://example.com/article/{idx}",
             tags=["synthetic", "demo"],
         )
+
+
+orchestrator_stub = OrchestratorService()
+"""Default orchestrator used by dependency injection."""

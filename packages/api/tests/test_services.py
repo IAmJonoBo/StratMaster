@@ -12,7 +12,7 @@ from stratmaster_api.services import (
 
 
 class StubResearch(ResearchMCPClient):
-    def metasearch(self, query: str, limit: int) -> dict[str, Any]:
+    def metasearch(self, query: str, limit: int) -> dict[str, Any]:  # type: ignore[override]
         return {
             "results": [
                 {"title": "Insight A", "url": "https://example.com/a", "snippet": "A"},
@@ -20,7 +20,7 @@ class StubResearch(ResearchMCPClient):
             ][:limit]
         }
 
-    def crawl(self, url: str) -> dict[str, Any]:
+    def crawl(self, url: str) -> dict[str, Any]:  # type: ignore[override]
         return {
             "url": url,
             "content": f"content for {url}",
@@ -30,9 +30,7 @@ class StubResearch(ResearchMCPClient):
 
 
 class StubKnowledge(KnowledgeMCPClient):
-    def hybrid_query(
-        self, tenant_id: str, query: str, top_k: int = 5
-    ) -> dict[str, Any]:
+    def hybrid_query(self, tenant_id: str, query: str, top_k: int = 5) -> dict[str, Any]:  # type: ignore[override]
         return {
             "hits": [
                 {
@@ -44,7 +42,7 @@ class StubKnowledge(KnowledgeMCPClient):
             ]
         }
 
-    def community_summaries(self, tenant_id: str, limit: int = 3) -> dict[str, Any]:
+    def community_summaries(self, tenant_id: str, limit: int = 3) -> dict[str, Any]:  # type: ignore[override]
         return {
             "summaries": [
                 {
@@ -58,16 +56,14 @@ class StubKnowledge(KnowledgeMCPClient):
 
 
 class StubRouter(RouterMCPClient):
-    def complete(
-        self, tenant_id: str, prompt: str, max_tokens: int = 256
-    ) -> dict[str, Any]:
+    def complete(self, tenant_id: str, prompt: str, max_tokens: int = 256) -> dict[str, Any]:  # type: ignore[override]
         return {
             "text": "Completed recommendation",
             "provider": "local",
             "model": "mixtral",
         }
 
-    def rerank(
+    def rerank(  # type: ignore[override]
         self, tenant_id: str, query: str, documents: list[dict[str, str]], top_k: int
     ) -> dict[str, Any]:
         # reverse order to confirm orchestrator respects rerank results
@@ -81,20 +77,16 @@ class StubRouter(RouterMCPClient):
 
 
 class StubEvals(EvalsMCPClient):
-    def run(
-        self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None
-    ) -> dict[str, Any]:
+    def run(self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None) -> dict[str, Any]:  # type: ignore[override]
         return {"run_id": "eval-1234", "passed": True, "metrics": {"ragas": 0.9}}
 
 
 class FailingEvals(EvalsMCPClient):
-    def run(
-        self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None
-    ) -> dict[str, Any]:
+    def run(self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None) -> dict[str, Any]:  # type: ignore[override]
         return {"run_id": "eval-9999", "passed": False, "metrics": {"ragas": 0.4}}
 
 
-def test_run_research_reranks_results() -> None:
+def test_run_research_reranks_results():
     orchestrator = OrchestratorService(
         research_client=StubResearch(),
         knowledge_client=StubKnowledge(),
@@ -109,7 +101,7 @@ def test_run_research_reranks_results() -> None:
     assert hits[0].document_id != hits[1].document_id
 
 
-def test_generate_recommendation_uses_router_completion() -> None:
+def test_generate_recommendation_uses_router_completion():
     orchestrator = OrchestratorService(
         research_client=StubResearch(),
         knowledge_client=StubKnowledge(),
@@ -125,7 +117,7 @@ def test_generate_recommendation_uses_router_completion() -> None:
     assert outcome.decision_brief.recommendation.startswith("Completed recommendation")
 
 
-def test_run_eval_calls_evals_service() -> None:
+def test_run_eval_calls_evals_service():
     orchestrator = OrchestratorService(
         research_client=StubResearch(),
         knowledge_client=StubKnowledge(),
@@ -137,7 +129,7 @@ def test_run_eval_calls_evals_service() -> None:
     assert payload["metrics"]["ragas"] == 0.9
 
 
-def test_recommendation_blocked_when_evals_fail() -> None:
+def test_recommendation_blocked_when_evals_fail():
     orchestrator = OrchestratorService(
         research_client=StubResearch(),
         knowledge_client=StubKnowledge(),
