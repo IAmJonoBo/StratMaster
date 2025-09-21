@@ -18,14 +18,11 @@ except ImportError:  # pragma: no cover - fallback path
     AutoModelForSequenceClassification = None  # type: ignore[assignment]
     AutoTokenizer = None  # type: ignore[assignment]
 
-_FORCE_FALLBACK = os.getenv("RERANKERS_BGE_FORCE_FALLBACK", "0").lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+def _parse_bool(value: str) -> bool:
+    """Parse a string into a boolean value using common truthy values."""
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
-
+_FORCE_FALLBACK = _parse_bool(os.getenv("RERANKERS_BGE_FORCE_FALLBACK", "0"))
 @dataclass(slots=True)
 class RerankedDocument:
     """Simple data container representing a reranked candidate."""
