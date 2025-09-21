@@ -1,5 +1,80 @@
 {
-  "ceps": [],
-  "jtbd": [],
-  "dbas": []
+  "ceps": [
+    {
+      "id": "cep-premium-reengagement",
+      "title": "Premium tier re-engagement sprint",
+      "summary": "Re-introduce dormant premium subscribers through concierge onboarding and refreshed loyalty value props.",
+      "sponsor": "Chief Growth Office",
+      "sast": "2024-03-18T09:00:00Z",
+      "source": {
+        "type": "analyst_brief",
+        "reference": "premium-tier-q1-refresh",
+        "collected_at": "2024-03-18T09:00:00Z"
+      }
+    },
+    {
+      "id": "cep-value-churn-diagnosis",
+      "title": "Value segment churn diagnosis",
+      "summary": "Investigate root causes behind elevated churn in value-tier cohorts and deliver remedial CX playbooks.",
+      "sponsor": "Customer Strategy",
+      "sast": "2024-02-27T16:30:00Z",
+      "source": {
+        "type": "interview",
+        "reference": "customer-advisory-board-feb",
+        "collected_at": "2024-02-27T16:30:00Z"
+      }
+    }
+  ],
+  "jtbd": [
+    {
+      "id": "jtbd-market-expansion",
+      "title": "Evaluate cross-border market expansion",
+      "summary": "Strategy team needs ranked opportunities for entering two APAC markets with minimal channel disruption.",
+      "persona": "Strategic Planning Lead",
+      "sast": "2024-03-04T13:15:00Z",
+      "source": {
+        "type": "workshop",
+        "reference": "2024-strategy-offsite",
+        "collected_at": "2024-03-04T13:15:00Z"
+      }
+    },
+    {
+      "id": "jtbd-campaign-brief",
+      "title": "Draft positioning for premium relaunch",
+      "summary": "Brand team seeks messaging pillars aligned to pricing research ahead of launch communications.",
+      "persona": "Brand Marketing Lead",
+      "sast": "2024-03-11T10:45:00Z",
+      "source": {
+        "type": "insight_report",
+        "reference": "pricing-elasticity-q1",
+        "collected_at": "2024-03-11T10:45:00Z"
+      }
+    }
+  ],
+  "dbas": [
+    {
+      "id": "dba-fy24-velocity",
+      "title": "FY24 strategic velocity dashboard",
+      "summary": "Tracks hypothesis throughput, approval cycle time, and downstream KPI shifts for FY24 plays.",
+      "owner": "Strategy Ops",
+      "sast": "2024-03-01T08:00:00Z",
+      "source": {
+        "type": "dashboard",
+        "reference": "metabase/strategic-velocity",
+        "collected_at": "2024-03-01T08:00:00Z"
+      }
+    },
+    {
+      "id": "dba-voice-of-customer",
+      "title": "Voice of customer sentiment summary",
+      "summary": "Aggregates NPS verbatims and MCP summaries to flag churn precursors and upsell opportunities.",
+      "owner": "Customer Experience",
+      "sast": "2024-02-20T17:20:00Z",
+      "source": {
+        "type": "insight_report",
+        "reference": "voc-sentiment-feb",
+        "collected_at": "2024-02-20T17:20:00Z"
+      }
+    }
+  ]
 }
