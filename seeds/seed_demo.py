@@ -221,8 +221,9 @@ def seed_qdrant(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None
     if not materialised:
         logger.info("No assets to persist in Qdrant")
         return
-    client = QdrantClient(url=config.qdrant_url)
+    # Safe to access materialised[0] here because we return early if the list is empty
     vectors_config = {"size": len(materialised[0]["vector"]), "distance": "Cosine"}
+    client = QdrantClient(url=config.qdrant_url)
     client.recreate_collection(collection_name=config.qdrant_collection, vectors_config=vectors_config)
     points = []
     for asset in materialised:
