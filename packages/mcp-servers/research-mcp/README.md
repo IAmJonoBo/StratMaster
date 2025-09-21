@@ -23,8 +23,12 @@ external sinks. Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults t
 ## Local development
 
 ```bash
-uvicorn research_mcp.app:create_app --factory --reload --port 8081
+python -m research_mcp --reload --port 8081
 ```
+
+Additional flags mirror uvicorn options and can also be supplied via environment variables,
+e.g. `RESEARCH_MCP_PORT`, `RESEARCH_MCP_RELOAD`, `RESEARCH_MCP_PROXY_HEADERS`, and
+`RESEARCH_MCP_ROOT_PATH`.
 
 Run tests via `pytest` in this package (`make test` at repo root runs them automatically).
 
