@@ -115,11 +115,12 @@ def _fingerprint(record: Mapping[str, Any]) -> str:
 
 def _vectorize(text: str, size: int = 16) -> List[float]:
     digest = hashlib.sha256(text.encode("utf-8")).digest()
+    # Pad digest if needed to ensure enough non-overlapping chunks
+    if len(digest) < size * 2:
+        digest = digest.ljust(size * 2, b"\0")
     floats: List[float] = []
     for idx in range(size):
-        chunk = digest[idx % len(digest) : (idx % len(digest)) + 2]
-        if len(chunk) < 2:
-            chunk = chunk.ljust(2, b"\0")
+        chunk = digest[idx * 2 : (idx * 2) + 2]
         value = int.from_bytes(chunk, "big") / 65535.0
         floats.append(value)
     return floats
