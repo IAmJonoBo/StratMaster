@@ -15,10 +15,9 @@ cd "$ROOT_DIR"
 #  - .Spotlight-V100, .Trashes (if somehow copied in)
 
 # Use -prune to skip heavy directories for speed.
-prune_dirs=(-name .git -o -name .venv -o -name node_modules -o -name build -o -name dist)
-
+# Prune heavy/common directories explicitly for speed.
 # shellcheck disable=SC2016
-find . \( ${prune_dirs[@]} \) -prune -o \
+find . \( -name .git -o -name .venv -o -name node_modules -o -name build -o -name dist \) -prune -o \
   \( -name '._*' -o -name '.DS_Store' -o -name '.AppleDouble' -o -name '.Spotlight-V100' -o -name '.Trashes' \) \
   -print -delete || true
 

@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
+import importlib.util
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Any, Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from datetime import UTC, datetime
+from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import httpx
-
-logger = logging.getLogger(__name__)
-
-try:  # pragma: no cover - optional dependency fallback
-    from langgraph.graph import END, StateGraph
-except ImportError:  # pragma: no cover
-    END = "__end__"
-    StateGraph = None  # type: ignore[assignment]
 
 from .models import (
     CEP,
@@ -48,9 +42,13 @@ from .models import (
     WorkflowMetadata,
 )
 
+logger = logging.getLogger(__name__)
+
+_UNEXPECTED_RESPONSE = "Unexpected response payload"
+
 
 def _utcnow() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(tz=UTC)
 
 
 class ResearchMCPClient:
@@ -73,7 +71,10 @@ class ResearchMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
     def crawl(self, url: str) -> dict[str, Any]:
         resp = httpx.post(
@@ -82,7 +83,10 @@ class ResearchMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
 
 class KnowledgeMCPClient:
@@ -107,7 +111,10 @@ class KnowledgeMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
     def community_summaries(self, tenant_id: str, limit: int = 3) -> dict[str, Any]:
         resp = httpx.get(
@@ -116,7 +123,10 @@ class KnowledgeMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
 
 class RouterMCPClient:
@@ -143,7 +153,10 @@ class RouterMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
     def rerank(
         self,
@@ -163,7 +176,10 @@ class RouterMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
 
 class EvalsMCPClient:
@@ -185,31 +201,47 @@ class EvalsMCPClient:
             timeout=self.timeout,
         )
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
 
 
 class _SequentialPipeline:
     """Fallback pipeline executor when LangGraph is unavailable."""
 
-    def __init__(self, *steps):
-        self.steps = steps
+    # Define a simple protocol for pipelines to satisfy type checking
+
+    def __init__(
+        self,
+        *steps: Callable[[dict[str, Any]], dict[str, Any]],
+    ) -> None:
+        # store steps as a tuple for immutability and clear typing
+        self.steps: tuple[Callable[[dict[str, Any]], dict[str, Any]], ...] = steps
 
     def invoke(self, state: dict[str, Any]) -> dict[str, Any]:
-        current = state
+        current: dict[str, Any] = state
         for step in self.steps:
             current = step(current)
         return current
 
 
+class Pipeline(Protocol):
+    """Minimal interface for an executable pipeline used in this module."""
+
+    def invoke(self, state: dict[str, Any]) -> dict[str, Any]: ...
+
+
 class _GraphPipeline:
     """Wrapper around a compiled LangGraph pipeline with sequential fallback."""
 
-    def __init__(self, compiled, fallback: _SequentialPipeline) -> None:
-        self._compiled = compiled
-        self._fallback = fallback
+    def __init__(self, compiled: Pipeline, fallback: _SequentialPipeline) -> None:
+        self._compiled: Pipeline = compiled
+        self._fallback: _SequentialPipeline = fallback
 
     def invoke(self, state: dict[str, Any]) -> dict[str, Any]:
         try:
+            # compiled conforms to Pipeline, so invoke returns dict[str, Any]
             return self._compiled.invoke(state)
         except Exception as exc:  # pragma: no cover - protective fallback
             logger.warning(
@@ -233,10 +265,11 @@ class OrchestratorService:
         self.knowledge_client = knowledge_client or KnowledgeMCPClient()
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
-        self._pipeline = self._build_pipeline()
+        self._pipeline: Pipeline = self._build_pipeline()
 
-    def _build_pipeline(self):
-        if StateGraph is None:
+    def _build_pipeline(self) -> Pipeline:
+        # Lazy-import LangGraph to avoid hard dependency and import-order lint issues
+        if importlib.util.find_spec("langgraph.graph") is None:
             return _SequentialPipeline(
                 self._graph_research,
                 self._graph_eval,
@@ -248,7 +281,9 @@ class OrchestratorService:
             self._graph_recommend,
         )
         try:
-            graph: StateGraph = StateGraph(dict)
+            from langgraph.graph import END, StateGraph
+
+            graph = StateGraph(dict)
             graph.add_node("research", self._graph_research)
             graph.add_node("eval", self._graph_eval)
             graph.add_node("recommend", self._graph_recommend)
@@ -256,7 +291,7 @@ class OrchestratorService:
             graph.add_edge("research", "eval")
             graph.add_edge("eval", "recommend")
             graph.add_edge("recommend", END)
-            compiled = graph.compile()
+            compiled = cast(Pipeline, graph.compile())
         except Exception as exc:  # pragma: no cover - setup guard
             logger.warning(
                 "LangGraph pipeline setup failed; using sequential fallback",
@@ -286,7 +321,9 @@ class OrchestratorService:
     def run_research(self, plan_id: str, tenant_id: str) -> dict[str, Any]:
         return self._collect_research(plan_id=plan_id, tenant_id=tenant_id)
 
-    def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
+    def summarise_graph(
+        self, _tenant_id: str, focus: str, limit: int
+    ) -> dict[str, Any]:
         graph = GraphArtifacts(
             nodes=[
                 GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
@@ -319,9 +356,9 @@ class OrchestratorService:
 
     def run_debate(
         self,
-        tenant_id: str,
-        hypothesis_id: str | None,
-        claim_ids: list[str] | None,
+        _tenant_id: str,
+        _hypothesis_id: str | None,
+        _claim_ids: list[str] | None,
         max_turns: int,
     ) -> dict[str, Any]:
         turns = [
@@ -453,6 +490,8 @@ class OrchestratorService:
         outcome = final_state.get("recommendation")
         if outcome is None:
             raise RuntimeError("recommendation pipeline failed to produce an outcome")
+        if not isinstance(outcome, RecommendationOutcome):
+            raise TypeError("pipeline produced unexpected recommendation type")
         return outcome
 
     def query_retrieval(
@@ -489,11 +528,11 @@ class OrchestratorService:
                 "metrics": metrics,
             }
 
-    def create_experiment(self, tenant_id: str, payload: dict[str, Any]) -> str:
+    def create_experiment(self, _tenant_id: str, _payload: dict[str, Any]) -> str:
         return f"exp-{uuid4().hex[:8]}"
 
     def create_forecast(
-        self, tenant_id: str, metric_id: str, horizon_days: int
+        self, _tenant_id: str, metric_id: str, horizon_days: int
     ) -> Forecast:
         metric = Metric(id=metric_id, name="Metric", definition="Synthetic")
         return Forecast(
@@ -576,7 +615,8 @@ class OrchestratorService:
             )
         except Exception:
             return []
-        return payload.get("hits", [])
+        hits = cast(list[dict[str, Any]], payload.get("hits", []))
+        return hits
 
     def _retrieval_records_from_knowledge_hits(
         self, hits: Sequence[dict[str, Any]]

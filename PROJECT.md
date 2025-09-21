@@ -141,13 +141,13 @@ open-brand-strategy-ai/
 - Decision assurance: Chain‑of‑Verification (CoVe) stage before the Constitutional Critic; returns verified deltas or triggers more research.
 - Tool mediation: All external calls via MCP servers (section 8). Agents never perform raw HTTP.
 - Dataflow (E2E):
-  1.  Intake → OPA policy gate → research plan.
-  2.  SearxNG metasearch → Playwright crawl → Unstructured/Tika parse → provenance pack.
-  3.  IE → dense embeddings (Qdrant) + learned sparse terms (OpenSearch/SPLADE) + late‑interaction encodings (ColBERT) + relations (NebulaGraph).
-  4.  GraphRAG pipeline → communities (Leiden/Louvain) → summaries → narrative answers.
-  5.  CoVe self‑verification → adversarial debate + constitution → Evals (Ragas, FActScore, TruthfulQA, RAGTruth/LettuceDetect) → Langfuse traces/metrics.
-  6.  Decision layer: CEP/JTBD/DBA scoring; causal (DoWhy/EconML); forecasting (PyMC/Prophet) → recommendations.
-  7.  UX surfaces: Argument map, GRADE evidence, Assumption heat‑map, Graph explorer, Strategy Kanban, Experiment console.
+  1. Intake → OPA policy gate → research plan.
+  2. SearxNG metasearch → Playwright crawl → Unstructured/Tika parse → provenance pack.
+  3. IE → dense embeddings (Qdrant) + learned sparse terms (OpenSearch/SPLADE) + late‑interaction encodings (ColBERT) + relations (NebulaGraph).
+  4. GraphRAG pipeline → communities (Leiden/Louvain) → summaries → narrative answers.
+  5. CoVe self‑verification → adversarial debate + constitution → Evals (Ragas, FActScore, TruthfulQA, RAGTruth/LettuceDetect) → Langfuse traces/metrics.
+  6. Decision layer: CEP/JTBD/DBA scoring; causal (DoWhy/EconML); forecasting (PyMC/Prophet) → recommendations.
+  7. UX surfaces: Argument map, GRADE evidence, Assumption heat‑map, Graph explorer, Strategy Kanban, Experiment console.
 
 ---
 

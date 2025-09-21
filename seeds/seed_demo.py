@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import logging
 import os
@@ -15,25 +16,8 @@ from typing import Any, Dict, Iterable, List, Mapping
 
 logger = logging.getLogger("stratmaster.seeds")
 
-try:  # pragma: no cover - optional dependency
-    import psycopg
-except ImportError:  # pragma: no cover - optional dependency
-    psycopg = None  # type: ignore[assignment]
-
-try:  # pragma: no cover - optional dependency
-    from qdrant_client import QdrantClient
-except ImportError:  # pragma: no cover - optional dependency
-    QdrantClient = None  # type: ignore[assignment]
-
-try:  # pragma: no cover - optional dependency
-    from opensearchpy import OpenSearch
-except ImportError:  # pragma: no cover - optional dependency
-    OpenSearch = None  # type: ignore[assignment]
-
-try:  # pragma: no cover - optional dependency
-    from minio import Minio
-except ImportError:  # pragma: no cover - optional dependency
-    Minio = None  # type: ignore[assignment]
+"""Note: Optional clients are imported inside functions to keep module importable
+without those dependencies installed (psycopg, qdrant-client, opensearch-py, minio)."""
 
 DATA_FILE = Path(__file__).with_name("demo-ceps-jtbd-dbas.json")
 DEFAULT_BUCKET = "stratmaster-demo"
@@ -60,7 +44,8 @@ class SeedConfig:
             dataset_path=dataset_path,
             postgres_dsn=os.getenv(
                 "SEED_POSTGRES_DSN",
-                "postgresql://postgres:postgres@localhost:5432/stratmaster",
+                # No credentials in defaults; use environment variables instead
+                "postgresql://localhost:5432/stratmaster",
             ),
             qdrant_url=os.getenv("SEED_QDRANT_URL", "http://localhost:6333"),
             qdrant_collection=os.getenv("SEED_QDRANT_COLLECTION", "stratmaster-demo"),
@@ -71,7 +56,8 @@ class SeedConfig:
             minio_secret_key=os.getenv("SEED_MINIO_SECRET_KEY", "stratmaster123"),
             minio_bucket=os.getenv("SEED_MINIO_BUCKET", DEFAULT_BUCKET),
             minio_region=os.getenv("SEED_MINIO_REGION", "us-east-1"),
-            minio_secure=os.getenv("SEED_MINIO_SECURE", "false").lower() in {"1", "true", "yes"},
+            minio_secure=os.getenv("SEED_MINIO_SECURE", "false").lower()
+            in {"1", "true", "yes"},
         )
 
 
@@ -84,7 +70,10 @@ def parse_args() -> argparse.Namespace:
         help="Path to JSON bundle describing demo artefacts",
     )
     parser.add_argument(
-        "--skip", nargs="*", choices=["postgres", "qdrant", "opensearch", "minio"], default=[],
+        "--skip",
+        nargs="*",
+        choices=["postgres", "qdrant", "opensearch", "minio"],
+        default=[],
         help="Backends to skip (useful when dependencies are unavailable)",
     )
     return parser.parse_args()
@@ -149,28 +138,35 @@ def _prepare_assets(bundle: Mapping[str, List[Dict[str, Any]]]) -> List[Dict[str
                     },
                     "source": {
                         **source,
-                        "collected_at": _normalise_timestamp(source.get("collected_at", sast)).isoformat(),
+                        "collected_at": _normalise_timestamp(
+                            source.get("collected_at", sast)
+                        ).isoformat(),
                     },
                     "sast": timestamp,
                     "fingerprint": fingerprint,
-                    "vector": _vectorize(record.get("summary", record.get("title", ""))),
+                    "vector": _vectorize(
+                        record.get("summary", record.get("title", ""))
+                    ),
                 }
             )
     return prepared
 
 
 def seed_postgres(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None:
-    if psycopg is None:
+    try:
+        psycopg = importlib.import_module("psycopg")
+        types_json = importlib.import_module("psycopg.types.json")
+        json_adapter = types_json.Json
+    except Exception:  # pragma: no cover - optional client
         logger.warning("psycopg not installed; skipping Postgres seeding")
         return
-    from psycopg.types.json import Json  # type: ignore[attr-defined]
 
     logger.info("Seeding Postgres at %s", config.postgres_dsn)
     materialised = list(assets)
     if not materialised:
         logger.info("No assets to persist in Postgres")
         return
-    with psycopg.connect(config.postgres_dsn, autocommit=True) as conn:  # type: ignore[arg-type]
+    with psycopg.connect(config.postgres_dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
             cur.execute("CREATE SCHEMA IF NOT EXISTS stratmaster_demo")
             cur.execute(
@@ -204,25 +200,34 @@ def seed_postgres(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> No
                     """,
                     {
                         **asset,
-                        "attributes": Json(asset["attributes"]),
-                        "source": Json(asset["source"]),
+                        "attributes": json_adapter(asset["attributes"]),
+                        "source": json_adapter(asset["source"]),
                     },
                 )
     logger.info("Postgres seed complete")
 
 
 def seed_qdrant(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None:
-    if QdrantClient is None:
+    try:
+        qdrant_mod = importlib.import_module("qdrant_client")
+        qdrant_client_cls = qdrant_mod.QdrantClient
+    except Exception:  # pragma: no cover - optional client
         logger.warning("qdrant-client not installed; skipping Qdrant seeding")
         return
-    logger.info("Seeding Qdrant at %s (collection %s)", config.qdrant_url, config.qdrant_collection)
+    logger.info(
+        "Seeding Qdrant at %s (collection %s)",
+        config.qdrant_url,
+        config.qdrant_collection,
+    )
     materialised = list(assets)
     if not materialised:
         logger.info("No assets to persist in Qdrant")
         return
-    client = QdrantClient(url=config.qdrant_url)
+    client = qdrant_client_cls(url=config.qdrant_url)
     vectors_config = {"size": len(materialised[0]["vector"]), "distance": "Cosine"}
-    client.recreate_collection(collection_name=config.qdrant_collection, vectors_config=vectors_config)
+    client.recreate_collection(
+        collection_name=config.qdrant_collection, vectors_config=vectors_config
+    )
     points = []
     for asset in materialised:
         points.append(
@@ -245,16 +250,25 @@ def seed_qdrant(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None
 
 
 def seed_opensearch(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None:
-    if OpenSearch is None:
+    try:
+        opensearch_mod = importlib.import_module("opensearchpy")
+        open_search_cls = opensearch_mod.OpenSearch
+    except Exception:  # pragma: no cover - optional client
         logger.warning("opensearch-py not installed; skipping OpenSearch seeding")
         return
-    logger.info("Seeding OpenSearch at %s (index %s)", config.opensearch_url, config.opensearch_index)
+    logger.info(
+        "Seeding OpenSearch at %s (index %s)",
+        config.opensearch_url,
+        config.opensearch_index,
+    )
     materialised = list(assets)
     if not materialised:
         logger.info("No assets to persist in OpenSearch")
         return
-    client = OpenSearch(hosts=[config.opensearch_url])
-    if not client.indices.exists(index=config.opensearch_index):  # pragma: no branch - defensive
+    client = open_search_cls(hosts=[config.opensearch_url])
+    if not client.indices.exists(
+        index=config.opensearch_index
+    ):  # pragma: no branch - defensive
         client.indices.create(
             index=config.opensearch_index,
             body={
@@ -289,15 +303,20 @@ def seed_opensearch(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> 
 
 
 def seed_minio(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None:
-    if Minio is None:
+    try:
+        minio_mod = importlib.import_module("minio")
+        minio_client_cls = minio_mod.Minio
+    except Exception:  # pragma: no cover - optional client
         logger.warning("minio client not installed; skipping MinIO seeding")
         return
-    logger.info("Seeding MinIO at %s (bucket %s)", config.minio_endpoint, config.minio_bucket)
+    logger.info(
+        "Seeding MinIO at %s (bucket %s)", config.minio_endpoint, config.minio_bucket
+    )
     materialised = list(assets)
     if not materialised:
         logger.info("No assets to persist in MinIO")
         return
-    client = Minio(
+    client = minio_client_cls(
         config.minio_endpoint,
         access_key=config.minio_access_key,
         secret_key=config.minio_secret_key,
