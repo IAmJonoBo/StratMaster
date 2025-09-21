@@ -26,7 +26,7 @@ find . \( ${prune_dirs[@]} \) -prune -o \
 # (e.g., when .git directory is copied with Finder to a non-HFS volume).
 # Only remove files that match the AppleDouble pattern '._*' within .git to
 # avoid touching legitimate git objects.
-if [ -d .git ]; then
+if [[ -d .git ]]; then
   find .git -type f -name '._*' -print -delete || true
 fi
 
