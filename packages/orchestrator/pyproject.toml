@@ -9,9 +9,9 @@ description = "LangGraph-based orchestration utilities for StratMaster"
 requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
-  "pydantic>=2.7",
-  "typing-extensions>=4.9",
-  "langchain-core>=0.3",
+  "pydantic>=2.11.9",
+  "typing-extensions>=4.15.0",
+  "langchain-core>=0.3.76",
 ]
 
 [tool.setuptools]
