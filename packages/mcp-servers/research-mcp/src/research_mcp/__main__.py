@@ -1,9 +1,5 @@
-import uvicorn
-
-
-def main():
-    uvicorn.run("research_mcp.app:create_app", factory=True, host="0.0.0.0", port=8081)
+from .cli import main as cli_main
 
 
 if __name__ == "__main__":
-    main()
+    cli_main()
