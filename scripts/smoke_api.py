@@ -22,25 +22,36 @@ async def main() -> int:
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         # /healthz
         r = await client.get("/healthz")
-        assert r.status_code == 200, f"/healthz status={r.status_code} body={r.text}"
-        assert r.json().get("status") == "ok", f"/healthz body={r.text}"
+        if r.status_code != 200:
+            print(f"/healthz: FAIL status={r.status_code} body={r.text}")
+            return 1
+        try:
+            data = r.json()
+        except Exception:
+            print(f"/healthz: FAIL (invalid JSON) body={r.text}")
+            return 1
+        if data.get("status") != "ok":
+            print(f"/healthz: FAIL body={r.text}")
+            return 1
         print("/healthz: ok")
+
         # /docs
         r = await client.get("/docs")
-        assert r.status_code == 200, f"/docs status={r.status_code}"
-        assert ("swagger-ui" in r.text) or (
-            "openapi" in r.text.lower()
-        ), "Swagger UI not detected in /docs"
+        if r.status_code != 200:
+            print(f"/docs: FAIL status={r.status_code}")
+            return 1
+        text_lower = r.text.lower()
+        if ("swagger-ui" not in text_lower) and ("openapi" not in text_lower):
+            print("/docs: FAIL (swagger not detected)")
+            return 1
         print("/docs: ok (swagger detected)")
+    print("Smoke: PASS")
     return 0
 
 
 if __name__ == "__main__":
     try:
         code = anyio.run(main)
-    except AssertionError as ae:
-        print(f"Smoke failed: {ae}")
-        code = 1
     except Exception as e:
         print(f"Unexpected error: {e}")
         code = 1
