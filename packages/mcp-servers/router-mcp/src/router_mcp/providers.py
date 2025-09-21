@@ -129,6 +129,7 @@ class ProviderAdapter:
                         "text": documents[item.index].get("text", ""),
                     }
                     for item in ranked
+                    if isinstance(item.index, int) and 0 <= item.index < len(documents)
                 ]
                 return {
                     "results": results,
