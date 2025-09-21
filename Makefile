@@ -57,13 +57,13 @@ test-docker:
 # Generate lock files with pinned, hashed dependencies from requirements*.txt
 lock:
 	[ -d .venv ] || python3 -m venv .venv
-	. .venv/bin/activate && pip install --upgrade pip && pip install pip-tools
+	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
 	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
 
 # Upgrade to latest allowed versions and refresh lock files
 lock-upgrade:
 	[ -d .venv ] || python3 -m venv .venv
-	. .venv/bin/activate && pip install --upgrade pip && pip install pip-tools
+	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
