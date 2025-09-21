@@ -124,8 +124,7 @@ class CrawlerClient:
                     finally:  # pragma: no cover
                         browser.close()
             logger.warning(
-                "Playwright rendering failed; returning synthetic content",
-                extra={"url": url},
+                "Playwright rendering failed; returning synthetic content"
             )
             return self._synthetic_content(url, render_js)
 
