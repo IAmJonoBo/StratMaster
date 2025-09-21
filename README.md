@@ -45,6 +45,20 @@ make bootstrap
 make test
 ```
 
+### Git hooks (AppleDouble cleanup)
+
+To avoid macOS AppleDouble junk corrupting the repository (e.g. `._*` files under `.git`), this repo includes a pre-push hook that runs a cleanup script. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+You can also run the cleanup manually at any time:
+
+```bash
+bash scripts/cleanup_appledouble.sh
+```
+
 If you encounter pip/Conda interference on macOS (UnicodeDecodeError in importlib.metadata), use one of these alternatives. Note that CI runs all tests automatically on every push/PR, so local runs are optional.
 
 - Use pyenv to install a clean CPython and recreate the venv
