@@ -1,19 +1,32 @@
-"""compression-mcp stub entrypoint.
-Exposes LLMLingua-based prompt compression via MCP tools.
-"""
+"""compression-mcp entrypoint.
+Starts the FastAPI application that exposes LLMLingua compression tools."""
+
+from __future__ import annotations
 
 import argparse
+from typing import Optional
+
+import uvicorn
 
 
-def main():
+def main(argv: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser(
-        prog="compression-mcp", description="Compression MCP server (stub)"
+        prog="compression-mcp", description="Compression MCP server"
     )
+    parser.add_argument("--host", default="0.0.0.0", help="Host interface to bind")
     parser.add_argument("--port", type=int, default=8005, help="Port to listen on")
-    args = parser.parse_args()
-    print(
-        f"[compression-mcp] Stub server would start on port {args.port} "
-        "(TODO[COMP-502]: replace with FastAPI app; see docs/backlog.md#todo-comp-502-compression-mcp-server-implementation)"
+    parser.add_argument(
+        "--reload", action="store_true", help="Enable autoreload (development only)"
+    )
+    args = parser.parse_args(argv)
+
+    uvicorn.run(
+        "compression_mcp.app:create_app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+        factory=True,
+        log_level="info",
     )
 
 

@@ -1,0 +1,22 @@
+[project]
+name = "rerankers-bge"
+version = "0.1.0"
+description = "BGE reranker utilities with CLI and FastAPI service"
+requires-python = ">=3.10"
+authors = [{ name = "StratMaster" }]
+dependencies = [
+    "fastapi>=0.110",
+    "pydantic>=1.10",
+]
+
+[project.optional-dependencies]
+transformers = [
+    "torch",
+    "transformers>=4.36",
+]
+
+[project.scripts]
+rerankers-bge = "rerankers.bge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Iterable
 
 from .config import ProviderConfig
@@ -15,10 +15,16 @@ try:  # pragma: no cover - optional dependency
 except ImportError:  # pragma: no cover
     litellm = None
 
+try:  # pragma: no cover - optional dependency
+    from rerankers.bge import BGEReranker
+except ImportError:  # pragma: no cover
+    BGEReranker = None  # type: ignore[assignment]
+
 
 @dataclass
 class ProviderAdapter:
     config: ProviderConfig
+    _reranker: "BGEReranker | None" = field(init=False, default=None, repr=False)
 
     def complete(self, prompt: str, max_tokens: int) -> dict[str, Any]:
         if self.config.name in {"openai", "litellm", "vllm"} and litellm is not None:
@@ -102,6 +108,37 @@ class ProviderAdapter:
                 }
             except Exception as exc:
                 logger.warning("Provider rerank failed; falling back", exc_info=exc)
+        local_reranker = self._get_local_reranker()
+        if local_reranker is not None:
+            try:
+                ranked = local_reranker.rerank(
+                    query,
+                    [
+                        {
+                            "id": doc.get("id"),
+                            "text": doc.get("text", ""),
+                        }
+                        for doc in documents
+                    ],
+                    top_k=top_k,
+                )
+                results = [
+                    {
+                        "id": documents[item.index].get("id"),
+                        "score": float(item.score),
+                        "text": documents[item.index].get("text", ""),
+                    }
+                    for item in ranked
+                ]
+                return {
+                    "results": results,
+                    "provider": self.config.name,
+                    "model": self.config.rerank_model,
+                }
+            except Exception as exc:
+                logger.warning(
+                    "Local BGE reranker failed; using heuristic fallback", exc_info=exc
+                )
         scored = [
             {"id": doc["id"], "score": max(0.1, 1.0 - idx * 0.05), "text": doc["text"]}
             for idx, doc in enumerate(documents)
@@ -111,3 +148,17 @@ class ProviderAdapter:
             "provider": self.config.name,
             "model": self.config.rerank_model,
         }
+
+    def _get_local_reranker(self) -> "BGEReranker | None":
+        if self.config.name != "local" or BGEReranker is None:
+            return None
+        if self._reranker is None:
+            try:
+                self._reranker = BGEReranker(
+                    model_name=self.config.rerank_model,
+                    force_fallback=True,
+                )
+            except Exception as exc:  # pragma: no cover - defensive guard
+                logger.warning("Unable to initialise BGE reranker", exc_info=exc)
+                self._reranker = None
+        return self._reranker

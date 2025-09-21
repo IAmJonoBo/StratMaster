@@ -87,4 +87,4 @@ def test_rerank_endpoint(client=client()):
     )
     assert resp.status_code == 200
     results = resp.json()["results"]
-    assert results[0]["id"] in {"a", "b"}
+    assert results[0]["id"] == "a"
