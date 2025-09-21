@@ -99,25 +99,35 @@ class CrawlerClient:
         self.settings = settings
 
     def fetch(self, url: str, render_js: bool = False) -> str:
-        if (
-            render_js
-            and self.settings.use_playwright
-            and sync_playwright is not None
-            and self.settings.use_network
-        ):
+        wants_playwright = render_js and self.settings.use_playwright
+
+        if wants_playwright:
+            if not self.settings.use_network:
+                logger.warning(
+                    "Playwright rendering requested without network access; returning synthetic content"
+                )
+                return self._synthetic_content(url, render_js)
+
+            if sync_playwright is None:
+                logger.warning(
+                    "Playwright not available; returning synthetic content instead of rendering"
+                )
+                return self._synthetic_content(url, render_js)
+
             with suppress(Exception):  # pragma: no cover - network path
-                with sync_playwright() as p:
-                    browser = p.chromium.launch(headless=True)
+                with sync_playwright() as playwright:
+                    browser = playwright.chromium.launch(headless=True)
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        content = page.content()
-                        return content
+                        return page.content()
                     finally:  # pragma: no cover
                         browser.close()
             logger.warning(
-                "Playwright rendering unavailable; falling back to HTTP fetch"
+                "Playwright rendering failed; returning synthetic content",
+                extra={"url": url},
             )
+            return self._synthetic_content(url, render_js)
 
         if self.settings.use_network and httpx is not None:
             try:
@@ -131,6 +141,10 @@ class CrawlerClient:
                     "Crawler network fetch failed; returning synthetic content",
                     exc_info=exc,
                 )
+        return self._synthetic_content(url, render_js)
+
+    @staticmethod
+    def _synthetic_content(url: str, render_js: bool) -> str:
         return f"Synthetic content for {url} (render_js={render_js})"
 
 

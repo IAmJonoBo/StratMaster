@@ -23,8 +23,26 @@ external sinks. Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults t
 ## Local development
 
 ```bash
-uvicorn research_mcp.app:create_app --factory --reload --port 8081
+python -m research_mcp --reload --port 8081
 ```
+
+Additional flags mirror uvicorn options and can also be supplied via environment variables,
+e.g. `RESEARCH_MCP_PORT`, `RESEARCH_MCP_RELOAD`, `RESEARCH_MCP_PROXY_HEADERS`, and
+`RESEARCH_MCP_ROOT_PATH`. Service-specific toggles are available directly on the CLI as
+well:
+
+```bash
+python -m research_mcp \
+  --allowlist example.com,strategy.example \
+  --blocklist tracker.invalid \
+  --enable-network \
+  --use-playwright
+```
+
+The command above configures crawler allow/block lists, enables outbound requests for
+metasearch/crawling, and turns on Playwright rendering. The same options can be provided
+via `RESEARCH_MCP_ALLOWLIST`, `RESEARCH_MCP_BLOCKLIST`, `RESEARCH_MCP_ENABLE_NETWORK`,
+and `RESEARCH_MCP_USE_PLAYWRIGHT`.
 
 Run tests via `pytest` in this package (`make test` at repo root runs them automatically).
 
