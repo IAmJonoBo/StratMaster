@@ -1,10 +1,10 @@
 # Backlog
 
-This backlog turns the blueprint roadmap into actionable slices. IDs are referenced from TODO markers across the repo.
+This backlog turns the blueprint roadmap into actionable slices. IDs are referenced from backlog markers across the repo.
 
 ## Sprint 2 – Knowledge Fabric
 
-### TODO[SP2-201] Knowledge MCP connectors
+### SP2-201 — Knowledge MCP connectors
 
 - Issue stub: `issue/sp2-201-knowledge-mcp-connectors`
 - PR slices:
@@ -13,7 +13,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp2-201c-opensearch-nebula` — wire OpenSearch/NebulaGraph connectors with graceful fallbacks.
 - Acceptance: Service auto-detects connectors, exposes capability flags in `/info`, and surfaces actionable errors without crashing.
 
-### TODO[SP2-202] Knowledge fabric storage & GraphRAG materialisation
+### SP2-202 — Knowledge fabric storage & GraphRAG materialisation
 
 - Issue stub: `issue/sp2-202-knowledge-fabric`
 - PR slices:
@@ -22,7 +22,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp2-202c-summary-endpoints` — expose graph/community summaries backed by stored artefacts.
 - Acceptance: Graph resources serve persisted communities per tenant; provenance and storage layout documented.
 
-### TODO[SP2-203] Retrieval index toolchain (ColBERT/SPLADE + hybrid orchestrator)
+### SP2-203 — Retrieval index toolchain (ColBERT/SPLADE + hybrid orchestrator)
 
 - Issue stub: `issue/sp2-203-retrieval-indexing`
 - PR slices:
@@ -31,7 +31,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp2-203c-hybrid-tests` — regression tests for weighted hybrid retrieval/reranking.
 - Acceptance: `make index.colbert` / `make index.splade` succeed locally; hybrid query reflects new indices with tests covering weight tuning.
 
-### TODO[SP2-204] BGE reranker package
+### SP2-204 — BGE reranker package
 
 - Issue stub: `issue/sp2-204-bge-reranker`
 - PR slices:
@@ -39,7 +39,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   2. `pr/sp2-204b-api` — expose CLI/service hooks and unit tests.
 - Acceptance: Knowledge MCP rerank endpoint calls into package; configurable topK and device parameters documented.
 
-### TODO[SP2-205] Router per-task policies
+### SP2-205 — Router per-task policies
 
 - Issue stub: `issue/sp2-205-router-policies`
 - PR slices:
@@ -47,7 +47,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   2. `pr/sp2-205b-evals` — add validation/tests ensuring tenants cannot bypass policy.
 - Acceptance: Router selects providers per task type; policy violations are rejected with clear errors.
 
-### TODO[SP2-210] Research MCP CLI/bootstrap
+### SP2-210 — Research MCP CLI/bootstrap
 
 - Issue stub: `issue/sp2-210-research-mcp-cli`
 - PR slices:
@@ -57,7 +57,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Sprint 3 – Agents & Assurance
 
-### TODO[SP3-301] LangGraph agent graph & shared state
+### SP3-301 — LangGraph agent graph & shared state
 
 - Issue stub: `issue/sp3-301-agent-graph`
 - PR slices:
@@ -66,7 +66,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp3-301c-checkpointing` — add persistence/checkpoint hooks.
 - Acceptance: Agent graph runs end-to-end with deterministic stubs; orchestrator fallback removed.
 
-### TODO[SP3-302] Debate, constitution, and eval gating
+### SP3-302 — Debate, constitution, and eval gating
 
 - Issue stub: `issue/sp3-302-debate-evals`
 - PR slices:
@@ -75,7 +75,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp3-302c-eval-blocks` — enforce eval gates before emitting recommendations.
 - Acceptance: Tests cover pass/fail paths; API returns structured failure modes when gates fail.
 
-### TODO[SP3-303] DSPy program compilation & telemetry
+### SP3-303 — DSPy program compilation & telemetry
 
 - Issue stub: `issue/sp3-303-dspy`
 - PR slices:
@@ -84,7 +84,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   3. `pr/sp3-303c-ci-check` — add regression ensuring checkpoints stay in sync.
 - Acceptance: DSPy artefacts stored under `packages/dsp/dspy_programs`; CI verifies reproducibility.
 
-### TODO[SP3-304] API Pydantic model suite
+### SP3-304 — API Pydantic model suite
 
 - Issue stub: `issue/sp3-304-api-models`
 - PR slices:
@@ -95,7 +95,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Data & Seeds
 
-### TODO[DATA-101] Seed corpus & provenance
+### DATA-101 — Seed corpus & provenance
 
 - Issue stub: `issue/data-101-demo-seeds`
 - PR slices:
@@ -105,91 +105,91 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Infrastructure & Ops
 
-### TODO[INF-401] SearxNG configuration
+### INF-401 — SearxNG configuration
 
 - Issue stub: `issue/inf-401-searxng`
 - PR slices: engine allow-lists, rate limits, Playwright integration docs.
 - Acceptance: Helm/Compose configs documented; policies enforced.
 
-### TODO[INF-402] Qdrant operations
+### INF-402 — Qdrant operations
 
 - Issue stub: `issue/inf-402-qdrant`
 - PR slices: collection templates, backup/restore notes, health dashboards.
 - Acceptance: Tenancy-aware collection plan documented with sizing guidance.
 
-### TODO[INF-403] OpenSearch operations
+### INF-403 — OpenSearch operations
 
 - Issue stub: `issue/inf-403-opensearch`
 - PR slices: analyzers/SPLADE mappings, ILM policies, monitoring hooks.
 - Acceptance: Index templates + tuning guidance committed to infra README.
 
-### TODO[INF-404] NebulaGraph operations
+### INF-404 — NebulaGraph operations
 
 - Issue stub: `issue/inf-404-nebulagraph`
 - PR slices: space layout, schema DDL, sample queries.
 - Acceptance: README explains tenant isolation and GraphRAG integration.
 
-### TODO[INF-405] MinIO buckets & policies
+### INF-405 — MinIO buckets & policies
 
 - Issue stub: `issue/inf-405-minio`
 - PR slices: bucket layout, IAM policies, sample `mc` commands.
 - Acceptance: Storage conventions documented and referenced by services.
 
-### TODO[INF-406] Langfuse deployment
+### INF-406 — Langfuse deployment
 
 - Issue stub: `issue/inf-406-langfuse`
 - PR slices: Docker/Helm values, API key rotation, dashboard templates.
 - Acceptance: Observability quickstart runnable locally.
 
-### TODO[INF-407] Temporal orchestration
+### INF-407 — Temporal orchestration
 
 - Issue stub: `issue/inf-407-temporal`
 - PR slices: namespace/queue strategy, worker config, sample workflows.
 - Acceptance: README includes commands to run demo workflow.
 
-### TODO[INF-408] vLLM/Ollama serving
+### INF-408 — vLLM/Ollama serving
 
 - Issue stub: `issue/inf-408-vllm-ollama`
 - PR slices: model list, guided JSON config, resource sizing matrix.
 - Acceptance: Infra doc informs router defaults and scaling guidance.
 
-### TODO[INF-409] LiteLLM router shim
+### INF-409 — LiteLLM router shim
 
 - Issue stub: `issue/inf-409-litellm`
 - PR slices: endpoint exposure, per-tenant policy mapping, tracing hooks.
 - Acceptance: README details how to enable OpenAI-compatible endpoint securely.
 
-### TODO[INF-410] Keycloak tenancy
+### INF-410 — Keycloak tenancy
 
 - Issue stub: `issue/inf-410-keycloak`
 - PR slices: realm/client bootstrap, dev credentials, Helm values integration.
 - Acceptance: Identity story documented end-to-end.
 
-### TODO[INF-411] DuckDB storage integration
+### INF-411 — DuckDB storage integration
 
 - Issue stub: `issue/inf-411-duckdb`
 - PR slices: storage path layout, sample analytical queries, Compose notes.
 - Acceptance: README doubles as quickstart for local analytics.
 
-### TODO[INF-412] Postgres operations
+### INF-412 — Postgres operations
 
 - Issue stub: `issue/inf-412-postgres`
 - PR slices: schema management, migration strategy, credential handling.
 - Acceptance: Database docs tie into API models and seeds.
 
-### TODO[INF-414] Ingress management
+### INF-414 — Ingress management
 
 - Issue stub: `issue/inf-414-ingress`
 - PR slices: example manifests, hostnames/TLS, cert-manager guidance.
 - Acceptance: Ops doc ready for staging rollout.
 
-### TODO[INF-415] Sealed secrets / SOPS
+### INF-415 — Sealed secrets / SOPS
 
 - Issue stub: `issue/inf-415-sealed-secrets`
 - PR slices: bootstrap flow, key rotation policy, SOPS+age workflow.
 - Acceptance: Secret management runbook committed.
 
-### TODO[INF-416] Network policies
+### INF-416 — Network policies
 
 - Issue stub: `issue/inf-416-network-policies`
 - PR slices: example policies per component, mapping to OPA, multi-tenant notes.
@@ -197,7 +197,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Safety & Governance
 
-### TODO[SEC-201] Constitutional prompts
+### SEC-201 — Constitutional prompts
 
 - Issue stub: `issue/sec-201-constitutions`
 - PR slices: house rules authoring, alignment review, integration tests.
@@ -205,13 +205,13 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Compression & Tooling
 
-### TODO[COMP-501] LLMLingua parameter tuning
+### COMP-501 — LLMLingua parameter tuning
 
 - Issue stub: `issue/comp-501-llmlingua-config`
 - PR slices: task-specific configs, eval harness integration, documentation.
 - Acceptance: Compression config validated against eval metrics with guardrails documented.
 
-### TODO[COMP-502] Compression MCP server implementation
+### COMP-502 — Compression MCP server implementation
 
 - Issue stub: `issue/comp-502-compression-mcp`
 - PR slices: FastAPI server, LLMLingua integration, tests, CLI entrypoint.
@@ -219,7 +219,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## API & Contracts
 
-### TODO[API-701] API model coverage
+### API-701 — API model coverage
 
 - Issue stub: `issue/api-701-model-suite`
 - PR slices: implement core Pydantic models, generate JSON Schemas, align docs/tests.
@@ -227,7 +227,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ## Ops & Compliance
 
-### TODO[OPS-001] License selection
+### OPS-001 — License selection
 
 - Issue stub: `issue/ops-001-license-selection`
 - PR slices: collect legal/market requirements, decide licence, update repository metadata and headers.

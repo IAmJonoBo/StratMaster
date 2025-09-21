@@ -1,11 +1,53 @@
 tenants:
   default:
+    tasks:
+      reasoning:
+        primary:
+          provider: local
+          model: mixtral-8x22b-instruct
+        fallbacks:
+          - provider: openai
+            model: gpt-large-reasoning
+        parameters:
+          max_output_tokens: 4096
+          temperature_max: 0.8
+      summarisation:
+        primary:
+          provider: local
+          model: qwen2.5-14b-instruct
+        fallbacks:
+          - provider: openai
+            model: gpt-large-reasoning
+        parameters:
+          max_output_tokens: 2048
+          temperature_max: 0.7
+      embedding:
+        primary:
+          provider: openai
+          model: text-embedding-3-large
+        fallbacks:
+          - provider: local
+            model: qwen2.5-14b-instruct
+        parameters:
+          max_batch: 128
+          allow_raw_documents: false
+      rerank:
+        primary:
+          provider: local
+          model: bge-reranker-large
+        fallbacks:
+          - provider: openai
+            model: text-embedding-3-large
+        parameters:
+          max_candidates: 200
+          score_threshold: 0.15
     providers:
       local:
         default: true
         models:
           - mixtral-8x22b-instruct
           - qwen2.5-14b-instruct
+          - bge-reranker-large
       openai:
         enabled: false
         models:
@@ -20,7 +62,12 @@ tenants:
         limits:
           tpm: 60000
           budget_usd_month: 100
-# TODO[SP2-205]: Extend policy with per-task routing (reasoning/embedding/rerank) and validation (see `docs/backlog.md#todo-sp2-205-router-per-task-policies`).
+    validation:
+      reject_unknown_tasks: true
+      enforce_privacy_constraints: true
+      guardrails:
+        temperature_max_global: 0.85
+        max_context_tokens: 32000
 structured_outputs:
   enabled: true
   backend: outlines
