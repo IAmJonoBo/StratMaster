@@ -1,4 +1,4 @@
-.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade
 
 dev.up:
 	docker compose up -d
@@ -53,3 +53,17 @@ test-docker:
 		-v $(PWD):/work \
 		-w /work \
 		python:3.12-slim bash -lc "python -m venv .venv && . .venv/bin/activate && pip install -e packages/api -e packages/mcp-servers/research-mcp pytest && pytest -q"
+
+# Generate lock files with pinned, hashed dependencies from requirements*.txt
+lock:
+	[ -d .venv ] || python3 -m venv .venv
+	. .venv/bin/activate && pip install --upgrade pip && pip install pip-tools
+	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
+	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
+
+# Upgrade to latest allowed versions and refresh lock files
+lock-upgrade:
+	[ -d .venv ] || python3 -m venv .venv
+	. .venv/bin/activate && pip install --upgrade pip && pip install pip-tools
+	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
+	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
