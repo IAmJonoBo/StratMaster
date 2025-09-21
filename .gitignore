@@ -49,3 +49,4 @@ site/
 .trunk/logs/
 .trunk/cache/
 .trunk/.state
+.venv-test/
