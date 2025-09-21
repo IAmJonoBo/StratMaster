@@ -29,6 +29,65 @@ Knowledge MCP on <http://localhost:8082>, Router MCP on <http://localhost:8083>,
 
 See `packages/api/README.md` for Python-only development instructions.
 
+## Regression guard checklist
+
+Run these quick checks before merging or after pulling changes to avoid regressions:
+
+1. Bootstrap the env (creates .venv, installs tooling)
+
+```bash
+make bootstrap
+```
+
+1. Run API tests only (fast, ~1s)
+
+```bash
+PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
+# Expected: 17 passed
+```
+
+1. Full repo tests (optional, ~2–5s locally)
+
+```bash
+PYTHONNOUSERSITE=1 .venv/bin/python -m pytest -q
+# Expected: all tests pass (count may grow over time)
+```
+
+1. API smoke (in‑process ASGI)
+
+```bash
+.venv/bin/python scripts/smoke_api.py
+# Expected: /healthz 200 {"status":"ok"} and /docs contains Swagger UI
+```
+
+1. Manual health (uvicorn)
+
+```bash
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --port 8080 &
+curl -s http://localhost:8080/healthz
+# Expected: {"status":"ok"}
+```
+
+1. Helm chart lint
+
+```bash
+helm lint helm/stratmaster-api
+helm lint helm/research-mcp
+# Expected: 0 failures (warnings OK)
+```
+
+1. AppleDouble hygiene (macOS)
+
+```bash
+git config core.hooksPath .githooks   # one‑time
+bash scripts/cleanup_appledouble.sh   # manual cleanup anytime
+```
+
+Notes:
+
+- If local pip installs time out (corporate network), document as “fails due to firewall/network limitations” and use `make test-docker` instead.
+- Prefer installing from lock files (`requirements.lock`, `requirements-dev.lock`) for reproducible environments.
+
 ## Running tests
 
 If your local Python environment is clean (not Conda-managed), you can run:

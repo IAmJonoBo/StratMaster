@@ -134,20 +134,20 @@ open-brand-strategy-ai/
 
 ## 3) Reference architecture
 
- - Agent graph (LangGraph): Researcher → Synthesiser → Strategist → Adversary → Constitutional Critic → Recommender.
- - Retrieval stack upgrades: add late‑interaction ColBERT and learned sparse SPLADE alongside Qdrant/OpenSearch; cross‑encoder reranking with BGE v2.*.
- - Structured outputs end‑to‑end: vLLM guided decoding (JSON Schema/regex/grammar) so all agents emit Pydantic‑valid objects.
- - Self‑improving programs: DSPy modules compile prompts/weights for the Researcher→Synthesiser→Strategist loop; artefacts tracked in Langfuse.
- - Decision assurance: Chain‑of‑Verification (CoVe) stage before the Constitutional Critic; returns verified deltas or triggers more research.
- - Tool mediation: All external calls via MCP servers (section 8). Agents never perform raw HTTP.
- - Dataflow (E2E):
-   1. Intake → OPA policy gate → research plan.
-   2. SearxNG metasearch → Playwright crawl → Unstructured/Tika parse → provenance pack.
-   3. IE → dense embeddings (Qdrant) + learned sparse terms (OpenSearch/SPLADE) + late‑interaction encodings (ColBERT) + relations (NebulaGraph).
-   4. GraphRAG pipeline → communities (Leiden/Louvain) → summaries → narrative answers.
-   5. CoVe self‑verification → adversarial debate + constitution → Evals (Ragas, FActScore, TruthfulQA, RAGTruth/LettuceDetect) → Langfuse traces/metrics.
-   6. Decision layer: CEP/JTBD/DBA scoring; causal (DoWhy/EconML); forecasting (PyMC/Prophet) → recommendations.
-   7. UX surfaces: Argument map, GRADE evidence, Assumption heat‑map, Graph explorer, Strategy Kanban, Experiment console.
+- Agent graph (LangGraph): Researcher → Synthesiser → Strategist → Adversary → Constitutional Critic → Recommender.
+- Retrieval stack upgrades: add late‑interaction ColBERT and learned sparse SPLADE alongside Qdrant/OpenSearch; cross‑encoder reranking with BGE v2.\*.
+- Structured outputs end‑to‑end: vLLM guided decoding (JSON Schema/regex/grammar) so all agents emit Pydantic‑valid objects.
+- Self‑improving programs: DSPy modules compile prompts/weights for the Researcher→Synthesiser→Strategist loop; artefacts tracked in Langfuse.
+- Decision assurance: Chain‑of‑Verification (CoVe) stage before the Constitutional Critic; returns verified deltas or triggers more research.
+- Tool mediation: All external calls via MCP servers (section 8). Agents never perform raw HTTP.
+- Dataflow (E2E):
+  1.  Intake → OPA policy gate → research plan.
+  2.  SearxNG metasearch → Playwright crawl → Unstructured/Tika parse → provenance pack.
+  3.  IE → dense embeddings (Qdrant) + learned sparse terms (OpenSearch/SPLADE) + late‑interaction encodings (ColBERT) + relations (NebulaGraph).
+  4.  GraphRAG pipeline → communities (Leiden/Louvain) → summaries → narrative answers.
+  5.  CoVe self‑verification → adversarial debate + constitution → Evals (Ragas, FActScore, TruthfulQA, RAGTruth/LettuceDetect) → Langfuse traces/metrics.
+  6.  Decision layer: CEP/JTBD/DBA scoring; causal (DoWhy/EconML); forecasting (PyMC/Prophet) → recommendations.
+  7.  UX surfaces: Argument map, GRADE evidence, Assumption heat‑map, Graph explorer, Strategy Kanban, Experiment console.
 
 ---
 
@@ -167,16 +167,16 @@ Conventions:
 
 ## 5) Storage and retrieval
 
- - Vector: Qdrant (multi‑vector, HNSW; optional PQ/IVF). Collections per tenant and corpus.
- - Lexical/ANN: OpenSearch (BM25, SPLADE optional; k‑NN HNSW/Faiss).
- - Graph: NebulaGraph for entities/relations/communities; separate space per tenant.
- - Object store: MinIO for raw/cached artefacts and snapshots.
+- Vector: Qdrant (multi‑vector, HNSW; optional PQ/IVF). Collections per tenant and corpus.
+- Lexical/ANN: OpenSearch (BM25, SPLADE optional; k‑NN HNSW/Faiss).
+- Graph: NebulaGraph for entities/relations/communities; separate space per tenant.
+- Object store: MinIO for raw/cached artefacts and snapshots.
 
 ### Enhanced retrieval methods
 
 - Late‑interaction (ColBERT/ColBERTer): passage encodings stored in Qdrant (per‑token vectors) with compact residuals; scoring via MaxSim; index build CLI in `packages/retrieval/colbert`.
 - Learned sparse (SPLADE/LSR): document expansion indexed in OpenSearch; supports BM25+SPLADE hybrid and domain adaptation; training scripts in `packages/retrieval/splade`.
-- Reranking: BGE v2.* cross‑encoders for top‑K rerank; optional layerwise/lightweight variants for CPU.
+- Reranking: BGE v2.\* cross‑encoders for top‑K rerank; optional layerwise/lightweight variants for CPU.
 
 Hybrid retrieval orchestrator contract:
 
@@ -234,8 +234,8 @@ Safety:
 
 **Modes.**
 
-1) **Provider mode (router):** The model router can call OpenAI endpoints for completion/embedding/rerank when `openai.enabled=true` for a tenant. Defaults remain local (vLLM/Ollama).
-2) **Client mode (tools):** Expose our system as **OpenAI tool-calling functions** (Responses API style) so GPT can invoke research, retrieval, GraphRAG, evals, and decision modules through JSON‑schema tools.
+1. **Provider mode (router):** The model router can call OpenAI endpoints for completion/embedding/rerank when `openai.enabled=true` for a tenant. Defaults remain local (vLLM/Ollama).
+2. **Client mode (tools):** Expose our system as **OpenAI tool-calling functions** (Responses API style) so GPT can invoke research, retrieval, GraphRAG, evals, and decision modules through JSON‑schema tools.
 
 **Security & privacy guardrails.**
 
@@ -313,8 +313,8 @@ Endpoints (JWT via Keycloak; OpenAPI enabled):
 - POST /recommendations
 - POST /retrieval/colbert/query
 - POST /retrieval/splade/query
-- /experiments/*
-- /forecasts/*
+- /experiments/\*
+- /forecasts/\*
 - POST /evals/run
 
 Cross‑cutting:
@@ -453,12 +453,13 @@ PR checklist (reviewers/Gate):
 - temporal server start-dev (dev only) + sample workflow run
 - docker compose -f docker-compose.yml up langfuse
 - OpenLineage/Marquez quickstart
-- export OPENAI_API_KEY=... && make provider.openai.test   # runs a minimal routed completion + embedding and logs cost
-- curl -s "<http://localhost:8080/providers/openai/tools>"     # returns OpenAI tool JSON Schemas for Client mode
-- make index.colbert   # train/build ColBERT index on demo corpus
-- make index.splade    # train/build SPLADE expansion + OpenSearch index
-- make eval.bench      # run Ragas + FActScore + TruthfulQA + LettuceDetect on seeds
-- make etl.arrow       # run Arrow/DuckDB/Polars demo pipeline
+- export OPENAI_API_KEY=... && make provider.openai.test # runs a minimal routed completion + embedding and logs cost
+- curl -s "<http://localhost:8080/providers/openai/tools>" # returns OpenAI tool JSON Schemas for Client mode
+- make index.colbert # train/build ColBERT index on demo corpus
+- make index.splade # train/build SPLADE expansion + OpenSearch index
+- make eval.bench # run Ragas + FActScore + TruthfulQA + LettuceDetect on seeds
+- make etl.arrow # run Arrow/DuckDB/Polars demo pipeline
+- python scripts/smoke_api.py # quick in‑process smoke for API /healthz and /docs
 
 ---
 
@@ -500,10 +501,10 @@ This blueprint is the single source of truth for scaffolding and governance. Kee
         "parameters": {
           "type": "object",
           "properties": {
-            "query": {"type": "string"},
-            "max_pages": {"type": "integer", "minimum": 1, "maximum": 5},
-            "respect_robots": {"type": "boolean", "default": true},
-            "allow_domains": {"type": "array", "items": {"type": "string"}}
+            "query": { "type": "string" },
+            "max_pages": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "respect_robots": { "type": "boolean", "default": true },
+            "allow_domains": { "type": "array", "items": { "type": "string" } }
           },
           "required": ["query"]
         }
@@ -517,10 +518,20 @@ This blueprint is the single source of truth for scaffolding and governance. Kee
         "parameters": {
           "type": "object",
           "properties": {
-            "query": {"type": "string"},
-            "k": {"type": "integer", "minimum": 1, "maximum": 50, "default": 20},
-            "alpha": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.5},
-            "filters": {"type": "object"}
+            "query": { "type": "string" },
+            "k": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            },
+            "alpha": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5
+            },
+            "filters": { "type": "object" }
           },
           "required": ["query"]
         }
@@ -534,8 +545,12 @@ This blueprint is the single source of truth for scaffolding and governance. Kee
         "parameters": {
           "type": "object",
           "properties": {
-            "seed_entities": {"type": "array", "items": {"type": "string"}},
-            "algo": {"type": "string", "enum": ["leiden", "louvain"], "default": "leiden"}
+            "seed_entities": { "type": "array", "items": { "type": "string" } },
+            "algo": {
+              "type": "string",
+              "enum": ["leiden", "louvain"],
+              "default": "leiden"
+            }
           }
         }
       }
@@ -548,7 +563,10 @@ This blueprint is the single source of truth for scaffolding and governance. Kee
         "parameters": {
           "type": "object",
           "properties": {
-            "suite": {"type": "string", "enum": ["rag", "reasoning", "debate"]}
+            "suite": {
+              "type": "string",
+              "enum": ["rag", "reasoning", "debate"]
+            }
           },
           "required": ["suite"]
         }
@@ -562,11 +580,14 @@ This blueprint is the single source of truth for scaffolding and governance. Kee
         "parameters": {
           "type": "object",
           "properties": {
-            "hypothesis": {"type": "string"},
-            "metric": {"type": "string"},
-            "mde": {"type": "number"},
-            "unit": {"type": "string", "enum": ["user", "account", "session"]},
-            "bandit": {"type": "boolean", "default": false}
+            "hypothesis": { "type": "string" },
+            "metric": { "type": "string" },
+            "mde": { "type": "number" },
+            "unit": {
+              "type": "string",
+              "enum": ["user", "account", "session"]
+            },
+            "bandit": { "type": "boolean", "default": false }
           },
           "required": ["hypothesis", "metric"]
         }
@@ -610,7 +631,7 @@ providers:
 ```yaml
 structured_outputs:
   enabled: true
-  backend: outlines   # or xgrammar
+  backend: outlines # or xgrammar
   strict_json: true
   error_policy: retry_then_fail
   max_retries: 2

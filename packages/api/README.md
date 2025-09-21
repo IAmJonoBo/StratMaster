@@ -44,3 +44,31 @@ make api.run
 
 `pytest` covers health, OpenAI tool schemas, config validation, idempotency enforcement,
 and the orchestration endpoints. Run `make test` or `pytest -q` inside the repo.
+
+## Smoke & health checks
+
+Run these quick checks locally to guard against regressions:
+
+1. API tests only (fast)
+
+```bash
+PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
+# Expect: 17 passed
+```
+
+1. In‑process smoke (no network sockets)
+
+```bash
+.venv/bin/python scripts/smoke_api.py
+# Expect: /healthz 200 {"status":"ok"} and /docs contains Swagger UI
+```
+
+1. Manual run + health
+
+```bash
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080 &
+curl -s http://localhost:8080/healthz
+# Expect: {"status":"ok"}
+```
+
+Remember: All POST endpoints require the `Idempotency-Key` header (8–128 chars, `[A-Za-z0-9_-]`).
