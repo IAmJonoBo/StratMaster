@@ -233,7 +233,7 @@ services:
       - "8000:8000"
 
   playwright-worker:
-    image: mcr.microsoft.com/playwright/python:v1.48.0-jammy
+    image: mcr.microsoft.com/playwright/python:v1.55.0-jammy
     profiles: [workers]
     command: sleep infinity
 
