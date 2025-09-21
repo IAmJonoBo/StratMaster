@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pre-push: remove macOS AppleDouble and Finder artifacts, including inside .git.
+# This prevents corrupting the remote with Apple junk if files were copied from Finder.
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+"${REPO_ROOT}/scripts/cleanup_appledouble.sh" >/dev/null 2>&1 || true
+
+exit 0

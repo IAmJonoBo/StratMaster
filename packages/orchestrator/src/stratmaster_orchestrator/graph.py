@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Any, Callable, Dict
 
 from stratmaster_api.models import DebateTrace, GraphArtifacts, RecommendationOutcome
 
@@ -29,7 +29,7 @@ def build_strategy_graph() -> Callable[[StrategyState], OrchestrationResult]:
     if StateGraph is None:
         return _sequential_executor
 
-    graph: StateGraph = StateGraph(StrategyState)
+    graph = StateGraph(StrategyState)
     for agent_callable in ordered_agents():
         graph.add_node(agent_callable.__name__, agent_callable)
 
@@ -41,8 +41,30 @@ def build_strategy_graph() -> Callable[[StrategyState], OrchestrationResult]:
 
     compiled = graph.compile()
 
+    def _coerce_state(
+        raw: StrategyState | Dict[str, Any], seed: StrategyState
+    ) -> StrategyState:
+        """Ensure the compiled graph result is a StrategyState.
+
+        Some langgraph versions return a plain dict for state. To keep our
+        downstream code stable (and tests portable when langgraph is or isn't
+        installed), coerce dicts into our dataclass while preserving any fields
+        already present on the seed state.
+        """
+        if isinstance(raw, StrategyState):
+            return raw
+        if isinstance(raw, dict):
+            # Overlay updates onto the initial state so required fields and
+            # defaults are retained if the compiled graph omits them.
+            base = vars(seed).copy()
+            base.update(raw)
+            return StrategyState(**base)
+        # Fallback – unexpected type, but try to build minimally from seed
+        return seed
+
     def _run(initial_state: StrategyState) -> OrchestrationResult:
-        final_state = compiled.invoke(initial_state)
+        raw_state = compiled.invoke(initial_state)
+        final_state = _coerce_state(raw_state, initial_state)
         if final_state.debate is None:
             final_state.debate = DebateTrace(turns=[])
         if final_state.artefacts is None:

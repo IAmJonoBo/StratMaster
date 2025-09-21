@@ -8,7 +8,7 @@ services are wired in. Keeping the interface stable now ensures downstream integ
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Callable, Iterable
 
 from stratmaster_api.models import (
     CEP,
@@ -111,7 +111,7 @@ def recommender_node(state: StrategyState) -> StrategyState:
     return state
 
 
-def ordered_agents() -> Iterable[callable]:
+def ordered_agents() -> Iterable[Callable[[StrategyState], StrategyState]]:
     return (
         researcher_node,
         synthesiser_node,
