@@ -101,7 +101,7 @@ services:
           target: /app
 
   postgres:
-    image: postgres:15
+    image: postgres:17
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
