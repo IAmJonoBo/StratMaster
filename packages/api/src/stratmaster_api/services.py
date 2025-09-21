@@ -201,6 +201,24 @@ class _SequentialPipeline:
         return current
 
 
+class _GraphPipeline:
+    """Wrapper around a compiled LangGraph pipeline with sequential fallback."""
+
+    def __init__(self, compiled, fallback: _SequentialPipeline) -> None:
+        self._compiled = compiled
+        self._fallback = fallback
+
+    def invoke(self, state: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return self._compiled.invoke(state)
+        except Exception as exc:  # pragma: no cover - protective fallback
+            logger.warning(
+                "LangGraph pipeline execution failed; using sequential fallback",
+                exc_info=exc,
+            )
+            return self._fallback.invoke(state)
+
+
 class OrchestratorService:
     """Best-effort orchestrator that leans on MCP services when reachable."""
 
@@ -224,15 +242,28 @@ class OrchestratorService:
                 self._graph_eval,
                 self._graph_recommend,
             )
-        graph: StateGraph = StateGraph(dict)
-        graph.add_node("research", self._graph_research)
-        graph.add_node("eval", self._graph_eval)
-        graph.add_node("recommend", self._graph_recommend)
-        graph.set_entry_point("research")
-        graph.add_edge("research", "eval")
-        graph.add_edge("eval", "recommend")
-        graph.add_edge("recommend", END)
-        return graph.compile()
+        fallback = _SequentialPipeline(
+            self._graph_research,
+            self._graph_eval,
+            self._graph_recommend,
+        )
+        try:
+            graph: StateGraph = StateGraph(dict)
+            graph.add_node("research", self._graph_research)
+            graph.add_node("eval", self._graph_eval)
+            graph.add_node("recommend", self._graph_recommend)
+            graph.set_entry_point("research")
+            graph.add_edge("research", "eval")
+            graph.add_edge("eval", "recommend")
+            graph.add_edge("recommend", END)
+            compiled = graph.compile()
+        except Exception as exc:  # pragma: no cover - setup guard
+            logger.warning(
+                "LangGraph pipeline setup failed; using sequential fallback",
+                exc_info=exc,
+            )
+            return fallback
+        return _GraphPipeline(compiled, fallback)
 
     # ------------------------------------------------------------------
     # Research planning/execution
