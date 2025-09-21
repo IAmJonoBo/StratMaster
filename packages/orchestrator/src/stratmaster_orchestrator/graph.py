@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable, Dict
 
 from stratmaster_api.models import DebateTrace, GraphArtifacts, RecommendationOutcome
@@ -15,6 +16,9 @@ except ImportError:  # pragma: no cover - fallback when langgraph not installed
     END = "__end__"
     START = "__start__"
     StateGraph = None
+
+
+logger = logging.getLogger(__name__)
 
 
 def build_strategy_graph() -> Callable[[StrategyState], OrchestrationResult]:
@@ -63,7 +67,14 @@ def build_strategy_graph() -> Callable[[StrategyState], OrchestrationResult]:
         return seed
 
     def _run(initial_state: StrategyState) -> OrchestrationResult:
-        raw_state = compiled.invoke(initial_state)
+        try:
+            raw_state = compiled.invoke(initial_state)
+        except Exception as exc:  # pragma: no cover - exercised via tests
+            logger.warning(
+                "LangGraph execution failed; falling back to sequential executor",
+                exc_info=exc,
+            )
+            return _sequential_executor(initial_state)
         final_state = _coerce_state(raw_state, initial_state)
         if final_state.debate is None:
             final_state.debate = DebateTrace(turns=[])

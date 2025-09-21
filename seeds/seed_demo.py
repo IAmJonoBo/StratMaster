@@ -115,12 +115,11 @@ def _fingerprint(record: Mapping[str, Any]) -> str:
 
 def _vectorize(text: str, size: int = 16) -> List[float]:
     digest = hashlib.sha256(text.encode("utf-8")).digest()
-    # Pad digest if needed to ensure enough non-overlapping chunks
-    if len(digest) < size * 2:
-        digest = digest.ljust(size * 2, b"\0")
     floats: List[float] = []
     for idx in range(size):
-        chunk = digest[idx * 2 : (idx * 2) + 2]
+        chunk = digest[idx % len(digest) : (idx % len(digest)) + 2]
+        if len(chunk) < 2:
+            chunk = chunk.ljust(2, b"\0")
         value = int.from_bytes(chunk, "big") / 65535.0
         floats.append(value)
     return floats
@@ -221,9 +220,8 @@ def seed_qdrant(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None
     if not materialised:
         logger.info("No assets to persist in Qdrant")
         return
-    # Safe to access materialised[0] here because we return early if the list is empty
-    vectors_config = {"size": len(materialised[0]["vector"]), "distance": "Cosine"}
     client = QdrantClient(url=config.qdrant_url)
+    vectors_config = {"size": len(materialised[0]["vector"]), "distance": "Cosine"}
     client.recreate_collection(collection_name=config.qdrant_collection, vectors_config=vectors_config)
     points = []
     for asset in materialised:
