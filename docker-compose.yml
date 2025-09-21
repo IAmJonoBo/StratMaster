@@ -159,7 +159,7 @@ services:
       - "8100:8080"
 
   temporal:
-    image: temporalio/auto-setup:1.23.0
+    image: temporalio/auto-setup:1.28.1
     environment:
       DB_PORT: 5432
       DB_HOST: postgres
