@@ -12,7 +12,7 @@ DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8081
 LOG_LEVEL_CHOICES = ("critical", "error", "warning", "info", "debug", "trace")
 _TRUE_VALUES = {"1", "true", "t", "yes", "y", "on"}
-_DEFAULT_ALLOWLIST = ("example.com",)
+_DEFAULT_ALLOWLIST = ()
 
 
 def _env_flag(name: str, default: bool) -> bool:
