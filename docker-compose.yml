@@ -205,7 +205,7 @@ services:
       - "4318:4318"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0
+    image: quay.io/keycloak/keycloak:26.3
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
