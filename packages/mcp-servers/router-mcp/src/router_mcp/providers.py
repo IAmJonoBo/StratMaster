@@ -19,8 +19,8 @@ except ImportError:  # pragma: no cover
 try:  # pragma: no cover - optional dependency
     from bge_reranker import BGEReranker, RerankDocument
 except ImportError:  # pragma: no cover
-    BGEReranker = None  # type: ignore[assignment]
-    RerankDocument = None  # type: ignore[assignment]
+    BGEReranker = None
+    RerankDocument = None
 
 
 @dataclass

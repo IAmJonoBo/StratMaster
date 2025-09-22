@@ -24,17 +24,14 @@ from .models import (
 )
 
 try:  # pragma: no cover - optional dependency
-    from bge_reranker import (  # type: ignore[import-not-found]
-        BGEReranker,
-        RerankDocument,
-    )
-except ImportError:  # pragma: no cover
-    BGEReranker = None  # type: ignore[assignment]
-    RerankDocument = None  # type: ignore[assignment]
+    from bge_reranker import BGEReranker, RerankDocument
+except Exception:  # pragma: no cover
+    BGEReranker = None
+    RerankDocument = None
 
 try:  # pragma: no cover - optional dependency
-    from opentelemetry import metrics  # type: ignore[import-not-found]
-except ImportError:  # pragma: no cover
+    from opentelemetry import metrics
+except Exception:  # pragma: no cover
     metrics = None
 
 

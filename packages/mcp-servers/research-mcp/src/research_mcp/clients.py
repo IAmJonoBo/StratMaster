@@ -27,12 +27,12 @@ except ImportError:  # pragma: no cover
     httpx = None
 
 try:  # pragma: no cover - optional dependency
-    from playwright.sync_api import sync_playwright  # type: ignore[import-not-found]
+    from playwright.sync_api import sync_playwright
 except ImportError:  # pragma: no cover
     sync_playwright = None
 
 try:  # pragma: no cover - optional dependency
-    import boto3  # type: ignore[import-not-found]
+    import boto3
 except ImportError:  # pragma: no cover
     boto3 = None
 
@@ -120,7 +120,8 @@ class CrawlerClient:
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        return page.content()
+                        text: str = page.content()  # playwright returns str
+                        return text
                     finally:  # pragma: no cover
                         browser.close()
             logger.warning("Playwright rendering failed; returning synthetic content")
@@ -211,7 +212,7 @@ class ProvenanceEmitter:
             logger.warning("boto3 not available; skipping MinIO provenance upload")
             return
         try:
-            s3 = boto3.resource(  # type: ignore[attr-defined]
+            s3 = boto3.resource(
                 "s3",
                 endpoint_url=self.settings.minio_endpoint,
                 aws_access_key_id=self.settings.minio_access_key,
@@ -225,7 +226,7 @@ class ProvenanceEmitter:
                     "cache_key": cache_key,
                 }
             ).encode("utf-8")
-            s3.Object(self.settings.minio_bucket, f"provenance/{cache_key}.json").put(  # type: ignore[attr-defined]
+            s3.Object(self.settings.minio_bucket, f"provenance/{cache_key}.json").put(
                 Body=body,
                 ContentType="application/json",
             )

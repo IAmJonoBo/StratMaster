@@ -34,10 +34,10 @@ class BGEReranker:
     model_name: str = "BAAI/bge-reranker-base"
 
     def rerank(
-        self, request: RerankRequest | None = None, **kwargs: object
+        self, request: RerankRequest | None = None, **kwargs: str
     ) -> list[RerankResult]:
         if request is None:
-            request = RerankRequest(**kwargs)  # type: ignore[arg-type]
+            request = RerankRequest(**kwargs)
         query_vec = _vectorise(request.query)
         results: list[RerankResult] = []
         for doc in request.documents:
