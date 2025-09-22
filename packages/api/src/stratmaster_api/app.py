@@ -32,6 +32,7 @@ from .models.requests import (
     RetrievalQueryRequest,
     RetrievalQueryResponse,
 )
+from .models.schema_export import SCHEMA_VERSION
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -148,7 +149,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     register_debug_config_endpoint(app)
-    register_openai_tool_endpoints(app)
+    register_model_schema_endpoints(app)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -325,20 +326,28 @@ def register_debug_config_endpoint(app: FastAPI) -> None:
         return {"section": section, "name": safe, "config": cfg}
 
 
-def _schemas_dir() -> Path:
+def _model_schemas_dir() -> Path:
     root = Path(__file__).resolve().parents[4]
-    return root / "packages" / "providers" / "openai" / "tool-schemas"
+    return root / "packages" / "api" / "schemas"
 
 
-def _load_tool_schemas() -> dict[str, Any]:
-    schemas_path = _schemas_dir()
+def _schema_name_from_stem(stem: str) -> str:
+    suffix = f"-{SCHEMA_VERSION}"
+    if stem.endswith(suffix):
+        return stem[: -len(suffix)]
+    return stem
+
+
+def _load_model_schemas() -> dict[str, Any]:
+    schemas_path = _model_schemas_dir()
     if not schemas_path.exists() or not schemas_path.is_dir():
         raise HTTPException(
             status_code=500, detail=f"Schemas directory not found: {schemas_path}"
         )
-    tools: dict[str, Any] = {}
+    schemas: dict[str, Any] = {}
     for json_file in sorted(schemas_path.glob("*.json")):
-        if json_file.name.startswith("._") or json_file.name.startswith("."):
+        # Skip hidden files or macOS resource fork files
+        if json_file.name.startswith('._') or json_file.name.startswith('.'):
             continue
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
@@ -346,44 +355,26 @@ def _load_tool_schemas() -> dict[str, Any]:
             raise HTTPException(
                 status_code=500, detail=f"Failed to parse {json_file.name}: {e}"
             ) from e
-        tools[json_file.stem] = data
-    if not tools:
-        raise HTTPException(status_code=500, detail="No tool schemas found")
-    return tools
+        name = _schema_name_from_stem(json_file.stem)
+        schemas[name] = data
+    if not schemas:
+        raise HTTPException(status_code=500, detail="No model schemas found")
+    return schemas
 
 
-def register_openai_tool_endpoints(app: FastAPI) -> None:
-    @app.get("/providers/openai/tools")
-    async def list_openai_tool_schemas(format: str = "raw") -> dict[str, Any]:
-        if format not in ("raw", "openai"):
-            raise HTTPException(
-                status_code=400, detail="format must be 'raw' or 'openai'"
-            )
-        tools = _load_tool_schemas()
-        if format == "raw":
-            return {"schemas": tools, "count": len(tools)}
-        oa_tools: list[dict[str, Any]] = []
-        for name, schema in tools.items():
-            oa_tools.append(
-                {
-                    "type": "function",
-                    "function": {
-                        "name": name,
-                        "description": schema.get("description", ""),
-                        "parameters": schema,
-                    },
-                }
-            )
-        return {"tools": oa_tools, "count": len(oa_tools)}
+def register_model_schema_endpoints(app: FastAPI) -> None:
+    @app.get("/schemas/models")
+    async def list_model_schemas() -> dict[str, Any]:
+        schemas = _load_model_schemas()
+        return {"version": SCHEMA_VERSION, "schemas": schemas, "count": len(schemas)}
 
-    @app.get("/providers/openai/tools/{name}")
-    async def get_openai_tool_schema(name: str) -> dict[str, Any]:
-        tools = _load_tool_schemas()
-        schema = tools.get(name)
-        if not schema:
-            raise HTTPException(
-                status_code=404, detail=f"Tool schema not found: {name}"
-            )
+    @app.get("/schemas/models/{name}")
+    async def get_model_schema(name: str) -> dict[str, Any]:
+        safe = _safe_name(name)
+        schemas = _load_model_schemas()
+        schema = schemas.get(safe)
+        if schema is None:
+            raise HTTPException(status_code=404, detail=f"Schema not found: {safe}")
         if not isinstance(schema, dict):
-            raise HTTPException(status_code=500, detail="invalid tool schema shape")
+            raise HTTPException(status_code=500, detail="invalid schema shape")
         return cast(dict[str, Any], schema)
