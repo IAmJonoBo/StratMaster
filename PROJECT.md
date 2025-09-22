@@ -454,7 +454,7 @@ PR checklist (reviewers/Gate):
 - docker compose -f docker-compose.yml up langfuse
 - OpenLineage/Marquez quickstart
 - export OPENAI_API_KEY=... && make provider.openai.test # runs a minimal routed completion + embedding and logs cost
-- curl -s "<http://localhost:8080/providers/openai/tools>" # returns OpenAI tool JSON Schemas for Client mode
+- curl -s "<http://127.0.0.1:8080/providers/openai/tools>" # returns OpenAI tool JSON Schemas for Client mode
 - make index.colbert # train/build ColBERT index on demo corpus
 - make index.splade # train/build SPLADE expansion + OpenSearch index
 - make eval.bench # run Ragas + FActScore + TruthfulQA + LettuceDetect on seeds

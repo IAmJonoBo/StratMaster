@@ -73,7 +73,7 @@ make test-docker
 
 - **Time**: Starts in ~2-3 seconds
 - **Endpoints**: Health at `/healthz`, OpenAPI docs at `/docs`
-- **Test**: `curl http://localhost:8080/healthz` should return `{"status":"ok"}`
+- **Test**: `curl http://127.0.0.1:8080/healthz` should return `{"status":"ok"}`
 
 **Full stack** (when Docker images are available):
 
@@ -112,11 +112,11 @@ PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 .venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080 &
 
 # Test health endpoint
-curl http://localhost:8080/healthz
+curl http://127.0.0.1:8080/healthz
 # Should return: {"status":"ok"}
 
 # Test OpenAPI docs
-curl http://localhost:8080/docs | grep "StratMaster API"
+curl http://127.0.0.1:8080/docs | grep "StratMaster API"
 # Should return HTML with title containing "StratMaster API"
 ```
 
