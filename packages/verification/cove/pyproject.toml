@@ -3,17 +3,14 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "stratmaster-orchestrator"
+name = "stratmaster-cove"
 version = "0.1.0"
-description = "LangGraph-based orchestration utilities for StratMaster"
+description = "Deterministic Chain-of-Verification utilities for StratMaster"
 requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
   "pydantic>=2.11.9",
   "typing-extensions>=4.15.0",
-  "langchain-core>=0.3.76",
-  "pyyaml>=6.0.2",
-  "stratmaster-cove>=0.1.0",
 ]
 
 [tool.setuptools]

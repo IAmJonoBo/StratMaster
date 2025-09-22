@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from stratmaster_cove import VerificationResult
+
 from stratmaster_api.models import (
     Assumption,
     Claim,
@@ -17,6 +19,7 @@ from stratmaster_api.models import (
     DecisionBrief,
     GraphArtifacts,
     RecommendationOutcome,
+    RecommendationStatus,
     RetrievalRecord,
     WorkflowMetadata,
 )
@@ -39,6 +42,12 @@ class AgentScratchpad:
     notes: list[str] = field(default_factory=list)
     tool_calls: list[ToolInvocation] = field(default_factory=list)
 
+    def copy(self) -> "AgentScratchpad":
+        return AgentScratchpad(
+            notes=list(self.notes),
+            tool_calls=list(self.tool_calls),
+        )
+
 
 @dataclass
 class StrategyState:
@@ -57,6 +66,50 @@ class StrategyState:
     scratchpad: dict[str, AgentScratchpad] = field(default_factory=dict)
     pending_tasks: list[str] = field(default_factory=list)
     completed_tasks: list[str] = field(default_factory=list)
+    verification: VerificationResult | None = None
+    status: RecommendationStatus = RecommendationStatus.NEEDS_REVIEW
+    failure_reasons: list[str] = field(default_factory=list)
+
+    def copy(self) -> "StrategyState":
+        return StrategyState(
+            tenant_id=self.tenant_id,
+            query=self.query,
+            claims=list(self.claims),
+            assumptions=list(self.assumptions),
+            retrieval=list(self.retrieval),
+            artefacts=self.artefacts,
+            debate=self.debate,
+            decision_brief=self.decision_brief,
+            workflow=self.workflow,
+            metrics=dict(self.metrics),
+            scratchpad={name: pad.copy() for name, pad in self.scratchpad.items()},
+            pending_tasks=list(self.pending_tasks),
+            completed_tasks=list(self.completed_tasks),
+            verification=self.verification,
+            status=self.status,
+            failure_reasons=list(self.failure_reasons),
+        )
+
+    def with_updates(self, **updates: Any) -> "StrategyState":
+        clone = self.copy()
+        for key, value in updates.items():
+            setattr(clone, key, value)
+        return clone
+
+    def record_metric(self, name: str, value: float) -> None:
+        self.metrics[name] = value
+
+    def mark_failure(self, reason: str) -> None:
+        if reason not in self.failure_reasons:
+            self.failure_reasons.append(reason)
+        self.status = RecommendationStatus.NEEDS_REVIEW
+
+    def mark_failed(self, reason: str) -> None:
+        self.mark_failure(reason)
+        self.status = RecommendationStatus.FAILED
+
+    def mark_complete(self) -> None:
+        self.status = RecommendationStatus.COMPLETE
 
 
 @dataclass

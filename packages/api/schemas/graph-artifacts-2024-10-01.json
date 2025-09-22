@@ -1,0 +1,203 @@
+{
+  "$defs": {
+    "CommunityScore": {
+      "additionalProperties": false,
+      "properties": {
+        "community_id": {
+          "description": "Identifier for the detected community",
+          "title": "Community Id",
+          "type": "string"
+        },
+        "score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "community_id",
+        "score"
+      ],
+      "title": "CommunityScore",
+      "type": "object"
+    },
+    "CommunitySummary": {
+      "additionalProperties": false,
+      "properties": {
+        "community_id": {
+          "title": "Community Id",
+          "type": "string"
+        },
+        "key_entities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Key Entities",
+          "type": "array"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "community_id",
+        "summary",
+        "key_entities"
+      ],
+      "title": "CommunitySummary",
+      "type": "object"
+    },
+    "GraphEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "relation": {
+          "title": "Relation",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weight"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "relation"
+      ],
+      "title": "GraphEdge",
+      "type": "object"
+    },
+    "GraphNode": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "type"
+      ],
+      "title": "GraphNode",
+      "type": "object"
+    },
+    "NarrativeChunk": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "supporting_claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Claims",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "supporting_claims"
+      ],
+      "title": "NarrativeChunk",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.stratmaster.ai/graph-artifacts/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "communities": {
+      "items": {
+        "$ref": "#/$defs/CommunityScore"
+      },
+      "title": "Communities",
+      "type": "array"
+    },
+    "community_summaries": {
+      "items": {
+        "$ref": "#/$defs/CommunitySummary"
+      },
+      "title": "Community Summaries",
+      "type": "array"
+    },
+    "edges": {
+      "items": {
+        "$ref": "#/$defs/GraphEdge"
+      },
+      "title": "Edges",
+      "type": "array"
+    },
+    "narrative_chunks": {
+      "items": {
+        "$ref": "#/$defs/NarrativeChunk"
+      },
+      "title": "Narrative Chunks",
+      "type": "array"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/GraphNode"
+      },
+      "title": "Nodes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "nodes",
+    "edges",
+    "communities",
+    "community_summaries",
+    "narrative_chunks"
+  ],
+  "title": "GraphArtifacts",
+  "type": "object"
+}
