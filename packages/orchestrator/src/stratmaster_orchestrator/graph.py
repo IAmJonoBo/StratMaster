@@ -84,7 +84,7 @@ def build_strategy_graph(
             graph.add_node(name, node)
 
         graph.add_edge(START, node_names[0])
-        for current, nxt in zip(node_names, node_names[1:], strict=False):
+        for current, nxt in zip(node_names, node_names[1:]):
             graph.add_edge(current, nxt)
         graph.add_edge(node_names[-1], END)
 
