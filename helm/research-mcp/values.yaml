@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: research-mcp
-  tag: dev
+  tag: "0.1.1"
   pullPolicy: IfNotPresent
 
 service:
