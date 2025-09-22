@@ -13,9 +13,9 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   service advertises the right capability set and connector health flags.【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/config.py†L1-L68】【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/connectors.py†L1-L283】【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/service.py†L1-L238】【F:packages/mcp-servers/knowledge-mcp/tests/test_app.py†L1-L67】
 - Issue stub: `issue/sp2-201-knowledge-mcp-connectors`
 - PR slices:
-  1. `pr/sp2-201a-config-health` — tighten environment config, add readiness/telemetry hooks.
-  2. `pr/sp2-201b-qdrant-adapter` — implement Qdrant dense connector with integration tests (mocked client).
-  3. `pr/sp2-201c-opensearch-nebula` — wire OpenSearch/NebulaGraph connectors with graceful fallbacks.
+   1. `pr/sp2-201a-config-health` — tighten environment config, add readiness/telemetry hooks.
+   2. `pr/sp2-201b-qdrant-adapter` — implement Qdrant dense connector with integration tests (mocked client).
+   3. `pr/sp2-201c-opensearch-nebula` — wire OpenSearch/NebulaGraph connectors with graceful fallbacks.
 - Acceptance: Service auto-detects connectors, exposes capability flags in `/info`, and surfaces actionable errors without crashing.
 
 ### SP2-202 — Knowledge fabric storage & GraphRAG materialisation
