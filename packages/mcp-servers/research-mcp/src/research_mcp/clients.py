@@ -120,8 +120,7 @@ class CrawlerClient:
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        content: str = str(page.content())
-                        return content
+                        return page.content()
                     finally:  # pragma: no cover
                         browser.close()
             logger.warning("Playwright rendering failed; returning synthetic content")
