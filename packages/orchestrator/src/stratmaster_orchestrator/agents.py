@@ -1,122 +1,227 @@
-"""Agent node implementations for the LangGraph strategy pipeline.
-
-All functions currently provide deterministic placeholder behaviour. They should be
-replaced with calls into MCP servers (research, knowledge, router, evals) once those
-services are wired in. Keeping the interface stable now ensures downstream integrations
-(e.g., API handlers, tests) can start exercising the orchestration flow.
-"""
+"""Agent node implementations backed by deterministic tool stubs."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 
-from stratmaster_api.models import (
-    CEP,
-    JTBD,
-    Assumption,
-    Claim,
-    DecisionBrief,
-    EvidenceGrade,
-    RetrievalRecord,
-    RetrievalScore,
-)
+from stratmaster_api.models import DebateTrace, DebateTurn, WorkflowMetadata
 
-from .state import StrategyState, ensure_agent_scratchpad
+from .checkpoints import InMemoryCheckpointStore
+from .prompts import DebatePrompts
+from .state import StrategyState, ToolInvocation, ensure_agent_scratchpad
+from .tools import EvaluationGate, ToolRegistry
 
 
-def researcher_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "researcher")
-    pad.notes.append("Gathered baseline insights")
+@dataclass
+class ResearcherNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
 
-    if not state.claims:
-        state.claims.append(
-            Claim(
-                id="claim-seed",
-                statement="Synthetic claim seeded by Researcher",
-                evidence_grade=EvidenceGrade.MODERATE,
-                provenance_ids=["prov-seed"],
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "researcher")
+        sources, metasearch_call = self.tools.metasearch()
+        pad.notes.append("Collected metasearch results and prioritised sources")
+        pad.tool_calls.append(metasearch_call)
+        retrieval, retrieval_call = self.tools.crawl_and_embed(sources)
+        pad.tool_calls.append(retrieval_call)
+        working.claims = self.tools.synthesise_claims(sources)
+        working.assumptions = self.tools.synthesise_assumptions(working.claims)
+        working.retrieval = retrieval
+        working.artefacts = self.tools.graph_artifacts(working.claims)
+        working.completed_tasks.append("research")
+        working.pending_tasks.extend([task for task in ("synthesis", "debate") if task not in working.pending_tasks])
+        self.checkpoints.save("researcher", working)
+        return working
+
+
+@dataclass
+class SynthesiserNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
+    minimum_pass_ratio: float
+
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "synthesiser")
+        verification = self.tools.run_verification(
+            working.claims,
+            working.retrieval,
+            minimum_pass_ratio=self.minimum_pass_ratio,
+        )
+        pad.notes.append("Ran CoVe verification across claims")
+        pad.tool_calls.append(
+            ToolInvocation(
+                name="assurance.cove.verify",
+                arguments={"claims": len(working.claims)},
+                response={
+                    "verified_fraction": verification.verified_fraction,
+                    "status": verification.status,
+                },
             )
         )
-    return state
-
-
-def synthesiser_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "synthesiser")
-    pad.notes.append("Clustered research claims")
-    if not state.assumptions:
-        state.assumptions.append(
-            Assumption(
-                id="assumption-synth",
-                statement="Market growth continues",
-                confidence=0.55,
-                provenance_ids=["prov-seed"],
+        working.verification = verification
+        working.record_metric("cove_verified_fraction", verification.verified_fraction)
+        if verification.status != "verified":
+            working.mark_failure("verification_below_threshold")
+        if working.debate is None:
+            working.debate = DebateTrace(turns=[])
+        working.debate.turns.append(
+            DebateTurn(
+                agent="synthesiser",
+                role="Synthesiser",
+                content="Summarised evidence and verification results",
+                grounding=[],
             )
         )
-    return state
+        working.completed_tasks.append("synthesis")
+        self.checkpoints.save("synthesiser", working)
+        return working
 
 
-def strategist_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "strategist")
-    pad.notes.append("Drafted recommendation outline")
-    return state
+@dataclass
+class StrategistNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
+    evaluation_gate: EvaluationGate
 
-
-def adversary_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "adversary")
-    pad.notes.append("Challenged assumptions")
-    return state
-
-
-def constitutional_critic_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "critic")
-    pad.notes.append("Verified compliance with constitution")
-    return state
-
-
-def recommender_node(state: StrategyState) -> StrategyState:
-    pad = ensure_agent_scratchpad(state, "recommender")
-    pad.notes.append("Finalised decision brief")
-
-    if state.decision_brief is None:
-        state.decision_brief = DecisionBrief(
-            id="brief-graph",
-            cep=CEP(
-                id="cep-seed",
-                title="Customer expansion programme",
-                narrative="Outline of customer journey",
-                jobs_to_be_done=["Understand the market"],
-            ),
-            jtbd=[JTBD(id="jtbd-1", actor="Customer", motivation="", outcome="")],
-            dbas=[],
-            assumptions=list(state.assumptions),
-            claims=list(state.claims),
-            experiments=[],
-            forecasts=[],
-            recommendation="Invest in premium positioning",
-            safer_alternative="Run limited pilot",
-            evidence_grade=EvidenceGrade.MODERATE,
-            provenance_ids=["prov-seed"],
-            confidence=0.6,
-        )
-    if not state.retrieval:
-        state.retrieval.append(
-            RetrievalRecord(
-                document_id="doc-graph",
-                scores=RetrievalScore(hybrid_score=0.8),
-                grounding_spans=[],
-                chunk_hash="hash-graph",
-                provenance_id="prov-seed",
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "strategist")
+        metrics, invocation = self.tools.run_evaluations("rag-safety")
+        pad.notes.append("Evaluated retrieval and reasoning metrics")
+        pad.tool_calls.append(invocation)
+        for name, value in metrics.items():
+            working.record_metric(name, value)
+        working.completed_tasks.append("strategy")
+        if working.debate is None:
+            working.debate = DebateTrace(turns=[])
+        working.debate.turns.append(
+            DebateTurn(
+                agent="strategist",
+                role="Strategist",
+                content="Prepared recommendation draft with evaluation metrics",
+                grounding=[],
             )
         )
-    return state
+        self.checkpoints.save("strategist", working)
+        return working
 
 
-def ordered_agents() -> Iterable[Callable[[StrategyState], StrategyState]]:
-    return (
-        researcher_node,
-        synthesiser_node,
-        strategist_node,
-        adversary_node,
-        constitutional_critic_node,
-        recommender_node,
-    )
+@dataclass
+class AdversaryNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
+    prompts: DebatePrompts
+
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "adversary")
+        guidance = self.prompts.adversary.get("principles", [])
+        pad.notes.append("Stress-tested assumptions using adversary prompt")
+        pad.tool_calls.append(
+            ToolInvocation(
+                name="debate.adversary.review",
+                arguments={"principles": [rule["id"] for rule in guidance.values() if isinstance(rule, dict) and "id" in rule]},
+            )
+        )
+        if working.debate is None:
+            working.debate = DebateTrace(turns=[])
+        working.debate.turns.append(
+            DebateTurn(
+                agent="adversary",
+                role="Adversary",
+                content="Raised counterfactual risks based on constitutional rules",
+                grounding=[],
+            )
+        )
+        self.checkpoints.save("adversary", working)
+        return working
+
+
+@dataclass
+class ConstitutionalCriticNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
+    prompts: DebatePrompts
+    evaluation_gate: EvaluationGate
+
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "critic")
+        pad.notes.append("Applied constitutional critic to evaluation metrics")
+        passed, failures = self.evaluation_gate.check(working.metrics)
+        pad.tool_calls.append(
+            ToolInvocation(
+                name="assurance.evals.gate",
+                arguments={"metrics": list(self.evaluation_gate.minimums.keys())},
+                response={"passed": passed, "failures": failures},
+            )
+        )
+        working.record_metric("evaluation_passed", 1.0 if passed else 0.0)
+        if working.debate is None:
+            working.debate = DebateTrace(turns=[])
+        verdict = "Approved under constitution" if passed else "Requires operator review"
+        working.debate.turns.append(
+            DebateTurn(
+                agent="critic",
+                role="ConstitutionalCritic",
+                content=verdict,
+                grounding=[],
+            )
+        )
+        working.debate.verdict = verdict
+        if not passed:
+            for failure in failures:
+                working.mark_failed(failure)
+        self.checkpoints.save("critic", working)
+        return working
+
+
+@dataclass
+class RecommenderNode:
+    tools: ToolRegistry
+    checkpoints: InMemoryCheckpointStore
+
+    def __call__(self, state: StrategyState) -> StrategyState:
+        working = state.copy()
+        pad = ensure_agent_scratchpad(working, "recommender")
+        if not working.failure_reasons:
+            working.mark_complete()
+        pad.notes.append("Composed decision brief and final recommendation")
+        outcome = self.tools.compose_recommendation(
+            working,
+            workflow=working.workflow
+            if working.workflow
+            else WorkflowMetadata(workflow_id="wf-synthetic", tenant_id=working.tenant_id),
+        )
+        pad.tool_calls.append(
+            ToolInvocation(
+                name="decision.compose", arguments={"status": outcome.status.value}
+            )
+        )
+        working.decision_brief = outcome.decision_brief
+        working.metrics = dict(outcome.metrics)
+        working.artefacts = outcome.graph
+        working.workflow = outcome.workflow
+        working.completed_tasks.append("recommendation")
+        self.checkpoints.save("recommender", working)
+        return working
+
+
+def build_nodes(
+    state: StrategyState,
+    checkpoints: InMemoryCheckpointStore,
+    prompts: DebatePrompts,
+    evaluation_gate: EvaluationGate,
+    minimum_pass_ratio: float,
+) -> list:
+    tools = ToolRegistry(state.tenant_id, state.query)
+    return [
+        ResearcherNode(tools, checkpoints),
+        SynthesiserNode(tools, checkpoints, minimum_pass_ratio),
+        StrategistNode(tools, checkpoints, evaluation_gate),
+        AdversaryNode(tools, checkpoints, prompts),
+        ConstitutionalCriticNode(tools, checkpoints, prompts, evaluation_gate),
+        RecommenderNode(tools, checkpoints),
+    ]
