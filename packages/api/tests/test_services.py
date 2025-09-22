@@ -88,12 +88,16 @@ class StubRouter(RouterMCPClient):
 
 
 class StubEvals(EvalsMCPClient):
-    def run(self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None) -> dict[str, Any]:  # type: ignore[override]
+    def run(  # type: ignore[override]
+        self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None
+    ) -> dict[str, Any]:
         return {"run_id": "eval-1234", "passed": True, "metrics": {"ragas": 0.9}}
 
 
 class FailingEvals(EvalsMCPClient):
-    def run(self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None) -> dict[str, Any]:  # type: ignore[override]
+    def run(  # type: ignore[override]
+        self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None
+    ) -> dict[str, Any]:
         return {"run_id": "eval-9999", "passed": False, "metrics": {"ragas": 0.4}}
 
 

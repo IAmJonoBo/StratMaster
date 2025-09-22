@@ -1,5 +1,6 @@
 # pyright: reportMissingImports=false
 from fastapi.testclient import TestClient
+
 from stratmaster_api.app import create_app
 
 
