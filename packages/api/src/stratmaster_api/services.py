@@ -58,8 +58,8 @@ class BaseMCPClient:
         self,
         base_url: str | None = None,
         timeout: float = 10.0,
-        env_url_key: str = "",
-        default_url: str = "",
+        env_url_key: str,
+        default_url: str,
     ) -> None:
         self.base_url = base_url or os.getenv(env_url_key, default_url)
         self.timeout = timeout
