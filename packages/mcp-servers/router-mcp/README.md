@@ -23,7 +23,7 @@ OpenAI provider shims.
 ## Local development
 
 ```bash
-python -m router_mcp --port 8083
+python -m router_mcp --host 127.0.0.1 --port 8083
 ```
 
 Run tests from the repo root:

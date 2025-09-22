@@ -39,7 +39,7 @@ degradations.
 ## Local development
 
 ```bash
-python -m knowledge_mcp --port 8082
+python -m knowledge_mcp --host 127.0.0.1 --port 8082
 ```
 
 Optional demo seeding (requires qdrant-client/opensearch-py):

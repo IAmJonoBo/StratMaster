@@ -17,7 +17,7 @@ remains dependency-light.
 ## Local development
 
 ```bash
-python -m compression_mcp --port 8085
+python -m compression_mcp --host 127.0.0.1 --port 8085
 ```
 
 Run tests from the repo root:

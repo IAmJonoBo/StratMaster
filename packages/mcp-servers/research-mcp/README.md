@@ -23,7 +23,7 @@ external sinks. Cached artefacts live under `RESEARCH_MCP_CACHE_DIR` (defaults t
 ## Local development
 
 ```bash
-python -m research_mcp --reload --port 8081
+python -m research_mcp --reload --host 127.0.0.1 --port 8081
 ```
 
 Additional flags mirror uvicorn options and can also be supplied via environment variables,

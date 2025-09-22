@@ -19,7 +19,7 @@ kill-switch behaviour.
 ## Local development
 
 ```bash
-python -m evals_mcp --port 8084
+python -m evals_mcp --host 127.0.0.1 --port 8084
 ```
 
 Run tests from the repo root:
