@@ -115,13 +115,13 @@ class CrawlerClient:
                 return self._synthetic_content(url, render_js)
 
             with suppress(Exception):  # pragma: no cover - network path
-                with sync_playwright() as playwright:
-                    browser = playwright.chromium.launch(headless=True)
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(headless=True)
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        text: str = page.content()  # playwright returns str
-                        return text
+                        html: str = page.content()  # playwright returns str
+                        return html
                     finally:  # pragma: no cover
                         browser.close()
             logger.warning("Playwright rendering failed; returning synthetic content")
