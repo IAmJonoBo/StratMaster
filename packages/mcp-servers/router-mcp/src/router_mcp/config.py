@@ -113,11 +113,13 @@ def _load_structured_decoding() -> dict[str, Any]:
     try:
         with cfg_path.open("r", encoding="utf-8") as fh:
             return yaml.safe_load(fh) or {}
-    except Exception:
+    except (yaml.YAMLError, OSError):
         return {}
 
 
-def _load_models_policy() -> ModelsPolicy:
+def _load_models_policy() -> (
+    ModelsPolicy
+):  # noqa: C901 - keep behavior; refactor later if needed
     cfg_path = (
         Path(__file__).resolve().parents[5]
         / "configs"
@@ -129,7 +131,7 @@ def _load_models_policy() -> ModelsPolicy:
     try:
         with cfg_path.open("r", encoding="utf-8") as fh:
             raw = yaml.safe_load(fh) or {}
-    except Exception:
+    except (yaml.YAMLError, OSError):
         return ModelsPolicy()
 
     tenants_cfg = raw.get("tenants", {}) or {}

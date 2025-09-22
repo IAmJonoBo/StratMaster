@@ -525,7 +525,7 @@ class OrchestratorService:
         try:
             payload = self.evals_client.run(tenant_id=tenant_id, suite=suite)
             return payload
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             metrics = {"ragas_score": 0.82, "factscore": 0.78}
             passed = all(value >= 0.7 for value in metrics.values())
             return {
@@ -562,7 +562,7 @@ class OrchestratorService:
     def _sources_from_metasearch(self, query: str, max_sources: int) -> list[Source]:
         try:
             payload = self.research_client.metasearch(query=query, limit=max_sources)
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             return [self._synthetic_source(i) for i in range(1, max_sources + 1)]
 
         results = payload.get("results", [])
@@ -595,7 +595,7 @@ class OrchestratorService:
             try:
                 crawl = self.research_client.crawl(src.url)
             # nosec B112 - network crawl failures are non-fatal; skip and continue
-            except Exception as exc:
+            except (httpx.HTTPError, ValueError, TypeError) as exc:
                 logger.warning("research crawl failed; skipping source", exc_info=exc)
                 continue
             content = crawl.get("content", "")
@@ -625,7 +625,7 @@ class OrchestratorService:
             payload = self.knowledge_client.hybrid_query(
                 tenant_id=tenant_id, query=query, top_k=top_k
             )
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             return []
         hits = cast(list[dict[str, Any]], payload.get("hits", []))
         return hits
@@ -664,7 +664,7 @@ class OrchestratorService:
                 tenant_id=tenant_id, limit=3
             )
             summaries = payload.get("summaries", [])
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             summaries = []
 
         if not summaries:
@@ -762,7 +762,7 @@ class OrchestratorService:
             }
             if order:
                 records.sort(key=lambda rec: order.get(rec.document_id, len(order)))
-        except Exception as exc:
+        except (httpx.HTTPError, ValueError, TypeError) as exc:
             logger.warning(
                 "rerank request failed; returning original order", exc_info=exc
             )
@@ -896,7 +896,7 @@ class OrchestratorService:
                 tenant_id=tenant_id, prompt=prompt, max_tokens=200
             )
             decision.recommendation = completion.get("text", decision.recommendation)
-        except Exception as exc:
+        except (httpx.HTTPError, ValueError, TypeError) as exc:
             logger.warning(
                 "completion request failed; keeping default recommendation",
                 exc_info=exc,
