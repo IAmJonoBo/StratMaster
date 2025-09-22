@@ -65,7 +65,7 @@ class VectorStore:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
             # on-disk partial/corrupt files are skipped intentionally, but we log the issue
-            except Exception as exc:  # nosec B112
+            except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
                 logger.warning(
                     "VectorStore: skipping unreadable JSON file %s: %s",
                     path,
