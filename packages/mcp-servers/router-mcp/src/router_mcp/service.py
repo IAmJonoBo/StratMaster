@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Iterable
+from json import JSONDecodeError
+from typing import Any
 
 from fastapi import HTTPException
 
@@ -293,7 +294,7 @@ class RouterService:
         try:
             json.loads(text)
             return text
-        except Exception:
+        except JSONDecodeError:
             strict = self.decoding_cfg.get("schema_validation", {}).get("strict", False)
             fallback_obj = {
                 "summary": text,
@@ -302,7 +303,7 @@ class RouterService:
             fallback = json.dumps(fallback_obj)
             try:
                 json.loads(fallback)
-            except Exception as exc:  # pragma: no cover
+            except JSONDecodeError as exc:  # pragma: no cover
                 if strict:
                     raise HTTPException(
                         status_code=500, detail="structured decoding failed"
