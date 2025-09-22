@@ -19,18 +19,18 @@ logger = logging.getLogger(__name__)
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient
 except ImportError:  # pragma: no cover
-    QdrantClient = None  # type: ignore[misc]
+    QdrantClient = None
 
 try:  # pragma: no cover - optional dependency
     from opensearchpy import OpenSearch
 except ImportError:  # pragma: no cover
-    OpenSearch = None  # type: ignore[misc]
+    OpenSearch = None
 
 try:  # pragma: no cover - optional dependency
     from nebula3.Config import Config as NebulaConfig
     from nebula3.gclient.net import ConnectionPool
 except ImportError:  # pragma: no cover
-    ConnectionPool = None  # type: ignore[misc]
+    ConnectionPool = None
 
 
 @dataclass
