@@ -44,7 +44,7 @@ class EvaluationGate:
             value = metrics.get(name)
             if value is None or value < threshold:
                 failures.append(f"{name}<{threshold:.2f}")
-        return (not failures, failures)
+        return not failures, failures
 
 
 class ToolRegistry:
