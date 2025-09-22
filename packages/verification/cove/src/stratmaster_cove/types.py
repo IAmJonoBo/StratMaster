@@ -103,6 +103,7 @@ def build_questions_for_claims(
 
     questions: list[VerificationQuestion] = []
     for idx, (claim_id, statement) in enumerate(zip(claim_ids, claim_statements, strict=False), start=1):
+
         questions.append(
             VerificationQuestion(
                 id=f"{prefix}-{idx:03d}",

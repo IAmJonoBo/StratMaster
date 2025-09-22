@@ -84,7 +84,6 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 ## Sprint 3 – Agents & Assurance
 
 ### SP3-301 — LangGraph agent graph & shared state
-
 - Status: ⏳ **Not started** — The LangGraph orchestration still leans on the
   synthetic `ToolRegistry`, which fabricates sources, retrieval scores, metrics,
   and decision briefs in-process instead of brokering real MCP calls, so the
@@ -92,7 +91,6 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   The API orchestrator also keeps the `_GraphPipeline` wrapper around a
   `_SequentialPipeline` fallback, so the legacy sequential path remains wired
   in rather than committing to LangGraph-only execution.【F:packages/api/src/stratmaster_api/services.py†L242-L334】
-
 - Issue stub: `issue/sp3-301-agent-graph`
 - PR slices:
   1. `pr/sp3-301a-state-contracts` — define typed state + tool mediation layer.
@@ -121,6 +119,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   or persisted artefact exists beyond the README placeholder in
   `dspy_programs`, leaving reproducible checkpoints and telemetry unimplemented.【F:packages/dsp/src/stratmaster_dsp/programs.py†L10-L86】【F:packages/dsp/dspy_programs/README.md†L1-L5】
 
+
 - Issue stub: `issue/sp3-303-dspy`
 - PR slices:
   1. `pr/sp3-303a-baseline-program` — baseline ResearchPlanner module with save/load.
@@ -134,6 +133,7 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
   `packages/api/schemas`, but the FastAPI layer still loads and exposes the
   legacy OpenAI tool contracts from `packages/providers/openai/tool-schemas`, so
   none of the Sprint 3 models are reachable through the API yet.【F:packages/api/src/stratmaster_api/app.py†L328-L387】
+
 
 - Issue stub: `issue/sp3-304-api-models`
 - PR slices:
