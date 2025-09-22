@@ -23,11 +23,12 @@ jobs:
           cache: pip
       - name: Setup Helm
         uses: azure/setup-helm@v4
-      - name: Install packages for tests
+      - name: Install core packages for tests
         run: |
-          # Core packages
           pip install -e packages/api -e packages/mcp-servers/research-mcp
-          # Install retrieval/reranker packages with CLI test extras so their tests execute
+      - name: Install retrieval/reranker test extras (3.11 only)
+        if: matrix.python-version == '3.11'
+        run: |
           pip install -e packages/retrieval/splade[test-cli] \
                       -e packages/retrieval/colbert[test-cli] \
                       -e packages/rerankers/bge[test-cli]
