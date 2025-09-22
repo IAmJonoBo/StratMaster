@@ -157,7 +157,7 @@ def create_app() -> FastAPI:
 
         validator = VALIDATORS.get(section)
         if validator is not None:
-            cfg: dict[str, Any] = validator(data)
+            cfg = validator(data)
         else:
             # When no validator is provided, cast the YAML payload to a dict
             cfg = cast(
