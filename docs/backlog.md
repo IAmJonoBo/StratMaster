@@ -85,6 +85,13 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP3-301 — LangGraph agent graph & shared state
 
+- Status: ⏳ **Not started** — The LangGraph tool registry still fabricates sources,
+  retrieval hits, metrics, and recommendations locally instead of mediating MCP
+  clients, so the agent graph is not yet wired to real services.【F:packages/orchestrator/src/stratmaster_orchestrator/tools.py†L50-L194】
+  The API orchestrator also continues to wrap the graph in `_GraphPipeline`
+  with a `_SequentialPipeline` fallback, leaving the legacy sequential path in
+  place.【F:packages/api/src/stratmaster_api/services.py†L242-L334】
+
 - Issue stub: `issue/sp3-301-agent-graph`
 - PR slices:
   1. `pr/sp3-301a-state-contracts` — define typed state + tool mediation layer.
@@ -93,6 +100,10 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 - Acceptance: Agent graph runs end-to-end with deterministic stubs; orchestrator fallback removed.
 
 ### SP3-302 — Debate, constitution, and eval gating
+
+- Status: ⏳ **Blocked** — Debate nodes and evaluation gates run against the
+  same deterministic `ToolRegistry` stubs, so constitutional reviews and metric
+  checks never touch live MCP assurances yet.【F:packages/orchestrator/src/stratmaster_orchestrator/tools.py†L50-L194】【F:packages/orchestrator/src/stratmaster_orchestrator/agents.py†L15-L200】
 
 - Issue stub: `issue/sp3-302-debate-evals`
 - PR slices:
@@ -103,6 +114,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP3-303 — DSPy program compilation & telemetry
 
+- Status: ⏳ **Not started** — The DSPy package only provides deterministic
+  stubs plus an in-memory telemetry recorder, and the `dspy_programs`
+  directory still holds a README placeholder rather than persisted
+  artefacts or Langfuse hooks.【F:packages/dsp/src/stratmaster_dsp/programs.py†L1-L100】【F:packages/dsp/dspy_programs/README.md†L1-L5】
+
 - Issue stub: `issue/sp3-303-dspy`
 - PR slices:
   1. `pr/sp3-303a-baseline-program` — baseline ResearchPlanner module with save/load.
@@ -111,6 +127,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 - Acceptance: DSPy artefacts stored under `packages/dsp/dspy_programs`; CI verifies reproducibility.
 
 ### SP3-304 — API Pydantic model suite
+
+- Status: ⏳ **Not started** — Versioned schemas exist on disk, but the FastAPI
+  layer still serves the legacy OpenAI tool schemas from
+  `packages/providers/openai/tool-schemas`, so the new contracts are not
+  exposed via the API yet.【F:packages/api/src/stratmaster_api/app.py†L328-L378】
 
 - Issue stub: `issue/sp3-304-api-models`
 - PR slices:
