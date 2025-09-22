@@ -122,7 +122,7 @@ class AdversaryNode:
         pad.tool_calls.append(
             ToolInvocation(
                 name="debate.adversary.review",
-                arguments={"principles": [rule["id"] for rule in guidance if isinstance(rule, dict) and "id" in rule]},
+                arguments={"principles": [rule["id"] for rule in guidance.values() if isinstance(rule, dict) and "id" in rule]},
             )
         )
         if working.debate is None:
