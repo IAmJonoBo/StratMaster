@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
 from .contracts import ArtefactRecord, RankedArtefact, TenantManifest
+
+JSON_GLOB_PATTERN = "*.json"
+
+
+logger = logging.getLogger(__name__)
 
 
 class VectorStore:
@@ -47,10 +53,25 @@ class VectorStore:
             path = self._tenant_path(tenant_id)
             payload = [record.model_dump() for record in records]
             path.write_text(json.dumps(payload, default=str), encoding="utf-8")
+        # Refresh records from disk to keep in-memory view consistent
+        self._load_from_disk()
 
     def _load_from_disk(self) -> None:
-        for path in self._base_path.glob("*.json"):
-            data = json.loads(path.read_text(encoding="utf-8"))
+        """Load all tenant records from disk into memory."""
+        for tenant_id in self._records.keys():
+            # clear to avoid duplication
+            self._records[tenant_id] = []
+        for path in self._base_path.glob(JSON_GLOB_PATTERN):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            # on-disk partial/corrupt files are skipped intentionally, but we log the issue
+            except Exception as exc:  # nosec B112
+                logger.warning(
+                    "VectorStore: skipping unreadable JSON file %s: %s",
+                    path,
+                    exc,
+                )
+                continue  # pragma: no cover - ignore partial files
             tenant_id = path.stem
             self._records[tenant_id] = [ArtefactRecord(**item) for item in data]
 
@@ -94,16 +115,38 @@ class ManifestStore:
         path.write_text(
             json.dumps(manifest.model_dump(), default=str), encoding="utf-8"
         )
-
-    def _load_from_disk(self) -> None:
-        for path in self._base_path.glob("*.json"):
-            data = json.loads(path.read_text(encoding="utf-8"))
-            manifest = TenantManifest(**data)
-            self._manifests[manifest.tenant_id] = manifest
+        # Reload manifests to ensure in-memory cache reflects disk
+        self._load_from_disk()
 
     @staticmethod
-    def _now():  # pragma: no cover - trivial shim
+    def _now() -> datetime:  # pragma: no cover - trivial shim
         return datetime.now(UTC)
+
+    def _load_from_disk(self) -> None:
+        """Load manifests from disk into memory."""
+        self._manifests.clear()
+        for path in self._base_path.glob(JSON_GLOB_PATTERN):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            # skip invalid JSON payloads written by older versions, but log
+            except Exception as exc:  # nosec B112
+                logger.warning(
+                    "ManifestStore: skipping invalid JSON in %s: %s",
+                    path,
+                    exc,
+                )
+                continue  # pragma: no cover
+            try:
+                manifest = TenantManifest(**data)
+            # skip invalid JSON payloads written by older versions, but log
+            except Exception as exc:  # nosec B112
+                logger.warning(
+                    "ManifestStore: skipping incompatible manifest in %s: %s",
+                    path,
+                    exc,
+                )
+                continue  # pragma: no cover
+            self._manifests[manifest.tenant_id] = manifest
 
 
 class GraphStore:
@@ -112,9 +155,8 @@ class GraphStore:
     def __init__(self, base_path: Path | str | None = None) -> None:
         self._base_path = Path(base_path or "artifacts/knowledge/graph")
         self._base_path.mkdir(parents=True, exist_ok=True)
-        self._graphs: dict[
-            str, Mapping[str, list[dict[str, str | float | list[str]]]]
-        ] = {}
+        # Use a permissive value type to accommodate nodes/edges/communities shapes
+        self._graphs: dict[str, dict[str, list[dict[str, object]]]] = {}
         self._load_from_disk()
 
     def write(
@@ -124,7 +166,7 @@ class GraphStore:
         edges: Iterable[Mapping[str, str | float]],
         communities: Iterable[Mapping[str, str | float | list[str]]],
     ) -> None:
-        payload = {
+        payload: dict[str, list[dict[str, object]]] = {
             "nodes": [dict(node) for node in nodes],
             "edges": [dict(edge) for edge in edges],
             "communities": [dict(comm) for comm in communities],
@@ -132,9 +174,7 @@ class GraphStore:
         self._graphs[tenant_id] = payload
         self._flush(tenant_id)
 
-    def get(
-        self, tenant_id: str
-    ) -> Mapping[str, list[dict[str, str | float | list[str]]]] | None:
+    def get(self, tenant_id: str) -> Mapping[str, list[dict[str, object]]] | None:
         return self._graphs.get(tenant_id)
 
     def _graph_path(self, tenant_id: str) -> Path:
@@ -144,8 +184,34 @@ class GraphStore:
         payload = self._graphs[tenant_id]
         path = self._graph_path(tenant_id)
         path.write_text(json.dumps(payload, default=str), encoding="utf-8")
+        # Reload from disk to ensure cache consistency
+        self._load_from_disk()
 
     def _load_from_disk(self) -> None:
-        for path in self._base_path.glob("*.json"):
+        """Load graph payloads from disk into memory."""
+        self._graphs.clear()
+        for path in self._base_path.glob(JSON_GLOB_PATTERN):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            # ignore unreadable/partial JSON files, but log
+            except Exception as exc:  # nosec B112
+                logger.warning(
+                    "GraphStore: skipping unreadable JSON file %s: %s",
+                    path,
+                    exc,
+                )
+                continue  # pragma: no cover
             tenant_id = path.stem
-            self._graphs[tenant_id] = json.loads(path.read_text(encoding="utf-8"))
+            # data is expected to be a dict with keys nodes/edges/communities
+            if isinstance(data, dict):
+                # coerce values to expected list-of-dicts shape when possible
+                coerced: dict[str, list[dict[str, object]]] = {}
+                for key in ("nodes", "edges", "communities"):
+                    raw = data.get(key, [])
+                    if isinstance(raw, list):
+                        coerced[key] = [
+                            dict(item) for item in raw if isinstance(item, dict)
+                        ]
+                    else:
+                        coerced[key] = []
+                self._graphs[tenant_id] = coerced

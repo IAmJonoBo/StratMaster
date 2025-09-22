@@ -594,7 +594,9 @@ class OrchestratorService:
         for src in sources:
             try:
                 crawl = self.research_client.crawl(src.url)
-            except Exception:
+            # nosec B112 - network crawl failures are non-fatal; skip and continue
+            except Exception as exc:
+                logger.warning("research crawl failed; skipping source", exc_info=exc)
                 continue
             content = crawl.get("content", "")
             sha256 = crawl.get("sha256", uuid4().hex)
@@ -760,8 +762,10 @@ class OrchestratorService:
             }
             if order:
                 records.sort(key=lambda rec: order.get(rec.document_id, len(order)))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(
+                "rerank request failed; returning original order", exc_info=exc
+            )
         return records[:max_results]
 
     def _compose_recommendation(
@@ -892,8 +896,11 @@ class OrchestratorService:
                 tenant_id=tenant_id, prompt=prompt, max_tokens=200
             )
             decision.recommendation = completion.get("text", decision.recommendation)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(
+                "completion request failed; keeping default recommendation",
+                exc_info=exc,
+            )
 
         workflow = WorkflowMetadata(
             workflow_id=f"wf-{uuid4().hex[:6]}",

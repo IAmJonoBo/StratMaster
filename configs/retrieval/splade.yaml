@@ -1,3 +1,4 @@
+---
 # SPLADE lexical expansion retrieval config
 corpus:
   path: seeds/demo-ceps-jtbd-dbas.json

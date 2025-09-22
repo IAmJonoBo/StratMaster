@@ -25,11 +25,11 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Research MCP", version="0.3.0")
 
     @app.get("/healthz")
-    async def healthz():
+    async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
     @app.get("/info")
-    async def info():
+    async def info() -> dict[str, object]:
         return {
             "name": "research-mcp",
             "version": "0.3.0",
@@ -41,14 +41,14 @@ def create_app() -> FastAPI:
     tools_router = APIRouter(prefix="/tools", tags=["tools"])
 
     @tools_router.post("/metasearch", response_model=MetasearchResponse)
-    async def metasearch(payload: MetasearchRequest):
+    async def metasearch(payload: MetasearchRequest) -> MetasearchResponse:
         try:
             return service.metasearch(payload)
         except ValueError as exc:  # pragma: no cover - defensive
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @tools_router.post("/crawl", response_model=CrawlResponse)
-    async def crawl(payload: CrawlRequest):
+    async def crawl(payload: CrawlRequest) -> CrawlResponse:
         try:
             return service.crawl(payload)
         except PermissionError as exc:
@@ -61,14 +61,14 @@ def create_app() -> FastAPI:
     resources_router = APIRouter(prefix="/resources", tags=["resources"])
 
     @resources_router.get("/cached_page/{cache_key}", response_model=CachedPageResource)
-    async def cached_page(cache_key: str):
+    async def cached_page(cache_key: str) -> CachedPageResource:
         try:
             return service.cached_page(cache_key)
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="cached page not found")
 
     @resources_router.get("/provenance/{cache_key}", response_model=ProvenanceResource)
-    async def provenance(cache_key: str):
+    async def provenance(cache_key: str) -> ProvenanceResource:
         try:
             return service.provenance(cache_key)
         except FileNotFoundError:

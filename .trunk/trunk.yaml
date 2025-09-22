@@ -1,3 +1,4 @@
+---
 # This file controls the behavior of Trunk: https://docs.trunk.io/cli
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
@@ -56,6 +57,10 @@ lint:
         - "**/tests/**"
     - linters: [ruff]
       # Avoid import-sorting noise and strict ruff checks in tests; keep runtime code strict
+      paths:
+        - "**/tests/**"
+    - linters: [bandit]
+      # Tests routinely use 'assert' and simplified error handling. Suppress Bandit noise in tests.
       paths:
         - "**/tests/**"
 actions:

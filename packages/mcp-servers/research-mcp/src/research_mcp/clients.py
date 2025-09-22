@@ -7,7 +7,7 @@ import logging
 from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from urllib.parse import urlencode
 
 from .config import (
@@ -45,7 +45,7 @@ class MetasearchClient:
     def __init__(self, settings: MetasearchSettings):
         self.settings = settings
 
-    def search(self, query: str, limit: int) -> List[SearchResult]:
+    def search(self, query: str, limit: int) -> list[SearchResult]:
         if self.settings.use_network and self.settings.endpoint and httpx is not None:
             try:
                 params = {
@@ -54,7 +54,7 @@ class MetasearchClient:
                     "timeout": self.settings.timeout,
                     "limit": limit,
                 }
-                headers: Dict[str, str] = {}
+                headers: dict[str, str] = {}
                 if self.settings.api_key:
                     headers["Authorization"] = f"Bearer {self.settings.api_key}"
                 with httpx.Client(timeout=self.settings.timeout) as client:
@@ -82,7 +82,7 @@ class MetasearchClient:
             ][:limit]
         return self._synthetic(query, limit)
 
-    def _synthetic(self, query: str, limit: int) -> List[SearchResult]:
+    def _synthetic(self, query: str, limit: int) -> list[SearchResult]:
         return [
             SearchResult(
                 title=f"Synthetic result {idx}",
@@ -166,7 +166,7 @@ class StorageClient:
         file_path = self.base_path / f"{cache_key}.json"
         if not file_path.exists():
             raise FileNotFoundError(cache_key)
-        data: Dict[str, Any] = json.loads(file_path.read_text(encoding="utf-8"))
+        data: dict[str, Any] = json.loads(file_path.read_text(encoding="utf-8"))
         return CachedPageResource(
             url=data["url"],
             content=data["content"],

@@ -250,16 +250,31 @@ class RouterService:
         embedding_model: str | None = None,
         rerank_model: str | None = None,
     ) -> ProviderConfig:
+        def _coerce_str(value: str | None, fallback: str) -> str:
+            return value if value is not None and value != "" else fallback
+
         prefix = f"ROUTER_PROVIDER_{provider_name.upper()}"
         default = self.config.default_provider
+        coerced_completion: str = _coerce_str(
+            completion_model,
+            os.getenv(f"{prefix}_COMPLETION_MODEL", default.completion_model)
+            or default.completion_model,
+        )
+        coerced_embedding: str = _coerce_str(
+            embedding_model,
+            os.getenv(f"{prefix}_EMBEDDING_MODEL", default.embedding_model)
+            or default.embedding_model,
+        )
+        coerced_rerank: str = _coerce_str(
+            rerank_model,
+            os.getenv(f"{prefix}_RERANK_MODEL", default.rerank_model)
+            or default.rerank_model,
+        )
         return ProviderConfig(
             name=provider_name,
-            completion_model=completion_model
-            or os.getenv(f"{prefix}_COMPLETION_MODEL", default.completion_model),
-            embedding_model=embedding_model
-            or os.getenv(f"{prefix}_EMBEDDING_MODEL", default.embedding_model),
-            rerank_model=rerank_model
-            or os.getenv(f"{prefix}_RERANK_MODEL", default.rerank_model),
+            completion_model=coerced_completion,
+            embedding_model=coerced_embedding,
+            rerank_model=coerced_rerank,
             temperature=self._float_param(
                 os.getenv(f"{prefix}_TEMPERATURE", str(default.temperature))
             )

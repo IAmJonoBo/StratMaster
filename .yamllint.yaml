@@ -1,7 +1,7 @@
 ---
 extends: default
 rules:
-  # Keep a few core safety checks
+  # Keep core safety checks
   key-duplicates: {}
   octal-values:
     forbid-implicit-octal: true
@@ -10,7 +10,7 @@ rules:
     extra-allowed: ["{|}"]
   comments:
     min-spaces-from-content: 1
-  # Relax noisy rules to reduce backlog; we can re-tighten later
+  # Relax noisy rules to reduce backlog; can be re-tightened later
   document-start: disable
   line-length: disable
   indentation: disable

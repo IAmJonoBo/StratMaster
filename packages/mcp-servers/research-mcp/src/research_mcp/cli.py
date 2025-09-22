@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import os
-from typing import Any, Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 import uvicorn
 
-DEFAULT_HOST = "0.0.0.0"
+DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8081
 LOG_LEVEL_CHOICES = ("critical", "error", "warning", "info", "debug", "trace")
 _TRUE_VALUES = {"1", "true", "t", "yes", "y", "on"}
@@ -37,7 +38,7 @@ def _env_int(name: str, default: int) -> int:
 def _env_list(name: str, default: Iterable[str]) -> list[str]:
     value = os.getenv(name)
     if value is None:
-        return [item for item in default]
+        return list(default)
     return _split_domains([value])
 
 

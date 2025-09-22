@@ -1,3 +1,4 @@
+---
 # Default evaluation thresholds for E5/BGE similarity, answer quality, and grounding
 similarity:
   embedding_model: BAAI/bge-small-en-v1.5
