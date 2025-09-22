@@ -46,7 +46,6 @@ class EvaluationGate:
                 failures.append(f"{name}<{threshold:.2f}")
         return (not failures, failures)
 
-
 class ToolRegistry:
     """Synthetic MCP-like tool registry used by agent nodes."""
 
