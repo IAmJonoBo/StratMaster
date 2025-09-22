@@ -7,6 +7,8 @@ services:
       - "8080:8080"
     environment:
       PYTHONUNBUFFERED: "1"
+      # checkov:skip=CKV_SECRET_4: Dev-only embedded credentials for local Postgres
+      # checkov:skip=CKV_SECRET_6: High-entropy detection false-positive for local-only URL
       STRATMASTER_API_DB_URL: postgresql+psycopg://postgres:postgres@postgres:5432/stratmaster
       LANGFUSE_SERVER_URL: http://langfuse:3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
@@ -103,6 +105,7 @@ services:
   postgres:
     image: postgres:17
     environment:
+      # checkov:skip=CKV_SECRET_4: Dev-only default password
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: stratmaster
@@ -144,6 +147,7 @@ services:
     command: server /data --console-address :9001
     environment:
       MINIO_ROOT_USER: stratmaster
+      # checkov:skip=CKV_SECRET_4: Dev-only default password
       MINIO_ROOT_PASSWORD: stratmaster123
     ports:
       - "9000:9000"
@@ -165,6 +169,7 @@ services:
       DB_HOST: postgres
       DB_NAME: temporal
       DB_USER: postgres
+      # checkov:skip=CKV_SECRET_4: Dev-only default password
       DB_PWD: postgres
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
       VISIBILITY_DB_NAME: temporal_visibility
@@ -187,7 +192,9 @@ services:
   langfuse:
     image: langfuse/langfuse:latest
     environment:
+      # checkov:skip=CKV_SECRET_4: Dev-only embedded credentials for local Postgres
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/langfuse
+      # checkov:skip=CKV_SECRET_6: Dev-only default secret; not used in production
       NEXTAUTH_SECRET: insecure_dev_secret
     depends_on:
       postgres:

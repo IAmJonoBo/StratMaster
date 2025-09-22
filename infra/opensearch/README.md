@@ -5,11 +5,11 @@ templates, analyzers, mappings, ILM policies, and monitoring practices.
 
 ## Index templates
 
-| Index           | Pattern                  | Template file |
-| --------------- | ------------------------ | ------------- |
-| `research-*`    | `research-<tenant>-*`    | `infra/opensearch/templates/research.json` |
-| `knowledge-*`   | `knowledge-<tenant>-*`   | `infra/opensearch/templates/knowledge.json` |
-| `logs-*`        | `logs-*`                 | Shared observability template |
+| Index         | Pattern                | Template file                               |
+| ------------- | ---------------------- | ------------------------------------------- |
+| `research-*`  | `research-<tenant>-*`  | `infra/opensearch/templates/research.json`  |
+| `knowledge-*` | `knowledge-<tenant>-*` | `infra/opensearch/templates/knowledge.json` |
+| `logs-*`      | `logs-*`               | Shared observability template               |
 
 Example snippet:
 
@@ -31,11 +31,11 @@ Example snippet:
     },
     "mappings": {
       "properties": {
-        "title": {"type": "text", "analyzer": "english"},
-        "summary": {"type": "text", "analyzer": "stratmaster_splade"},
-        "fingerprint": {"type": "keyword"},
-        "sast": {"type": "date"},
-        "tenant_id": {"type": "keyword"}
+        "title": { "type": "text", "analyzer": "english" },
+        "summary": { "type": "text", "analyzer": "stratmaster_splade" },
+        "fingerprint": { "type": "keyword" },
+        "sast": { "type": "date" },
+        "tenant_id": { "type": "keyword" }
       }
     }
   }
@@ -52,11 +52,11 @@ Example snippet:
 
 ## ILM policies
 
-| Policy name       | Phases | Details |
-| ----------------- | ------ | ------- |
-| `sm-hot-warm`     | hot → warm | Hot: replica 1, rollover at 50 GB. Warm: force merge to 1 segment. |
-| `sm-logs`         | hot → delete | Delete after 30 days. |
-| `sm-demo`         | hot only | Demo indices truncated nightly. |
+| Policy name   | Phases       | Details                                                            |
+| ------------- | ------------ | ------------------------------------------------------------------ |
+| `sm-hot-warm` | hot → warm   | Hot: replica 1, rollover at 50 GB. Warm: force merge to 1 segment. |
+| `sm-logs`     | hot → delete | Delete after 30 days.                                              |
+| `sm-demo`     | hot only     | Demo indices truncated nightly.                                    |
 
 Apply policies using:
 

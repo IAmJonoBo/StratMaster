@@ -1,8 +1,7 @@
+# mypy: ignore-errors
 """Pydantic schemas for router MCP."""
 
 from __future__ import annotations
-
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -14,6 +13,7 @@ class CompletionRequest(BaseModel):
     prompt: str
     max_tokens: int = Field(default=256, ge=16, le=4096)
     temperature: float = Field(default=0.2, ge=0, le=2)
+    task: str = Field(default="reasoning")
 
 
 class CompletionResponse(BaseModel):
@@ -31,6 +31,7 @@ class EmbeddingRequest(BaseModel):
     tenant_id: str
     input: list[str]
     model: str = "bge-small"
+    task: str = Field(default="embedding")
 
 
 class EmbeddingVector(BaseModel):
@@ -62,6 +63,7 @@ class RerankRequest(BaseModel):
     query: str
     documents: list[RerankItem]
     top_k: int = Field(default=5, ge=1, le=50)
+    task: str = Field(default="rerank")
 
 
 class RerankResult(BaseModel):

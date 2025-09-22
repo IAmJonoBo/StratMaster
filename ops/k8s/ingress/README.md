@@ -5,11 +5,11 @@ covering hostnames, TLS policies, and cert-manager integration.
 
 ## Hostname conventions
 
-| Environment | Base domain                | Examples |
-| ----------- | -------------------------- | -------- |
-| dev         | `dev.stratmaster.local`    | `api.dev.stratmaster.local`, `minio.dev.stratmaster.local` |
-| staging     | `staging.stratmaster.ai`   | `api.staging.stratmaster.ai`, `agents.staging.stratmaster.ai` |
-| prod        | `stratmaster.ai`           | `api.stratmaster.ai`, `agents.stratmaster.ai`, `console.stratmaster.ai` |
+| Environment | Base domain              | Examples                                                                |
+| ----------- | ------------------------ | ----------------------------------------------------------------------- |
+| dev         | `dev.stratmaster.local`  | `api.dev.stratmaster.local`, `minio.dev.stratmaster.local`              |
+| staging     | `staging.stratmaster.ai` | `api.staging.stratmaster.ai`, `agents.staging.stratmaster.ai`           |
+| prod        | `stratmaster.ai`         | `api.stratmaster.ai`, `agents.stratmaster.ai`, `console.stratmaster.ai` |
 
 - MCP servers get dedicated subdomains (e.g. `research`, `knowledge`, `compression`).
 - Internal dashboards (Temporal, Langfuse) sit behind identity-aware proxies and use

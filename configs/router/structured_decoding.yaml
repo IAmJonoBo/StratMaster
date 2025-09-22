@@ -1,7 +1,8 @@
+---
 # Structured decoding configuration for constrained tool calls
 llm:
   provider: litellm
-  model: gpt-4o-mini  # placeholder; can be overridden via env
+  model: gpt-4o-mini # placeholder; can be overridden via env
   temperature: 0.2
   max_tokens: 1024
   json_mode: true

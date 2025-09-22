@@ -1,6 +1,8 @@
+---
 apiVersion: v2
 name: research-mcp
-version: 0.1.0
-appVersion: v0.1.0
 description: Helm chart for research-mcp service
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
 icon: https://raw.githubusercontent.com/IAmJonoBo/StratMaster/main/docs/assets/icon-research.png

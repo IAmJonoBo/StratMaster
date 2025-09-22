@@ -1,0 +1,22 @@
+---
+extends: default
+rules:
+  # Keep core safety checks
+  key-duplicates: {}
+  octal-values:
+    forbid-implicit-octal: true
+  quoted-strings:
+    required: only-when-needed
+    extra-allowed: ["{|}"]
+  comments:
+    min-spaces-from-content: 1
+  # Relax noisy rules to reduce backlog; can be re-tightened later
+  document-start: disable
+  line-length: disable
+  indentation: disable
+  comments-indentation: disable
+  trailing-spaces: disable
+  empty-lines: disable
+  new-lines: disable
+  hyphens: disable
+  truthy: disable

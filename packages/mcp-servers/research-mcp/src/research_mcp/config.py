@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
 
 
 def _bool_env(name: str, default: bool = False) -> bool:
@@ -15,7 +14,7 @@ def _bool_env(name: str, default: bool = False) -> bool:
     return value.lower() in {"1", "true", "yes", "on"}
 
 
-def _list_env(name: str, default: Optional[List[str]] = None) -> List[str]:
+def _list_env(name: str, default: list[str] | None = None) -> list[str]:
     value = os.getenv(name)
     if value is None:
         return list(default or [])
@@ -24,8 +23,8 @@ def _list_env(name: str, default: Optional[List[str]] = None) -> List[str]:
 
 @dataclass
 class MetasearchSettings:
-    endpoint: Optional[str] = None
-    api_key: Optional[str] = None
+    endpoint: str | None = None
+    api_key: str | None = None
     timeout: float = 10.0
     use_network: bool = False
 
@@ -33,8 +32,8 @@ class MetasearchSettings:
 @dataclass
 class CrawlerSettings:
     user_agent: str = "StratMaster-ResearchBot/0.1"
-    allowlist: List[str] = field(default_factory=lambda: ["example.com"])
-    blocklist: List[str] = field(default_factory=list)
+    allowlist: list[str] = field(default_factory=lambda: ["example.com"])
+    blocklist: list[str] = field(default_factory=list)
     use_network: bool = False
     use_playwright: bool = False
 

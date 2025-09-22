@@ -1,3 +1,4 @@
+---
 # Redaction rules for PII/PHI
 rules:
   - name: email

@@ -6,9 +6,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-201 — Knowledge MCP connectors
 
-- Status: ✅ **Complete** — Knowledge MCP bootstraps optional connectors, surfaces
-  runtime availability in `/info`, and degrades gracefully when backends are
-  absent or unhealthy.【285a30†L1-L105】【29aa2e†L417-L468】【8585dc†L19-L70】
+- Status: ✅ **Complete** — Knowledge MCP bootstraps optional Qdrant, OpenSearch,
+  and NebulaGraph connectors, exposes their status through `/info`, and falls
+  back to synthetic responses whenever a backend or dependency is unavailable.
+  The wiring is exercised end-to-end by the FastAPI test client, confirming the
+  service advertises the right capability set and connector health flags.【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/config.py†L1-L68】【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/connectors.py†L1-L283】【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/service.py†L1-L238】【F:packages/mcp-servers/knowledge-mcp/tests/test_app.py†L1-L67】
 - Issue stub: `issue/sp2-201-knowledge-mcp-connectors`
 - PR slices:
   1. `pr/sp2-201a-config-health` — tighten environment config, add readiness/telemetry hooks.
@@ -18,9 +20,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-202 — Knowledge fabric storage & GraphRAG materialisation
 
-- Status: ⏳ **Pending** — the `packages/knowledge` package only carries design
-  notes and lacks the storage contract and GraphRAG implementation modules referenced
-  in the plan.【05eb90†L1-L54】【10eb41†L1-L2】
+- Status: ✅ **Complete** — the knowledge package now ships storage contracts,
+  repositories, a graph materialiser, and a pipeline that persists manifests
+  and communities per tenant while serving hybrid retrieval helpers. Unit tests
+  cover ingestion, query blending, and summary retrieval against the filesystem
+  repositories, demonstrating the flow end-to-end.【F:packages/knowledge/src/knowledge/storage/contracts.py†L1-L109】【F:packages/knowledge/src/knowledge/storage/repositories.py†L1-L189】【F:packages/knowledge/src/knowledge/graph/materialise.py†L1-L128】【F:packages/knowledge/src/knowledge/pipeline.py†L1-L99】【F:packages/knowledge/tests/test_pipeline.py†L1-L78】
 - Issue stub: `issue/sp2-202-knowledge-fabric`
 - PR slices:
   1. `pr/sp2-202a-tenant-layout` — define per-tenant storage contracts and schema registry.
@@ -30,8 +34,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-203 — Retrieval index toolchain (ColBERT/SPLADE + hybrid orchestrator)
 
-- Status: ⏳ **Pending** — both retrieval subpackages are documentation-only;
-  the ColBERT/SPLADE CLIs and tests described in the plan have not been implemented yet.【6c173d†L1-L2】【0bbba4†L1-L39】
+- Status: ✅ **Complete** — ColBERT and SPLADE packages now expose Typer CLIs for
+  index build/query/eval and expansion/verification respectively. The CLIs are
+  exercised by rich Click test harnesses and surfaced through dedicated
+  Makefile shortcuts for local workflows, giving us automated coverage of the
+  happy paths.【F:packages/retrieval/colbert/src/colbert/index.py†L1-L35】【F:packages/retrieval/colbert/src/colbert/search.py†L1-L69】【F:packages/retrieval/splade/src/splade/index.py†L1-L46】【F:packages/retrieval/splade/src/splade/verify.py†L1-L62】【F:packages/retrieval/colbert/tests/test_cli.py†L1-L85】【F:packages/retrieval/splade/tests/test_cli.py†L1-L84】【F:Makefile†L1-L34】
 - Issue stub: `issue/sp2-203-retrieval-indexing`
 - PR slices:
   1. `pr/sp2-203a-colbert-cli` — CLI + docs for building/querying ColBERT indexes from seeds.
@@ -41,8 +48,10 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-204 — BGE reranker package
 
-- Status: ⏳ **Pending** — the reranker package still consists of README
-  guidance without the Python module, CLI, or tests that the sprint calls for.【326cef†L1-L2】【061aad†L1-L41】
+- Status: ✅ **Complete** — a deterministic BGE reranker module, CLI, and tests
+  now provide query-aware scoring leveraged by the Knowledge MCP rerank tool.
+  The service defers to the package when available and gracefully synthesises
+  ranks otherwise, with unit tests covering the scorer outputs.【F:packages/rerankers/bge/src/bge_reranker/cli.py†L1-L66】【F:packages/rerankers/bge/src/bge_reranker/scorer.py†L1-L47】【F:packages/rerankers/bge/tests/test_reranker.py†L1-L43】【F:packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/service.py†L88-L150】
 - Issue stub: `issue/sp2-204-bge-reranker`
 - PR slices:
   1. `pr/sp2-204a-wrapper` — package cross-encoder inference utilities with device selection.
@@ -51,9 +60,10 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-205 — Router per-task policies
 
-- Status: ⏳ **Pending** — router MCP still routes everything through a single
-  default provider and does not enforce per-task model policies or validation
-  gates from `configs/router/models-policy.yaml`.【439a49†L15-L44】【3365df†L1-L70】
+- Status: ✅ **Complete** — the router MCP now loads the models policy, enforces
+  per-task guardrails, honours structured decoding options, and covers the
+  policy surface with unit tests that assert rejection paths and successful
+  routing for each task type.【F:packages/mcp-servers/router-mcp/src/router_mcp/config.py†L1-L175】【F:packages/mcp-servers/router-mcp/src/router_mcp/service.py†L1-L246】【F:packages/mcp-servers/router-mcp/tests/test_app.py†L1-L119】
 - Issue stub: `issue/sp2-205-router-policies`
 - PR slices:
   1. `pr/sp2-205a-schema` — extend models-policy schema for reasoning/embedding/rerank routing.
@@ -63,7 +73,8 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 ### SP2-210 — Research MCP CLI/bootstrap
 
 - Status: ✅ **Complete** — `python -m research_mcp` now boots the FastAPI app via
-  uvicorn and wires CLI flags/environment toggles for local usage as described in the sprint scope.【1cb3ee†L1-L6】【94db32†L1-L55】
+  uvicorn, exposes CLI options for config overrides, and ships client + CLI
+  tests covering both HTTP and Typer entrypoints.【F:packages/mcp-servers/research-mcp/main.py†L1-L32】【F:packages/mcp-servers/research-mcp/src/research_mcp/app.py†L1-L101】【F:packages/mcp-servers/research-mcp/tests/test_cli.py†L1-L68】【F:packages/mcp-servers/research-mcp/tests/test_clients.py†L1-L66】
 - Issue stub: `issue/sp2-210-research-mcp-cli`
 - PR slices:
   1. `pr/sp2-210a-uvicorn-cli` — make entrypoint start FastAPI app via uvicorn.

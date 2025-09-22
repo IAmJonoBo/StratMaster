@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import logging
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 from urllib.parse import urlencode
 
 from .config import (
@@ -38,14 +38,14 @@ except ImportError:  # pragma: no cover
 
 
 def _utcnow() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(UTC)
 
 
 class MetasearchClient:
     def __init__(self, settings: MetasearchSettings):
         self.settings = settings
 
-    def search(self, query: str, limit: int) -> List[SearchResult]:
+    def search(self, query: str, limit: int) -> list[SearchResult]:
         if self.settings.use_network and self.settings.endpoint and httpx is not None:
             try:
                 params = {
@@ -54,7 +54,7 @@ class MetasearchClient:
                     "timeout": self.settings.timeout,
                     "limit": limit,
                 }
-                headers: Dict[str, str] = {}
+                headers: dict[str, str] = {}
                 if self.settings.api_key:
                     headers["Authorization"] = f"Bearer {self.settings.api_key}"
                 with httpx.Client(timeout=self.settings.timeout) as client:
@@ -82,7 +82,7 @@ class MetasearchClient:
             ][:limit]
         return self._synthetic(query, limit)
 
-    def _synthetic(self, query: str, limit: int) -> List[SearchResult]:
+    def _synthetic(self, query: str, limit: int) -> list[SearchResult]:
         return [
             SearchResult(
                 title=f"Synthetic result {idx}",
@@ -115,17 +115,16 @@ class CrawlerClient:
                 return self._synthetic_content(url, render_js)
 
             with suppress(Exception):  # pragma: no cover - network path
-                with sync_playwright() as playwright:
-                    browser = playwright.chromium.launch(headless=True)
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(headless=True)
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        return page.content()
+                        html: str = page.content()  # playwright returns str
+                        return html
                     finally:  # pragma: no cover
                         browser.close()
-            logger.warning(
-                "Playwright rendering failed; returning synthetic content"
-            )
+            logger.warning("Playwright rendering failed; returning synthetic content")
             return self._synthetic_content(url, render_js)
 
         if self.settings.use_network and httpx is not None:
@@ -134,7 +133,8 @@ class CrawlerClient:
                 with httpx.Client(timeout=15.0, follow_redirects=True) as client:
                     response = client.get(url, headers=headers)
                     response.raise_for_status()
-                    return response.text
+                    text: str = str(response.text)
+                    return text
             except Exception as exc:  # pragma: no cover
                 logger.warning(
                     "Crawler network fetch failed; returning synthetic content",
@@ -167,7 +167,7 @@ class StorageClient:
         file_path = self.base_path / f"{cache_key}.json"
         if not file_path.exists():
             raise FileNotFoundError(cache_key)
-        data: Dict[str, Any] = json.loads(file_path.read_text(encoding="utf-8"))
+        data: dict[str, Any] = json.loads(file_path.read_text(encoding="utf-8"))
         return CachedPageResource(
             url=data["url"],
             content=data["content"],
@@ -212,7 +212,7 @@ class ProvenanceEmitter:
             logger.warning("boto3 not available; skipping MinIO provenance upload")
             return
         try:
-            s3 = boto3.resource(  # type: ignore[attr-defined]
+            s3 = boto3.resource(
                 "s3",
                 endpoint_url=self.settings.minio_endpoint,
                 aws_access_key_id=self.settings.minio_access_key,
@@ -226,7 +226,7 @@ class ProvenanceEmitter:
                     "cache_key": cache_key,
                 }
             ).encode("utf-8")
-            s3.Object(self.settings.minio_bucket, f"provenance/{cache_key}.json").put(  # type: ignore[attr-defined]
+            s3.Object(self.settings.minio_bucket, f"provenance/{cache_key}.json").put(
                 Body=body,
                 ContentType="application/json",
             )

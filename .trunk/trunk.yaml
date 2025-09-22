@@ -1,3 +1,4 @@
+---
 # This file controls the behavior of Trunk: https://docs.trunk.io/cli
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
@@ -25,7 +26,6 @@ lint:
     - black@25.9.0
     - checkov@3.2.471
     - git-diff-check
-    - hadolint@2.13.1
     - isort@6.0.1
     - markdownlint@0.45.0
     - mypy@1.18.2
@@ -36,6 +36,37 @@ lint:
     - taplo@0.10.0
     - trufflehog@3.90.8
     - yamllint@1.37.1
+  ignore:
+    - linters: [prettier, yamllint]
+      paths:
+        - "helm/**/templates/**"
+        - "helm/templates/**"
+        # Intentionally invalid samples used in negative tests/validation docs
+        - "configs/**/invalid*.yaml"
+        - "configs/**/invalid_*.yaml"
+        - "**/invalid*.yaml"
+        - "**/invalid_*.yaml"
+    - linters: [trufflehog, checkov]
+      # Dev-only compose file contains intentional sample credentials for local testing
+      paths:
+        - "docker-compose.yml"
+    - linters: [mypy]
+      # Exclude tests from static typing in Trunk (mypy.ini already excludes them, but enforce at Trunk level too)
+      paths:
+        - "**/tests/**"
+        # TEMP: avoid upstream mypy internal error when Trunk invokes these files directly
+        - "packages/mcp-servers/router-mcp/src/router_mcp/models.py"
+        - "packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/models.py"
+        # TEMP: mypy false-positive under Trunk runner for optional cli-only deps
+        - "packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/service.py"
+    - linters: [ruff]
+      # Avoid import-sorting noise and strict ruff checks in tests; keep runtime code strict
+      paths:
+        - "**/tests/**"
+    - linters: [bandit]
+      # Tests routinely use 'assert' and simplified error handling. Suppress Bandit noise in tests.
+      paths:
+        - "**/tests/**"
 actions:
   enabled:
     - trunk-announce

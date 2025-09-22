@@ -14,11 +14,11 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Evals MCP", version="0.1.0")
 
     @app.get("/healthz")
-    async def healthz():
+    async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
     @app.get("/info", response_model=InfoResponse)
-    async def info():
+    async def info() -> InfoResponse:
         return InfoResponse(
             name="evals-mcp",
             version="0.1.0",
@@ -28,7 +28,7 @@ def create_app() -> FastAPI:
     router = APIRouter(prefix="/tools", tags=["tools"])
 
     @router.post("/run", response_model=EvalRunResponse)
-    async def run_eval(payload: EvalRunRequest):
+    async def run_eval(payload: EvalRunRequest) -> EvalRunResponse:
         return service.run(payload)
 
     app.include_router(router)

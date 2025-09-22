@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from stratmaster_api.models import DebateTrace, GraphArtifacts, RecommendationOutcome
 
@@ -46,7 +47,7 @@ def build_strategy_graph() -> Callable[[StrategyState], OrchestrationResult]:
     compiled = graph.compile()
 
     def _coerce_state(
-        raw: StrategyState | Dict[str, Any], seed: StrategyState
+        raw: StrategyState | dict[str, Any], seed: StrategyState
     ) -> StrategyState:
         """Ensure the compiled graph result is a StrategyState.
 

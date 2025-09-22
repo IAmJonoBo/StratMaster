@@ -1,6 +1,7 @@
+---
 apiVersion: v2
 name: stratmaster-api
 version: 0.1.0
-appVersion: v0.1.0
+appVersion: "0.1.0"
 description: Helm chart for StratMaster API
 icon: https://raw.githubusercontent.com/IAmJonoBo/StratMaster/main/docs/assets/icon-api.png

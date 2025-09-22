@@ -1,3 +1,4 @@
+---
 # BGE reranker config
 model: BAAI/bge-reranker-large
 max_length: 1024

@@ -11,7 +11,7 @@ from .app import create_app
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Knowledge MCP server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
     parser.add_argument("--port", type=int, default=8082, help="Port to bind")
     args = parser.parse_args()
 

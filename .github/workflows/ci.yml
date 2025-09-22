@@ -1,9 +1,13 @@
+---
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   build-test:
@@ -19,8 +23,15 @@ jobs:
           cache: pip
       - name: Setup Helm
         uses: azure/setup-helm@v4
-      - name: Install packages for tests
-        run: pip install -e packages/api -e packages/mcp-servers/research-mcp
+      - name: Install core packages for tests
+        run: |
+          pip install -e packages/api -e packages/mcp-servers/research-mcp
+      - name: Install retrieval/reranker test extras (3.11 only)
+        if: matrix.python-version == '3.11'
+        run: |
+          pip install -e packages/retrieval/splade[test-cli] \
+                      -e packages/retrieval/colbert[test-cli] \
+                      -e packages/rerankers/bge[test-cli]
       - name: Run pytest (if present)
         run: |
           pip install pytest

@@ -8,8 +8,9 @@ status flags that surface in the `/info` endpoint.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable
+from typing import Any
 
 from .config import AppConfig
 
@@ -52,7 +53,7 @@ class QdrantConnector:
         probe_enabled: bool,
         probe_query: str,
         probe_top_k: int,
-    ) -> "QdrantConnector":
+    ) -> QdrantConnector:
         if not enabled:
             return cls(
                 enabled=False,
@@ -166,7 +167,7 @@ class OpenSearchConnector:
         probe_enabled: bool,
         probe_query: str,
         probe_top_k: int,
-    ) -> "OpenSearchConnector":
+    ) -> OpenSearchConnector:
         if not enabled:
             return cls(
                 enabled=False,
@@ -296,7 +297,7 @@ class NebulaConnector:
         space: str,
         probe_enabled: bool,
         probe_limit: int,
-    ) -> "NebulaConnector":
+    ) -> NebulaConnector:
         if not enabled:
             return cls(
                 enabled=False,
@@ -370,7 +371,7 @@ class NebulaConnector:
             try:
                 session.execute(f"USE {self.space}")
                 result = session.execute(
-                    "MATCH (c) RETURN c.name AS name LIMIT %d" % limit
+                    f"MATCH (c) RETURN c.name AS name LIMIT {limit}"
                 )
                 summaries = []
                 for row in result.rows():
@@ -402,7 +403,7 @@ class NebulaConnector:
             try:
                 session.execute(f"USE {self.space}")
                 result = session.execute(
-                    "MATCH (c) RETURN c.name AS name LIMIT %d" % self.probe_limit
+                    f"MATCH (c) RETURN c.name AS name LIMIT {self.probe_limit}"
                 )
                 self.available = result.is_succeeded() and result.rows()
                 if not self.available:
@@ -421,7 +422,7 @@ class ConnectorBundle:
     nebula: NebulaConnector
 
     @classmethod
-    def from_config(cls, config: AppConfig) -> "ConnectorBundle":
+    def from_config(cls, config: AppConfig) -> ConnectorBundle:
         return cls(
             qdrant=QdrantConnector.create(
                 enabled=config.vector.enable,
@@ -448,7 +449,7 @@ class ConnectorBundle:
             ),
         )
 
-    def as_statuses(self) -> Dict[str, dict[str, Any]]:
+    def as_statuses(self) -> dict[str, dict[str, Any]]:
         return {
             "vector": {
                 "enabled": self.qdrant.enabled,

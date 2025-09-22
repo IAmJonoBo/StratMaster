@@ -18,13 +18,13 @@ and demo commands.
 
 ## Queue conventions
 
-| Task queue              | Owner             | Notes |
-| ----------------------- | ---------------- | ----- |
-| `knowledge_ingest`      | Knowledge MCP    | GraphRAG materialisation. |
-| `research_workflows`    | Research MCP     | Research agent pipelines. |
-| `render_playwright`     | Observability    | Page rendering via Playwright. |
-| `evals`                 | Evaluation MCP   | Automated regression suites. |
-| `compression`           | Compression MCP  | Prompt compression tasks. |
+| Task queue           | Owner           | Notes                          |
+| -------------------- | --------------- | ------------------------------ |
+| `knowledge_ingest`   | Knowledge MCP   | GraphRAG materialisation.      |
+| `research_workflows` | Research MCP    | Research agent pipelines.      |
+| `render_playwright`  | Observability   | Page rendering via Playwright. |
+| `evals`              | Evaluation MCP  | Automated regression suites.   |
+| `compression`        | Compression MCP | Prompt compression tasks.      |
 
 - Workers register with namespace-qualified queue names (`<namespace>.<queue>`)
   when running in shared clusters.
@@ -32,6 +32,7 @@ and demo commands.
 ## Worker configuration
 
 - Python workers use `temporalio` SDK. Config snippet:
+
   ```python
   Worker(
       client,
@@ -40,6 +41,7 @@ and demo commands.
       activities=[chunk_document, upsert_vector, upsert_keyword]
   )
   ```
+
 - Set `activity_schedule_to_close_timeout` to 5 minutes for network-bound tasks.
 - Use `max_concurrent_activity_task_pollers=5` for ingestion heavy workloads.
 

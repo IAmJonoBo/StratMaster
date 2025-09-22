@@ -1,3 +1,4 @@
+---
 strategy: weighted_merge
 alpha_dense: 0.6
 alpha_sparse: 0.4

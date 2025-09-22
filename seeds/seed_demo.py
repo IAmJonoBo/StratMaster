@@ -8,11 +8,12 @@ import importlib
 import json
 import logging
 import os
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any
 
 logger = logging.getLogger("stratmaster.seeds")
 
@@ -79,7 +80,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_bundle(path: Path) -> Mapping[str, List[Dict[str, Any]]]:
+def load_bundle(path: Path) -> Mapping[str, list[dict[str, Any]]]:
     with path.open("r", encoding="utf-8") as fh:
         data = json.load(fh)
     if not isinstance(data, dict):  # pragma: no cover - guard rail
@@ -92,8 +93,8 @@ def _normalise_timestamp(value: str) -> datetime:
         value = value[:-1] + "+00:00"
     dt = datetime.fromisoformat(value)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def _fingerprint(record: Mapping[str, Any]) -> str:
@@ -102,9 +103,9 @@ def _fingerprint(record: Mapping[str, Any]) -> str:
     return f"sha256:{digest}"
 
 
-def _vectorize(text: str, size: int = 16) -> List[float]:
+def _vectorize(text: str, size: int = 16) -> list[float]:
     digest = hashlib.sha256(text.encode("utf-8")).digest()
-    floats: List[float] = []
+    floats: list[float] = []
     for idx in range(size):
         chunk = digest[idx % len(digest) : (idx % len(digest)) + 2]
         if len(chunk) < 2:
@@ -114,8 +115,8 @@ def _vectorize(text: str, size: int = 16) -> List[float]:
     return floats
 
 
-def _prepare_assets(bundle: Mapping[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
-    prepared: List[Dict[str, Any]] = []
+def _prepare_assets(bundle: Mapping[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    prepared: list[dict[str, Any]] = []
     for asset_type, records in bundle.items():
         for record in records:
             base = dict(record)
@@ -188,8 +189,24 @@ def seed_postgres(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> No
                 cur.execute(
                     """
                     INSERT INTO stratmaster_demo.assets (
-                        asset_type, asset_id, title, summary, attributes, provenance, sast, fingerprint
-                    ) VALUES (%(asset_type)s, %(id)s, %(title)s, %(summary)s, %(attributes)s, %(source)s, %(sast)s, %(fingerprint)s)
+                        asset_type,
+                        asset_id,
+                        title,
+                        summary,
+                        attributes,
+                        provenance,
+                        sast,
+                        fingerprint
+                    ) VALUES (
+                        %(asset_type)s,
+                        %(id)s,
+                        %(title)s,
+                        %(summary)s,
+                        %(attributes)s,
+                        %(source)s,
+                        %(sast)s,
+                        %(fingerprint)s
+                    )
                     ON CONFLICT (asset_type, asset_id) DO UPDATE SET
                         title = EXCLUDED.title,
                         summary = EXCLUDED.summary,
@@ -326,7 +343,7 @@ def seed_minio(config: SeedConfig, assets: Iterable[Mapping[str, Any]]) -> None:
     if not client.bucket_exists(config.minio_bucket):  # pragma: no branch - defensive
         client.make_bucket(config.minio_bucket, location=config.minio_region)
     manifest = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "assets": [
             {
                 "asset_type": asset["asset_type"],

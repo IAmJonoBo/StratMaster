@@ -141,7 +141,11 @@ class RouterMCPClient:
         self.timeout = timeout
 
     def complete(
-        self, tenant_id: str, prompt: str, max_tokens: int = 256
+        self,
+        tenant_id: str,
+        prompt: str,
+        max_tokens: int = 256,
+        task: str = "reasoning",
     ) -> dict[str, Any]:
         resp = httpx.post(
             f"{self.base_url}/tools/complete",
@@ -149,6 +153,7 @@ class RouterMCPClient:
                 "tenant_id": tenant_id,
                 "prompt": prompt,
                 "max_tokens": max_tokens,
+                "task": task,
             },
             timeout=self.timeout,
         )
@@ -164,6 +169,7 @@ class RouterMCPClient:
         query: str,
         documents: list[dict[str, str]],
         top_k: int,
+        task: str = "rerank",
     ) -> dict[str, Any]:
         resp = httpx.post(
             f"{self.base_url}/tools/rerank",
@@ -172,6 +178,7 @@ class RouterMCPClient:
                 "query": query,
                 "documents": documents,
                 "top_k": top_k,
+                "task": task,
             },
             timeout=self.timeout,
         )
@@ -321,9 +328,7 @@ class OrchestratorService:
     def run_research(self, plan_id: str, tenant_id: str) -> dict[str, Any]:
         return self._collect_research(plan_id=plan_id, tenant_id=tenant_id)
 
-    def summarise_graph(
-        self, _tenant_id: str, focus: str, limit: int
-    ) -> dict[str, Any]:
+    def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
         graph = GraphArtifacts(
             nodes=[
                 GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
@@ -356,11 +361,12 @@ class OrchestratorService:
 
     def run_debate(
         self,
-        _tenant_id: str,
-        _hypothesis_id: str | None,
-        _claim_ids: list[str] | None,
+        tenant_id: str,
+        hypothesis_id: str | None,
+        claim_ids: list[str] | None,
         max_turns: int,
     ) -> dict[str, Any]:
+        # alias to preserve variable names used previously
         turns = [
             DebateTurn(
                 agent="agent-1",
@@ -519,7 +525,7 @@ class OrchestratorService:
         try:
             payload = self.evals_client.run(tenant_id=tenant_id, suite=suite)
             return payload
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             metrics = {"ragas_score": 0.82, "factscore": 0.78}
             passed = all(value >= 0.7 for value in metrics.values())
             return {
@@ -528,12 +534,16 @@ class OrchestratorService:
                 "metrics": metrics,
             }
 
-    def create_experiment(self, _tenant_id: str, _payload: dict[str, Any]) -> str:
+    def create_experiment(self, tenant_id: str, payload: dict[str, Any]) -> str:
+        # alias for compatibility with previous underscore-prefixed params
+        _tenant_id = tenant_id
+        _payload = payload
         return f"exp-{uuid4().hex[:8]}"
 
     def create_forecast(
-        self, _tenant_id: str, metric_id: str, horizon_days: int
+        self, tenant_id: str, metric_id: str, horizon_days: int
     ) -> Forecast:
+        _tenant_id = tenant_id
         metric = Metric(id=metric_id, name="Metric", definition="Synthetic")
         return Forecast(
             id=f"forecast-{uuid4().hex[:8]}",
@@ -552,7 +562,7 @@ class OrchestratorService:
     def _sources_from_metasearch(self, query: str, max_sources: int) -> list[Source]:
         try:
             payload = self.research_client.metasearch(query=query, limit=max_sources)
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             return [self._synthetic_source(i) for i in range(1, max_sources + 1)]
 
         results = payload.get("results", [])
@@ -584,7 +594,9 @@ class OrchestratorService:
         for src in sources:
             try:
                 crawl = self.research_client.crawl(src.url)
-            except Exception:
+            # nosec B112 - network crawl failures are non-fatal; skip and continue
+            except (httpx.HTTPError, ValueError, TypeError) as exc:
+                logger.warning("research crawl failed; skipping source", exc_info=exc)
                 continue
             content = crawl.get("content", "")
             sha256 = crawl.get("sha256", uuid4().hex)
@@ -613,7 +625,7 @@ class OrchestratorService:
             payload = self.knowledge_client.hybrid_query(
                 tenant_id=tenant_id, query=query, top_k=top_k
             )
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             return []
         hits = cast(list[dict[str, Any]], payload.get("hits", []))
         return hits
@@ -652,7 +664,7 @@ class OrchestratorService:
                 tenant_id=tenant_id, limit=3
             )
             summaries = payload.get("summaries", [])
-        except Exception:
+        except (httpx.HTTPError, ValueError, TypeError):
             summaries = []
 
         if not summaries:
@@ -750,8 +762,10 @@ class OrchestratorService:
             }
             if order:
                 records.sort(key=lambda rec: order.get(rec.document_id, len(order)))
-        except Exception:
-            pass
+        except (httpx.HTTPError, ValueError, TypeError) as exc:
+            logger.warning(
+                "rerank request failed; returning original order", exc_info=exc
+            )
         return records[:max_results]
 
     def _compose_recommendation(
@@ -882,8 +896,11 @@ class OrchestratorService:
                 tenant_id=tenant_id, prompt=prompt, max_tokens=200
             )
             decision.recommendation = completion.get("text", decision.recommendation)
-        except Exception:
-            pass
+        except (httpx.HTTPError, ValueError, TypeError) as exc:
+            logger.warning(
+                "completion request failed; keeping default recommendation",
+                exc_info=exc,
+            )
 
         workflow = WorkflowMetadata(
             workflow_id=f"wf-{uuid4().hex[:6]}",

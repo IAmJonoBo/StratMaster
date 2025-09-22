@@ -108,7 +108,13 @@ def test_debug_config_evals_valid_and_invalid():
         ok = client.get("/debug/config/evals/thresholds")
         assert ok.status_code == 200
         cfg = ok.json()["config"]
-        for section in ["ingestion", "retrieval", "reasoning", "recommendations", "egress"]:
+        for section in [
+            "ingestion",
+            "retrieval",
+            "reasoning",
+            "recommendations",
+            "egress",
+        ]:
             assert isinstance(cfg[section], dict)
 
         bad = client.get("/debug/config/evals/invalid_thresholds")

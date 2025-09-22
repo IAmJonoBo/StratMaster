@@ -56,7 +56,13 @@ class StubKnowledge(KnowledgeMCPClient):
 
 
 class StubRouter(RouterMCPClient):
-    def complete(self, tenant_id: str, prompt: str, max_tokens: int = 256) -> dict[str, Any]:  # type: ignore[override]
+    def complete(
+        self,
+        tenant_id: str,
+        prompt: str,
+        max_tokens: int = 256,
+        task: str = "reasoning",
+    ) -> dict[str, Any]:  # type: ignore[override]
         return {
             "text": "Completed recommendation",
             "provider": "local",
@@ -64,7 +70,12 @@ class StubRouter(RouterMCPClient):
         }
 
     def rerank(  # type: ignore[override]
-        self, tenant_id: str, query: str, documents: list[dict[str, str]], top_k: int
+        self,
+        tenant_id: str,
+        query: str,
+        documents: list[dict[str, str]],
+        top_k: int,
+        task: str = "rerank",
     ) -> dict[str, Any]:
         # reverse order to confirm orchestrator respects rerank results
         ordered = list(reversed(documents))[:top_k]

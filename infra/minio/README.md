@@ -5,12 +5,12 @@ sample workflows so teams can store and retrieve artefacts reliably.
 
 ## Bucket layout
 
-| Bucket name                      | Purpose                              | Lifecycle |
-| -------------------------------- | ------------------------------------ | --------- |
-| `sm-{tenant}-raw`                | Landing zone for raw uploads (PDFs, transcripts). | 30 days hot, transition to glacier tier after 60 days. |
-| `sm-{tenant}-processed`          | Normalised artefacts, embeddings, agent outputs. | 90 days hot, delete after 365 days. |
-| `sm-shared-model-assets`         | Shared prompts, constitutions, evaluation artefacts. | Retain indefinitely with versioning. |
-| `sm-demo`                        | Demo dataset synced by `seeds/seed_demo.py`. | Resettable; empty bucket nightly. |
+| Bucket name              | Purpose                                              | Lifecycle                                              |
+| ------------------------ | ---------------------------------------------------- | ------------------------------------------------------ |
+| `sm-{tenant}-raw`        | Landing zone for raw uploads (PDFs, transcripts).    | 30 days hot, transition to glacier tier after 60 days. |
+| `sm-{tenant}-processed`  | Normalised artefacts, embeddings, agent outputs.     | 90 days hot, delete after 365 days.                    |
+| `sm-shared-model-assets` | Shared prompts, constitutions, evaluation artefacts. | Retain indefinitely with versioning.                   |
+| `sm-demo`                | Demo dataset synced by `seeds/seed_demo.py`.         | Resettable; empty bucket nightly.                      |
 
 - Tenants map 1:1 with customer environments (e.g. `acme`, `default`).
 - Bucket names are DNS-safe and kept under 63 chars; use hyphen-separated IDs.
@@ -21,6 +21,7 @@ sample workflows so teams can store and retrieve artefacts reliably.
 
 - **Service accounts:** each MCP/API component receives an IAM user with scoped
   access to its tenant buckets. Example policy snippet:
+
   ```json
   {
     "Version": "2012-10-17",
@@ -36,6 +37,7 @@ sample workflows so teams can store and retrieve artefacts reliably.
     ]
   }
   ```
+
 - **Tenant isolation:** policies never span tenants. Shared buckets (`sm-shared-model-assets`)
   are read-only for product teams, writable only by platform automation.
 - **Console access:** disable console login for app users; use MinIO console only for

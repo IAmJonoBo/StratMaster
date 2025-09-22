@@ -5,11 +5,11 @@ document outlines space layout, schema DDL, retention, and integration guidance.
 
 ## Space layout
 
-| Space name              | Purpose                               | Partition | Replica |
-| ----------------------- | ------------------------------------- | --------- | ------- |
-| `tenant_<id>_strategy`  | Strategic entities (hypotheses, plays) | 5         | 2 |
-| `tenant_<id>_research`  | Research artefacts, citations          | 5         | 2 |
-| `demo_stratmaster`      | Demo knowledge graph                   | 3         | 1 |
+| Space name             | Purpose                                | Partition | Replica |
+| ---------------------- | -------------------------------------- | --------- | ------- |
+| `tenant_<id>_strategy` | Strategic entities (hypotheses, plays) | 5         | 2       |
+| `tenant_<id>_research` | Research artefacts, citations          | 5         | 2       |
+| `demo_stratmaster`     | Demo knowledge graph                   | 3         | 1       |
 
 - Spaces are created per tenant to isolate workloads. Default vid type `FIXED_STRING(128)`.
 - Use `meta_client_timeout_ms=60000` for reliable schema propagation.
@@ -26,6 +26,7 @@ CREATE EDGE IF NOT EXISTS derived_from(weight double);
 ```
 
 - Index frequently queried properties:
+
   ```ngql
   CREATE TAG INDEX IF NOT EXISTS idx_hypothesis_name ON hypothesis(name(64));
   CREATE EDGE INDEX IF NOT EXISTS idx_supports_weight ON supports(weight);
@@ -40,14 +41,19 @@ CREATE EDGE IF NOT EXISTS derived_from(weight double);
 ## Sample GraphRAG queries
 
 - Fetch supporting artefacts for a hypothesis:
+
   ```ngql
   GO 2 STEPS FROM "hypothesis:premium-upsell" OVER supports YIELD supports.weight AS weight, $$.artefact.title AS title;
   ```
+
 - Identify hypotheses impacted by a given artefact:
+
   ```ngql
   GO 2 STEPS FROM "artefact:voc-sentiment" OVER <<supports REVERSE YIELD supports.weight AS weight, $$.hypothesis.name;
   ```
+
 - Discover communities:
+
   ```ngql
   CALL algo.subgraph("tenant_acme_strategy", {"seed_vertices": ["hypothesis:premium-upsell"]});
   ```
