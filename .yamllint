@@ -1,0 +1,15 @@
+extends: default
+
+rules:
+  quoted-strings: disable
+  document-start: disable
+  truthy: disable
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+    allow-numbers: true
+
+ignore: |
+  helm/**/templates/
+  helm/templates/
+  **/charts/**/templates/

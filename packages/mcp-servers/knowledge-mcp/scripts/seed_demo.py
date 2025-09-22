@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import logging
-from pathlib import Path
+from pathlib import Path  # noqa: F401  # kept for potential future file-based seeding
 
 from knowledge_mcp.config import load_config
 

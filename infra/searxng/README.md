@@ -8,14 +8,14 @@ limits, and operational notes.
 
 We only enable privacy-friendly engines with clear licensing:
 
-| Engine          | Enabled | Notes |
-| --------------- | ------- | ----- |
-| DuckDuckGo      | ✅       | Primary web source. |
-| Brave           | ✅       | Used for recency-sensitive queries. |
-| Wikipedia       | ✅       | Citation-friendly. |
-| StackOverflow   | ✅       | Technical research. |
-| Google          | 🚫       | Disabled to avoid ToS conflicts. |
-| Bing            | 🚫       | Disabled. |
+| Engine        | Enabled | Notes                               |
+| ------------- | ------- | ----------------------------------- |
+| DuckDuckGo    | ✅      | Primary web source.                 |
+| Brave         | ✅      | Used for recency-sensitive queries. |
+| Wikipedia     | ✅      | Citation-friendly.                  |
+| StackOverflow | ✅      | Technical research.                 |
+| Google        | 🚫      | Disabled to avoid ToS conflicts.    |
+| Bing          | 🚫      | Disabled.                           |
 
 Blocked domains (glob patterns) live under `configs/searxng/blocklist.txt` and
 include ad networks, social media, and competitors.

@@ -210,4 +210,3 @@ def main(argv: Sequence[str] | None = None) -> None:
 
 
 __all__ = ["build_parser", "main"]
-

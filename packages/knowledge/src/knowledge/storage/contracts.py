@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections import Counter
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import math
 import re
-from typing import Iterable
+from collections import Counter
+from collections.abc import Iterable
+from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -46,9 +46,9 @@ class ArtefactRecord(BaseModel):
         sast: datetime | str | None = None,
         tags: Iterable[str] | None = None,
         embedding_dim: int = 128,
-    ) -> "ArtefactRecord":
+    ) -> ArtefactRecord:
         if sast is None:
-            sast = datetime.now(timezone.utc)
+            sast = datetime.now(UTC)
         if isinstance(sast, str):
             try:
                 sast = datetime.fromisoformat(sast.replace("Z", "+00:00"))
@@ -80,7 +80,9 @@ class ArtefactRecord(BaseModel):
             sparse_terms=sparse,
         )
 
-    def similarity(self, query: str, alpha_dense: float = 0.6, alpha_sparse: float = 0.4) -> float:
+    def similarity(
+        self, query: str, alpha_dense: float = 0.6, alpha_sparse: float = 0.4
+    ) -> float:
         tokens = _tokenise(query)
         if not tokens:
             return 0.0
@@ -91,7 +93,9 @@ class ArtefactRecord(BaseModel):
             dense_query[bucket] += float(count)
         magnitude = math.sqrt(sum(val * val for val in dense_query)) or 1.0
         dense_query = [val / magnitude for val in dense_query]
-        dense_score = sum(a * b for a, b in zip(self.dense_vector, dense_query))
+        dense_score = sum(
+            a * b for a, b in zip(self.dense_vector, dense_query, strict=True)
+        )
         sparse_score = 0.0
         for token, weight in sparse_query.items():
             sparse_score += weight * self.sparse_terms.get(token, 0.0)
@@ -140,4 +144,3 @@ class TenantManifest(BaseModel):
 class RankedArtefact:
     score: float
     artefact: ArtefactRecord
-

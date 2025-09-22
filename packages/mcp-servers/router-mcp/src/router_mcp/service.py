@@ -64,7 +64,9 @@ class RouterService:
             default_model=payload.model or self.config.default_provider.embedding_model,
         )
         self._validate_embedding(tenant_policy, task_policy, payload)
-        model_name = payload.model or route.model or self.config.default_provider.embedding_model
+        model_name = (
+            payload.model or route.model or self.config.default_provider.embedding_model
+        )
         adapter = self._adapter_for(route.provider, embedding_model=model_name)
         result = adapter.embed(payload.input, model=model_name)
         vectors = [
@@ -114,7 +116,9 @@ class RouterService:
         task_policy = tenant_policy.tasks.get(task)
         if task_policy is None:
             if tenant_policy.validation.reject_unknown_tasks:
-                raise HTTPException(status_code=400, detail=f"Task '{task}' is not allowed")
+                raise HTTPException(
+                    status_code=400, detail=f"Task '{task}' is not allowed"
+                )
             task_policy = TaskPolicy(
                 name=task,
                 primary=TaskRoute(
@@ -130,7 +134,9 @@ class RouterService:
             detail=f"No providers available for task '{task}'",
         )
 
-    def _provider_enabled(self, tenant_policy: TenantPolicy, provider_name: str) -> bool:
+    def _provider_enabled(
+        self, tenant_policy: TenantPolicy, provider_name: str
+    ) -> bool:
         settings = tenant_policy.providers.get(provider_name)
         if settings is None:
             return provider_name == self.config.default_provider.name
@@ -149,16 +155,24 @@ class RouterService:
         guardrails = tenant_policy.validation.guardrails
         max_tokens = self._int_param(params.get("max_output_tokens"))
         if max_tokens is not None and payload.max_tokens > max_tokens:
-            raise HTTPException(status_code=400, detail="max_tokens exceeds policy limit")
+            raise HTTPException(
+                status_code=400, detail="max_tokens exceeds policy limit"
+            )
         param_temp = self._float_param(params.get("temperature_max"))
         if param_temp is not None and payload.temperature > param_temp:
-            raise HTTPException(status_code=400, detail="temperature exceeds task policy")
+            raise HTTPException(
+                status_code=400, detail="temperature exceeds task policy"
+            )
         global_temp = self._float_param(guardrails.get("temperature_max_global"))
         if global_temp is not None and payload.temperature > global_temp:
-            raise HTTPException(status_code=400, detail="temperature exceeds global guardrail")
+            raise HTTPException(
+                status_code=400, detail="temperature exceeds global guardrail"
+            )
         max_context = self._int_param(guardrails.get("max_context_tokens"))
         if max_context is not None and payload.max_tokens > max_context:
-            raise HTTPException(status_code=400, detail="context length exceeds guardrail")
+            raise HTTPException(
+                status_code=400, detail="context length exceeds guardrail"
+            )
 
     def _validate_embedding(
         self,
@@ -169,7 +183,9 @@ class RouterService:
         params = task_policy.parameters
         max_batch = self._int_param(params.get("max_batch"))
         if max_batch is not None and len(payload.input) > max_batch:
-            raise HTTPException(status_code=400, detail="embedding batch exceeds policy")
+            raise HTTPException(
+                status_code=400, detail="embedding batch exceeds policy"
+            )
         allow_raw = params.get("allow_raw_documents", True)
         if allow_raw is False:
             for item in payload.input:

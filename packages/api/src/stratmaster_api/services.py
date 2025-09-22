@@ -328,9 +328,9 @@ class OrchestratorService:
     def run_research(self, plan_id: str, tenant_id: str) -> dict[str, Any]:
         return self._collect_research(plan_id=plan_id, tenant_id=tenant_id)
 
-    def summarise_graph(
-        self, _tenant_id: str, focus: str, limit: int
-    ) -> dict[str, Any]:
+    def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
+        # alias to preserve prior underscore-prefixed name used internally
+        _tenant_id = tenant_id
         graph = GraphArtifacts(
             nodes=[
                 GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
@@ -363,11 +363,15 @@ class OrchestratorService:
 
     def run_debate(
         self,
-        _tenant_id: str,
-        _hypothesis_id: str | None,
-        _claim_ids: list[str] | None,
+        tenant_id: str,
+        hypothesis_id: str | None,
+        claim_ids: list[str] | None,
         max_turns: int,
     ) -> dict[str, Any]:
+        # alias to preserve variable names used previously
+        _tenant_id = tenant_id
+        _hypothesis_id = hypothesis_id
+        _claim_ids = claim_ids
         turns = [
             DebateTurn(
                 agent="agent-1",
@@ -535,12 +539,16 @@ class OrchestratorService:
                 "metrics": metrics,
             }
 
-    def create_experiment(self, _tenant_id: str, _payload: dict[str, Any]) -> str:
+    def create_experiment(self, tenant_id: str, payload: dict[str, Any]) -> str:
+        # alias for compatibility with previous underscore-prefixed params
+        _tenant_id = tenant_id
+        _payload = payload
         return f"exp-{uuid4().hex[:8]}"
 
     def create_forecast(
-        self, _tenant_id: str, metric_id: str, horizon_days: int
+        self, tenant_id: str, metric_id: str, horizon_days: int
     ) -> Forecast:
+        _tenant_id = tenant_id
         metric = Metric(id=metric_id, name="Metric", definition="Synthetic")
         return Forecast(
             id=f"forecast-{uuid4().hex[:8]}",

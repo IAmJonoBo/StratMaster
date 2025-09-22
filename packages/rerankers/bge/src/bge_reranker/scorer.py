@@ -5,9 +5,8 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass
-from typing import Iterable
 
-from .models import RerankDocument, RerankRequest, RerankResult
+from .models import RerankRequest, RerankResult
 
 _TOKEN_PATTERN = re.compile(r"[A-Za-z0-9]+")
 
@@ -34,9 +33,11 @@ def _similarity(query_vec: dict[str, float], doc_vec: dict[str, float]) -> float
 class BGEReranker:
     model_name: str = "BAAI/bge-reranker-base"
 
-    def rerank(self, request: RerankRequest | None = None, **kwargs) -> list[RerankResult]:
+    def rerank(
+        self, request: RerankRequest | None = None, **kwargs: object
+    ) -> list[RerankResult]:
         if request is None:
-            request = RerankRequest(**kwargs)
+            request = RerankRequest(**kwargs)  # type: ignore[arg-type]
         query_vec = _vectorise(request.query)
         results: list[RerankResult] = []
         for doc in request.documents:
@@ -47,4 +48,3 @@ class BGEReranker:
         for idx, item in enumerate(results[: request.top_k], start=1):
             item.rank = idx
         return results[: request.top_k]
-

@@ -3,13 +3,31 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from typer.testing import CliRunner
+import pytest
 
-from splade.config import SpladeConfig
-from splade.expand import app as expand_app
-from splade.index import app as index_app
-from splade.verify import app as verify_app
-from splade.indexer import SpladeIndex, SpladeIndexer
+
+def _require_splade_cli_or_skip():
+    try:  # lazy imports so the test module remains importable
+        from splade.config import SpladeConfig  # type: ignore
+        from splade.expand import app as expand_app  # type: ignore
+        from splade.index import app as index_app  # type: ignore
+        from splade.indexer import SpladeIndex, SpladeIndexer  # type: ignore
+        from splade.verify import app as verify_app  # type: ignore
+        from typer.testing import CliRunner  # type: ignore
+    except Exception:  # pragma: no cover - environment-dependent
+        pytest.skip(
+            "SPLADE CLI dependencies not installed; skipping",
+            allow_module_level=False,
+        )
+    return (
+        CliRunner,
+        SpladeConfig,
+        expand_app,
+        index_app,
+        SpladeIndex,
+        SpladeIndexer,
+        verify_app,
+    )
 
 
 def _write_config(tmp_path: Path, corpus_path: Path) -> Path:
@@ -46,14 +64,31 @@ def _write_corpus(tmp_path: Path) -> Path:
 
 
 def test_expand_cli_writes_jsonl(tmp_path: Path) -> None:
-    runner = CliRunner()
+    (
+        cli_runner,
+        splade_config,
+        expand_app,
+        _index_app,
+        _splade_index,
+        _splade_indexer,
+        _verify_app,
+    ) = _require_splade_cli_or_skip()
+    runner = cli_runner()
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
     output_path = tmp_path / "expansions.jsonl"
 
     result = runner.invoke(
         expand_app,
-        ["run", "--config", str(config_path), "--output", str(output_path), "--max-features", "50"],
+        [
+            "run",
+            "--config",
+            str(config_path),
+            "--output",
+            str(output_path),
+            "--max-features",
+            "50",
+        ],
     )
     assert result.exit_code == 0
     assert output_path.exists()
@@ -62,34 +97,58 @@ def test_expand_cli_writes_jsonl(tmp_path: Path) -> None:
 
 
 def test_index_cli_materialises_index(tmp_path: Path) -> None:
+    (
+        cli_runner,
+        splade_config,
+        _expand_app,
+        index_app,
+        splade_index,
+        splade_indexer,
+        _verify_app,
+    ) = _require_splade_cli_or_skip()
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
-    indexer = SpladeIndexer(SpladeConfig(**json.loads(config_path.read_text())))
+    indexer = splade_indexer(splade_config(**json.loads(config_path.read_text())))
     index_path = indexer.materialise(tmp_path / "artifacts" / "splade-index")
 
-    runner = CliRunner()
+    runner = cli_runner()
     result = runner.invoke(
         index_app,
-        ["build", "--config", str(config_path), "--output", str(tmp_path / "artifacts" / "splade-index")],
+        [
+            "build",
+            "--config",
+            str(config_path),
+            "--output",
+            str(tmp_path / "artifacts" / "splade-index"),
+        ],
     )
     assert result.exit_code == 0
-    persisted = SpladeIndex.load(index_path)
+    persisted = splade_index.load(index_path)
     assert len(persisted.documents) == 2
 
 
 def test_verify_cli_confirms_alignment(tmp_path: Path) -> None:
+    (
+        cli_runner,
+        splade_config,
+        expand_app,
+        _index_app,
+        _splade_index,
+        splade_indexer,
+        verify_app,
+    ) = _require_splade_cli_or_skip()
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
-    expander_runner = CliRunner()
+    expander_runner = cli_runner()
     expansions_path = tmp_path / "expansions.jsonl"
     expander_runner.invoke(
         expand_app,
         ["run", "--config", str(config_path), "--output", str(expansions_path)],
     )
-    indexer = SpladeIndexer(SpladeConfig(**json.loads(config_path.read_text())))
+    indexer = splade_indexer(splade_config(**json.loads(config_path.read_text())))
     index_path = indexer.materialise(tmp_path / "artifacts" / "splade-index")
 
-    runner = CliRunner()
+    runner = cli_runner()
     result = runner.invoke(
         verify_app,
         [

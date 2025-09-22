@@ -8,7 +8,7 @@ transport (HTTP, MCP, LangGraph shared memory).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from stratmaster_api.models import (
     Assumption,
@@ -27,8 +27,8 @@ class ToolInvocation:
     """Record of a single MCP tool invocation."""
 
     name: str
-    arguments: Dict[str, Any]
-    response: Dict[str, Any] | None = None
+    arguments: dict[str, Any]
+    response: dict[str, Any] | None = None
     error: str | None = None
 
 
@@ -36,8 +36,8 @@ class ToolInvocation:
 class AgentScratchpad:
     """Temporary agent-level working memory."""
 
-    notes: List[str] = field(default_factory=list)
-    tool_calls: List[ToolInvocation] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    tool_calls: list[ToolInvocation] = field(default_factory=list)
 
 
 @dataclass
@@ -46,17 +46,17 @@ class StrategyState:
 
     tenant_id: str
     query: str
-    claims: List[Claim] = field(default_factory=list)
-    assumptions: List[Assumption] = field(default_factory=list)
-    retrieval: List[RetrievalRecord] = field(default_factory=list)
-    artefacts: Optional[GraphArtifacts] = None
-    debate: Optional[DebateTrace] = None
-    decision_brief: Optional[DecisionBrief] = None
+    claims: list[Claim] = field(default_factory=list)
+    assumptions: list[Assumption] = field(default_factory=list)
+    retrieval: list[RetrievalRecord] = field(default_factory=list)
+    artefacts: GraphArtifacts | None = None
+    debate: DebateTrace | None = None
+    decision_brief: DecisionBrief | None = None
     workflow: WorkflowMetadata | None = None
-    metrics: Dict[str, float] = field(default_factory=dict)
-    scratchpad: Dict[str, AgentScratchpad] = field(default_factory=dict)
-    pending_tasks: List[str] = field(default_factory=list)
-    completed_tasks: List[str] = field(default_factory=list)
+    metrics: dict[str, float] = field(default_factory=dict)
+    scratchpad: dict[str, AgentScratchpad] = field(default_factory=dict)
+    pending_tasks: list[str] = field(default_factory=list)
+    completed_tasks: list[str] = field(default_factory=list)
 
 
 @dataclass

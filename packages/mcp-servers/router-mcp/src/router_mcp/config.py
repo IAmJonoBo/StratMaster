@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 
 def _env(name: str, default: str) -> str:
@@ -96,7 +96,9 @@ def load_config() -> AppConfig:
     )
     structured = _load_structured_decoding()
     policy = _load_models_policy()
-    return AppConfig(default_provider=provider, structured_decoding=structured, policy=policy)
+    return AppConfig(
+        default_provider=provider, structured_decoding=structured, policy=policy
+    )
 
 
 def _load_structured_decoding() -> dict[str, Any]:
@@ -144,7 +146,9 @@ def _load_models_policy() -> ModelsPolicy:
                 model=str(primary_cfg.get("model", "")),
             )
             fallbacks = [
-                TaskRoute(provider=str(item.get("provider")), model=str(item.get("model")))
+                TaskRoute(
+                    provider=str(item.get("provider")), model=str(item.get("model"))
+                )
                 for item in task_cfg.get("fallbacks", []) or []
                 if item.get("provider") and item.get("model")
             ]
@@ -171,14 +175,17 @@ def _load_models_policy() -> ModelsPolicy:
 
         validation_cfg = tenant_cfg.get("validation", {}) or {}
         validation = ValidationSettings(
-            reject_unknown_tasks=bool(validation_cfg.get("reject_unknown_tasks", False)),
+            reject_unknown_tasks=bool(
+                validation_cfg.get("reject_unknown_tasks", False)
+            ),
             enforce_privacy_constraints=bool(
                 validation_cfg.get("enforce_privacy_constraints", False)
             ),
             guardrails=validation_cfg.get("guardrails", {}) or {},
         )
-        tenants[tenant_id] = TenantPolicy(tasks=tasks, providers=providers, validation=validation)
+        tenants[tenant_id] = TenantPolicy(
+            tasks=tasks, providers=providers, validation=validation
+        )
 
     structured_outputs = raw.get("structured_outputs", {}) or {}
     return ModelsPolicy(tenants=tenants, structured_outputs=structured_outputs)
-

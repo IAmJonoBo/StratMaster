@@ -18,7 +18,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "Scanning for AppleDouble and macOS metadata files..."
-          matches=$(git ls-files -z | tr '\0' '\n' | grep -E '(^|/)\._|(^|/)\.DS_Store$|(^|/)\.AppleDouble(/|$)' || true)
+          matches=$(git ls-files -z | tr '\0' '\n' | \
+            grep -E '(^|/)\._|(^|/)\.DS_Store$|(^|/)\.AppleDouble(/|$)' || true)
           if [ -n "$matches" ]; then
             echo "Found forbidden files:" >&2
             echo "$matches" >&2

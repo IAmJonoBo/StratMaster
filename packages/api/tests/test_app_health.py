@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from stratmaster_api.app import create_app
 
 
-def test_healthz():
+def test_healthz() -> None:
     app = create_app()
     client = TestClient(app)
     resp = client.get("/healthz")

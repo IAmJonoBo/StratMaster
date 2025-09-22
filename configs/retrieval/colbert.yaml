@@ -17,7 +17,8 @@ embedding:
 search:
   k: 50
   max_passages: 4
-  alpha_dense_sparse_mix: 0.7  # used in hybrid mode
+  # used in hybrid mode
+  alpha_dense_sparse_mix: 0.7
 storage:
   backend: opensearch
   opensearch:

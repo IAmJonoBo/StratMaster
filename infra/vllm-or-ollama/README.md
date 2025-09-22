@@ -5,13 +5,13 @@ fallback rules for running local LLM inference via vLLM or Ollama.
 
 ## Supported models
 
-| Model name              | Provider | Context window | Recommended hardware |
-| ----------------------- | -------- | -------------- | -------------------- |
-| `mixtral-8x7b-instruct` | vLLM     | 32k tokens     | 2×A100 40GB or 4×L40S | 
-| `qwen2.5-14b-instruct`  | vLLM     | 16k tokens     | 1×A100 80GB or 2×A40 |
-| `mistral-nemo`          | vLLM     | 8k tokens      | 1×A100 40GB |
-| `llama3.1-8b-instruct`  | Ollama   | 8k tokens      | CPU ok, GPU optional |
-| `phi3-mini-4k`          | Ollama   | 4k tokens      | CPU ok |
+| Model name              | Provider | Context window | Recommended hardware  |
+| ----------------------- | -------- | -------------- | --------------------- |
+| `mixtral-8x7b-instruct` | vLLM     | 32k tokens     | 2×A100 40GB or 4×L40S |
+| `qwen2.5-14b-instruct`  | vLLM     | 16k tokens     | 1×A100 80GB or 2×A40  |
+| `mistral-nemo`          | vLLM     | 8k tokens      | 1×A100 40GB           |
+| `llama3.1-8b-instruct`  | Ollama   | 8k tokens      | CPU ok, GPU optional  |
+| `phi3-mini-4k`          | Ollama   | 4k tokens      | CPU ok                |
 
 - vLLM runs behind `uvicorn` with tensor parallelism disabled by default (single
   GPU). Adjust via `--tensor-parallel-size` in `docker-compose.yml` when multiple
@@ -20,12 +20,12 @@ fallback rules for running local LLM inference via vLLM or Ollama.
 
 ## Resource profiles
 
-| Target      | CPU          | Memory        | GPU                     | Notes |
-| ----------- | ------------ | ------------- | ----------------------- | ----- |
-| Dev (CPU)   | 8 cores      | 32 GB         | None                    | Ollama only. |
-| Dev (GPU)   | 16 cores     | 64 GB         | 1×RTX 4090 / 24 GB VRAM | vLLM with `qwen2.5`. |
-| Staging     | 32 cores     | 128 GB        | 2×L40S (48 GB)          | Mixtral for evaluation flows. |
-| Production  | 64 cores     | 256 GB        | 2×A100 80 GB            | Supports structured generation with guardrails. |
+| Target     | CPU      | Memory | GPU                     | Notes                                           |
+| ---------- | -------- | ------ | ----------------------- | ----------------------------------------------- |
+| Dev (CPU)  | 8 cores  | 32 GB  | None                    | Ollama only.                                    |
+| Dev (GPU)  | 16 cores | 64 GB  | 1×RTX 4090 / 24 GB VRAM | vLLM with `qwen2.5`.                            |
+| Staging    | 32 cores | 128 GB | 2×L40S (48 GB)          | Mixtral for evaluation flows.                   |
+| Production | 64 cores | 256 GB | 2×A100 80 GB            | Supports structured generation with guardrails. |
 
 ## Routing & fallback
 

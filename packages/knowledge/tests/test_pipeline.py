@@ -4,7 +4,12 @@ from datetime import datetime
 from pathlib import Path
 
 from knowledge import ArtefactRecord, KnowledgePipeline
-from knowledge.storage.repositories import GraphStore, KeywordStore, ManifestStore, VectorStore
+from knowledge.storage.repositories import (
+    GraphStore,
+    KeywordStore,
+    ManifestStore,
+    VectorStore,
+)
 
 
 def _create_pipeline(tmp_path: Path) -> KnowledgePipeline:
@@ -12,7 +17,12 @@ def _create_pipeline(tmp_path: Path) -> KnowledgePipeline:
     keyword = KeywordStore(tmp_path / "keywords")
     graph = GraphStore(tmp_path / "graph")
     manifest = ManifestStore(tmp_path / "manifests")
-    return KnowledgePipeline(vector_store=vector, keyword_store=keyword, graph_store=graph, manifest_store=manifest)
+    return KnowledgePipeline(
+        vector_store=vector,
+        keyword_store=keyword,
+        graph_store=graph,
+        manifest_store=manifest,
+    )
 
 
 def test_ingest_materialises_graph(tmp_path: Path) -> None:

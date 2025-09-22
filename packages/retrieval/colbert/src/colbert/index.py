@@ -33,7 +33,10 @@ def main(
 
 
 @app.command()
-def build(config: Path = typer.Option(..., exists=True, readable=True), output: Path | None = None) -> None:
+def build(
+    config: Path = typer.Option(..., exists=True, readable=True),
+    output: Path | None = None,
+) -> None:
     """Build an index using the provided YAML configuration."""
 
     _build_index(config, output)
@@ -41,4 +44,3 @@ def build(config: Path = typer.Option(..., exists=True, readable=True), output: 
 
 if __name__ == "__main__":  # pragma: no cover
     app()
-

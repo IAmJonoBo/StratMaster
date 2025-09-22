@@ -26,7 +26,9 @@ def _run_cli(query: str, documents_path: Path, top_k: int) -> None:
 def main(
     ctx: typer.Context,
     query: str = typer.Option(None, help="Query to rerank against"),
-    documents_path: Path = typer.Option(None, exists=True, dir_okay=False, file_okay=True),
+    documents_path: Path = typer.Option(
+        None, exists=True, dir_okay=False, file_okay=True
+    ),
     top_k: int = typer.Option(5, min=1, max=50),
 ) -> None:
     if ctx.invoked_subcommand is not None:
@@ -39,7 +41,9 @@ def main(
 @app.command()
 def run(
     query: str = typer.Option(..., help="Query to rerank against"),
-    documents_path: Path = typer.Option(..., exists=True, dir_okay=False, file_okay=True),
+    documents_path: Path = typer.Option(
+        ..., exists=True, dir_okay=False, file_okay=True
+    ),
     top_k: int = typer.Option(5, min=1, max=50),
 ) -> None:
     _run_cli(query, documents_path, top_k)
@@ -47,4 +51,3 @@ def run(
 
 if __name__ == "__main__":  # pragma: no cover
     app()
-

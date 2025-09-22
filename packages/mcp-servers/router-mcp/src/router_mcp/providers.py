@@ -98,11 +98,14 @@ class ProviderAdapter:
         model: str | None = None,
     ) -> dict[str, Any]:
         target_model = model or self.config.rerank_model
-        if self.config.name == "local" and BGEReranker is not None and RerankDocument is not None:
+        if (
+            self.config.name == "local"
+            and BGEReranker is not None
+            and RerankDocument is not None
+        ):
             reranker = BGEReranker(model_name=target_model)
             request_docs = [
-                RerankDocument(id=doc["id"], text=doc["text"])
-                for doc in documents
+                RerankDocument(id=doc["id"], text=doc["text"]) for doc in documents
             ]
             results = reranker.rerank(query=query, documents=request_docs, top_k=top_k)
             return {

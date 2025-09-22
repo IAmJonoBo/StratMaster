@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -69,4 +69,3 @@ def load_config(path: str | Path) -> ColbertConfig:
         "storage": raw.get("storage", {}),
     }
     return ColbertConfig(**merged)
-

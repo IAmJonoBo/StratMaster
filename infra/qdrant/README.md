@@ -5,10 +5,10 @@ tenancy strategy, recommended index parameters, and monitoring.
 
 ## Collection layout
 
-| Collection name        | Purpose                                   | Vector size | Distance |
-| ---------------------- | ----------------------------------------- | ----------- | -------- |
-| `tenant_<id>_research` | Research MCP summaries + citations        | 1024        | Cosine   |
-| `tenant_<id>_assets`   | Knowledge MCP canonical artefacts         | 1536        | Dot      |
+| Collection name        | Purpose                                     | Vector size | Distance |
+| ---------------------- | ------------------------------------------- | ----------- | -------- |
+| `tenant_<id>_research` | Research MCP summaries + citations          | 1024        | Cosine   |
+| `tenant_<id>_assets`   | Knowledge MCP canonical artefacts           | 1536        | Dot      |
 | `demo_stratmaster`     | Demo corpus seeded via `seeds/seed_demo.py` | 16          | Cosine   |
 
 - Each tenant gets isolated collections prefixed with their namespace. Use
@@ -18,14 +18,14 @@ tenancy strategy, recommended index parameters, and monitoring.
 
 ## Recommended parameters
 
-| Parameter                     | Value | Notes |
-| ----------------------------- | ----- | ----- |
-| `hnsw.m`                      | 32    | Balanced recall/latency for 1k QPS. |
-| `hnsw.ef_construct`          | 128   | Higher values improve recall; adjust for large datasets. |
-| `quantization`                | `scalar` for `tenant_*` collections, `none` for demo. |
-| `replication_factor`          | 2 (staging/prod) | Enables HA. |
-| `write_consistency_factor`    | 1 (dev), 2 (prod) | Trade-off between availability and durability. |
-| `shard_number`                | 3 (prod) | Spread load across nodes. |
+| Parameter                  | Value                                                 | Notes                                                    |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| `hnsw.m`                   | 32                                                    | Balanced recall/latency for 1k QPS.                      |
+| `hnsw.ef_construct`        | 128                                                   | Higher values improve recall; adjust for large datasets. |
+| `quantization`             | `scalar` for `tenant_*` collections, `none` for demo. |
+| `replication_factor`       | 2 (staging/prod)                                      | Enables HA.                                              |
+| `write_consistency_factor` | 1 (dev), 2 (prod)                                     | Trade-off between availability and durability.           |
+| `shard_number`             | 3 (prod)                                              | Spread load across nodes.                                |
 
 ## Seeding & updates
 

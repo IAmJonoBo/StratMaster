@@ -40,7 +40,7 @@ class AgentState(BaseModel):
 
 ## LangGraph wiring
 
-```
+```text
 Researcher → Synthesiser ↘
              ↑          Strategist → Output
 Adversary ----↗

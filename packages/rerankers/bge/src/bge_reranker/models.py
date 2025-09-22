@@ -28,4 +28,3 @@ class RerankResult(BaseModel):
     score: float
     text: str
     rank: int
-

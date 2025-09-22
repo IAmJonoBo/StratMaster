@@ -35,12 +35,16 @@ def main(
     ctx: typer.Context,
     config: Path = typer.Option(None, exists=True, readable=True),
     index_path: Path = typer.Option(None, exists=True, dir_okay=False, file_okay=True),
-    expansions_path: Path = typer.Option(None, exists=True, dir_okay=False, file_okay=True),
+    expansions_path: Path = typer.Option(
+        None, exists=True, dir_okay=False, file_okay=True
+    ),
 ) -> None:
     if ctx.invoked_subcommand is not None:
         return
     if None in (config, index_path, expansions_path):
-        raise typer.BadParameter("--config, --index-path, and --expansions-path are required")
+        raise typer.BadParameter(
+            "--config, --index-path, and --expansions-path are required"
+        )
     _run_verify(config, index_path, expansions_path)
 
 
@@ -48,11 +52,12 @@ def main(
 def run(
     config: Path = typer.Option(..., exists=True, readable=True),
     index_path: Path = typer.Option(..., exists=True, dir_okay=False, file_okay=True),
-    expansions_path: Path = typer.Option(..., exists=True, dir_okay=False, file_okay=True),
+    expansions_path: Path = typer.Option(
+        ..., exists=True, dir_okay=False, file_okay=True
+    ),
 ) -> None:
     _run_verify(config, index_path, expansions_path)
 
 
 if __name__ == "__main__":  # pragma: no cover
     app()
-

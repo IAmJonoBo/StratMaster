@@ -5,10 +5,10 @@ covers realm/client bootstrap, dev credential strategy, and deployment options.
 
 ## Realms
 
-| Realm             | Purpose                   | Notes |
-| ----------------- | ------------------------- | ----- |
-| `stratmaster-dev` | Local development stack   | Uses Docker Compose; admin/admin credentials. |
-| `stratmaster`     | Shared staging/prod realm | Backed by Postgres with high availability. |
+| Realm             | Purpose                   | Notes                                              |
+| ----------------- | ------------------------- | -------------------------------------------------- |
+| `stratmaster-dev` | Local development stack   | Uses Docker Compose; admin/admin credentials.      |
+| `stratmaster`     | Shared staging/prod realm | Backed by Postgres with high availability.         |
 | `tenant-<id>`     | Dedicated customer realm  | Optional; used when customers bring their own IdP. |
 
 - Realms follow a consistent client naming scheme (`api`, `agents`, `console`).

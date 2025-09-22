@@ -15,11 +15,11 @@ sample analytical queries.
 
 ## Persistence
 
-| Environment | Storage path                              | Notes |
-| ----------- | ------------------------------------------ | ----- |
-| Dev         | `volumes/duckdb/duckdb-dev.db`             | Local file; reset with `make analytics.reset`. |
-| Staging     | `s3://sm-<tenant>-analytics/duckdb/`       | Use DuckDB's S3 integration with temporary credentials. |
-| Production  | `s3://sm-<tenant>-analytics/duckdb/`       | Enable versioned buckets for rollback. |
+| Environment | Storage path                         | Notes                                                   |
+| ----------- | ------------------------------------ | ------------------------------------------------------- |
+| Dev         | `volumes/duckdb/duckdb-dev.db`       | Local file; reset with `make analytics.reset`.          |
+| Staging     | `s3://sm-<tenant>-analytics/duckdb/` | Use DuckDB's S3 integration with temporary credentials. |
+| Production  | `s3://sm-<tenant>-analytics/duckdb/` | Enable versioned buckets for rollback.                  |
 
 Set the following environment variables for remote storage:
 
@@ -32,11 +32,11 @@ export DUCKDB_SECRET_ACCESS_KEY=...
 
 ## Resource sizing
 
-| Workload            | CPU | Memory | Notes |
-| ------------------- | --- | ------ | ----- |
-| Notebook exploration| 4   | 16 GB  | Suitable for ad-hoc analysts. |
-| Batch transformations | 8 | 32 GB  | For scheduled pipelines via Temporal. |
-| Heavy aggregation    | 16 | 64 GB  | Consider splitting by tenant to avoid contention. |
+| Workload              | CPU | Memory | Notes                                             |
+| --------------------- | --- | ------ | ------------------------------------------------- |
+| Notebook exploration  | 4   | 16 GB  | Suitable for ad-hoc analysts.                     |
+| Batch transformations | 8   | 32 GB  | For scheduled pipelines via Temporal.             |
+| Heavy aggregation     | 16  | 64 GB  | Consider splitting by tenant to avoid contention. |
 
 ## Sample queries
 
@@ -50,6 +50,7 @@ export DUCKDB_SECRET_ACCESS_KEY=...
   WHERE m.metric = 'engagement_score';
   ```
 - Use Arrow flight endpoint to serve data to Polars:
+
   ```python
   import duckdb
   import polars as pl

@@ -57,7 +57,11 @@ class StubKnowledge(KnowledgeMCPClient):
 
 class StubRouter(RouterMCPClient):
     def complete(
-        self, tenant_id: str, prompt: str, max_tokens: int = 256, task: str = "reasoning"
+        self,
+        tenant_id: str,
+        prompt: str,
+        max_tokens: int = 256,
+        task: str = "reasoning",
     ) -> dict[str, Any]:  # type: ignore[override]
         return {
             "text": "Completed recommendation",

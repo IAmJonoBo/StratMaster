@@ -14,10 +14,7 @@ app = typer.Typer(help="Query a previously materialised ColBERT index")
 
 def search_index(index: ColbertIndex, query: str, k: int) -> list[tuple[str, float]]:
     query_vector = embed_query(query, index.dim)
-    ranked = [
-        (doc.doc_id, score(query_vector, doc.vector))
-        for doc in index.documents
-    ]
+    ranked = [(doc.doc_id, score(query_vector, doc.vector)) for doc in index.documents]
     ranked.sort(key=lambda item: item[1], reverse=True)
     return ranked[:k]
 
@@ -58,4 +55,3 @@ def query(
 
 if __name__ == "__main__":  # pragma: no cover
     app()
-

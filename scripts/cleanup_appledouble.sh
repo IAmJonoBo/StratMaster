@@ -5,7 +5,7 @@ set -euo pipefail
 # This is safe to run repeatedly; it only removes junk files that should not be committed.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
-cd "$ROOT_DIR"
+cd "${ROOT_DIR}"
 
 # Find and delete patterns:
 #  - ._* (AppleDouble resource forks)

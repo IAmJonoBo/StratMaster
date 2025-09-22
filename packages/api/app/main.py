@@ -8,7 +8,7 @@ app = FastAPI(title="StratMaster API", version="0.1.0")
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
@@ -24,7 +24,7 @@ def _schemas_dir() -> Path:
     return packages_dir / "providers" / "openai" / "tool-schemas"
 
 
-def _load_tool_schemas() -> dict[str, Any]:
+def _load_tool_schemas() -> dict[str, dict[str, Any]]:
     """Load all JSON schemas from the schemas directory into a dict keyed by tool name.
 
     The tool name is the filename stem (e.g., web_search.json -> web_search).
@@ -36,7 +36,7 @@ def _load_tool_schemas() -> dict[str, Any]:
             status_code=500, detail=f"Schemas directory not found: {schemas_path}"
         )
 
-    tools: dict[str, Any] = {}
+    tools: dict[str, dict[str, Any]] = {}
     for json_file in sorted(schemas_path.glob("*.json")):
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
@@ -47,6 +47,11 @@ def _load_tool_schemas() -> dict[str, Any]:
                 status_code=500,
                 detail=f"Failed to parse {json_file.name}: {e}",
             ) from e
+        if not isinstance(data, dict):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Schema must be a JSON object: {json_file.name}",
+            )
         tools[json_file.stem] = data
     if not tools:
         raise HTTPException(status_code=500, detail="No tool schemas found")
@@ -54,7 +59,7 @@ def _load_tool_schemas() -> dict[str, Any]:
 
 
 @app.get("/providers/openai/tools")
-def list_openai_tool_schemas(format: str = "raw"):
+def list_openai_tool_schemas(format: str = "raw") -> dict[str, Any]:
     """List available OpenAI tool schemas.
 
     Query params:
@@ -85,7 +90,7 @@ def list_openai_tool_schemas(format: str = "raw"):
 
 
 @app.get("/providers/openai/tools/{name}")
-def get_openai_tool_schema(name: str):
+def get_openai_tool_schema(name: str) -> dict[str, Any]:
     """Fetch a single tool schema by name (filename stem)."""
     tools = _load_tool_schemas()
     schema = tools.get(name)

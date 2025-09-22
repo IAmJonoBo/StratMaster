@@ -36,7 +36,9 @@ def _run_eval(
     limit = top_k or cfg.search.k
     queries = json.loads(queries_path.read_text(encoding="utf-8"))
     if not isinstance(queries, list):
-        raise ValueError("queries file must contain a list of {query, relevant} objects")
+        raise ValueError(
+            "queries file must contain a list of {query, relevant} objects"
+        )
 
     scores: list[EvalResult] = []
     for item in queries:
@@ -55,13 +57,17 @@ def main(
     ctx: typer.Context,
     config: Path = typer.Option(None, exists=True, readable=True),
     index_path: Path = typer.Option(None, exists=True, dir_okay=False, file_okay=True),
-    queries_path: Path = typer.Option(None, exists=True, dir_okay=False, file_okay=True),
+    queries_path: Path = typer.Option(
+        None, exists=True, dir_okay=False, file_okay=True
+    ),
     top_k: int | None = typer.Option(None, min=1, max=100),
 ) -> None:
     if ctx.invoked_subcommand is not None:
         return
     if None in (config, index_path, queries_path):
-        raise typer.BadParameter("--config, --index-path, and --queries-path are required")
+        raise typer.BadParameter(
+            "--config, --index-path, and --queries-path are required"
+        )
     _run_eval(config, index_path, queries_path, top_k)
 
 
@@ -77,4 +83,3 @@ def run(
 
 if __name__ == "__main__":  # pragma: no cover
     app()
-

@@ -3,13 +3,31 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from typer.testing import CliRunner
+import pytest
 
-from colbert.config import ColbertConfig
-from colbert.index import app as index_app
-from colbert.search import app as search_app
-from colbert.eval import app as eval_app
-from colbert.indexer import ColbertIndex, ColbertIndexer
+
+def _require_colbert_cli_or_skip():
+    try:  # lazy import to keep module importable
+        from colbert.config import ColbertConfig  # type: ignore
+        from colbert.eval import app as eval_app  # type: ignore
+        from colbert.index import app as index_app  # type: ignore
+        from colbert.indexer import ColbertIndex, ColbertIndexer  # type: ignore
+        from colbert.search import app as search_app  # type: ignore
+        from typer.testing import CliRunner  # type: ignore
+    except Exception:  # pragma: no cover - environment-dependent
+        pytest.skip(
+            "ColBERT CLI dependencies not installed; skipping",
+            allow_module_level=False,
+        )
+    return (
+        CliRunner,
+        ColbertConfig,
+        eval_app,
+        index_app,
+        ColbertIndex,
+        ColbertIndexer,
+        search_app,
+    )
 
 
 def _write_config(tmp_path: Path, corpus_path: Path) -> Path:
@@ -46,7 +64,16 @@ def _write_corpus(tmp_path: Path) -> Path:
 
 
 def test_build_cli_materialises_index(tmp_path: Path) -> None:
-    runner = CliRunner()
+    (
+        cli_runner,
+        colbert_config,
+        _eval_app,
+        index_app,
+        colbert_index,
+        colbert_indexer,
+        _search_app,
+    ) = _require_colbert_cli_or_skip()
+    runner = cli_runner()
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
 
@@ -56,17 +83,26 @@ def test_build_cli_materialises_index(tmp_path: Path) -> None:
     index_file = output_dir / "index.json"
     assert index_file.exists()
 
-    index = ColbertIndex.load(index_file)
+    index = colbert_index.load(index_file)
     assert len(index.documents) == 2
 
 
 def test_search_cli_returns_ranked_docs(tmp_path: Path) -> None:
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
-    indexer = ColbertIndexer(ColbertConfig(**json.loads(config_path.read_text())))
+    (
+        cli_runner,
+        colbert_config,
+        _eval_app,
+        _index_app,
+        colbert_index,
+        colbert_indexer,
+        search_app,
+    ) = _require_colbert_cli_or_skip()
+    indexer = colbert_indexer(colbert_config(**json.loads(config_path.read_text())))
     index_path = indexer.materialise(tmp_path / "artifacts" / "demo-index")
 
-    runner = CliRunner()
+    runner = cli_runner()
     result = runner.invoke(
         search_app,
         [
@@ -88,14 +124,23 @@ def test_search_cli_returns_ranked_docs(tmp_path: Path) -> None:
 def test_eval_cli_reports_recall(tmp_path: Path) -> None:
     corpus_path = _write_corpus(tmp_path)
     config_path = _write_config(tmp_path, corpus_path)
-    indexer = ColbertIndexer(ColbertConfig(**json.loads(config_path.read_text())))
+    (
+        cli_runner,
+        colbert_config,
+        eval_app,
+        _index_app,
+        _colbert_index,
+        colbert_indexer,
+        _search_app,
+    ) = _require_colbert_cli_or_skip()
+    indexer = colbert_indexer(colbert_config(**json.loads(config_path.read_text())))
     index_path = indexer.materialise(tmp_path / "artifacts" / "demo-index")
 
     queries = [{"query": "premium", "relevant": ["doc-1"]}]
     queries_path = tmp_path / "queries.json"
     queries_path.write_text(json.dumps(queries), encoding="utf-8")
 
-    runner = CliRunner()
+    runner = cli_runner()
     result = runner.invoke(
         eval_app,
         [

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
@@ -273,7 +273,7 @@ class DebateTrace(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     turns: list[DebateTurn]
-    verdict: Optional[str] = None
+    verdict: str | None = None
 
 
 class WorkflowMetadata(BaseModel):

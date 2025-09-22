@@ -6,7 +6,7 @@ APIs.
 
 ## Architecture
 
-```
+```text
 seeds → ingestion workers → Qdrant (vectors)
                    ↘︎            → OpenSearch (keywords)
                     ↘︎           → NebulaGraph (graph context)
@@ -17,12 +17,12 @@ seeds → ingestion workers → Qdrant (vectors)
 
 ## Storage contracts
 
-| Asset type | Backend       | Schema |
-| ---------- | ------------- | ------ |
-| `artefact` | Qdrant        | `{'id', 'title', 'summary', 'fingerprint', 'tenant_id', 'source', 'vector'}` |
-| `artefact` | OpenSearch    | Mirrors Qdrant payload + SPLADE expansion field. |
-| `graph`    | NebulaGraph   | Nodes (`hypothesis`, `artefact`) edges (`supports`, `derived_from`). |
-| `manifest` | MinIO         | JSON manifest keyed by asset IDs + provenance. |
+| Asset type | Backend     | Schema                                                                       |
+| ---------- | ----------- | ---------------------------------------------------------------------------- |
+| `artefact` | Qdrant      | `{'id', 'title', 'summary', 'fingerprint', 'tenant_id', 'source', 'vector'}` |
+| `artefact` | OpenSearch  | Mirrors Qdrant payload + SPLADE expansion field.                             |
+| `graph`    | NebulaGraph | Nodes (`hypothesis`, `artefact`) edges (`supports`, `derived_from`).         |
+| `manifest` | MinIO       | JSON manifest keyed by asset IDs + provenance.                               |
 
 Contracts are defined in `packages/knowledge/src/knowledge/storage/contracts.py`
 with Pydantic models ensuring validation on ingest.

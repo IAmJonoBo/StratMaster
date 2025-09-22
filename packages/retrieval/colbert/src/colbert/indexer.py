@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
 
 from .config import ColbertConfig
 
@@ -46,7 +46,7 @@ class ColbertIndex:
         return index_path
 
     @classmethod
-    def load(cls, path: Path) -> "ColbertIndex":
+    def load(cls, path: Path) -> ColbertIndex:
         data = json.loads(path.read_text(encoding="utf-8"))
         return cls(
             name=data["name"],
@@ -82,7 +82,9 @@ class ColbertIndexer:
 
     def materialise(self, output_dir: Path | None = None) -> Path:
         index = self.build()
-        base_path = output_dir or self.config.storage.output_dir / self.config.index.name
+        base_path = (
+            output_dir or self.config.storage.output_dir / self.config.index.name
+        )
         return index.save(Path(base_path))
 
     def _load_corpus(self) -> Iterable[tuple[str, str]]:
@@ -94,7 +96,9 @@ class ColbertIndexer:
     def _walk(self, node: object, collected: list[tuple[str, str]]) -> None:
         if isinstance(node, dict):
             if "id" in node:
-                text = " ".join(str(node.get(field, "")) for field in self.config.corpus.text_fields)
+                text = " ".join(
+                    str(node.get(field, "")) for field in self.config.corpus.text_fields
+                )
                 if text.strip():
                     collected.append((str(node["id"]), text.strip()))
             for value in node.values():
@@ -115,7 +119,7 @@ class ColbertIndexer:
 
 
 def score(query_vector: Sequence[float], document_vector: Sequence[float]) -> float:
-    return float(sum(q * d for q, d in zip(query_vector, document_vector)))
+    return float(sum(q * d for q, d in zip(query_vector, document_vector, strict=True)))
 
 
 def embed_query(text: str, dim: int) -> list[float]:
@@ -126,4 +130,3 @@ def embed_query(text: str, dim: int) -> list[float]:
         vector[bucket] += 1.0
     magnitude = math.sqrt(sum(val * val for val in vector)) or 1.0
     return [val / magnitude for val in vector]
-

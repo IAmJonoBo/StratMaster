@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
-from .graph.materialise import GraphArtefacts, GraphMaterialiser
+from .graph.materialise import GraphMaterialiser
 from .storage.contracts import ArtefactRecord, CommunitySummary, GraphEdge, GraphNode
 from .storage.repositories import GraphStore, KeywordStore, ManifestStore, VectorStore
 
@@ -65,7 +65,9 @@ class KnowledgePipeline:
             summaries=graph.summaries,
         )
 
-    def query_hybrid(self, tenant_id: str, query: str, top_k: int = 5) -> list[dict[str, str | float]]:
+    def query_hybrid(
+        self, tenant_id: str, query: str, top_k: int = 5
+    ) -> list[dict[str, str | float]]:
         dense_hits = self.vector_store.query(tenant_id, query, limit=top_k)
         sparse_hits = self.keyword_store.query(tenant_id, query, limit=top_k)
         combined: dict[str, dict[str, str | float]] = {}
@@ -81,13 +83,18 @@ class KnowledgePipeline:
                         "score": 0.0,
                     },
                 )
-                payload["score"] = float(payload.get("score", 0.0)) + item.score * weight
-        return sorted(combined.values(), key=lambda item: item["score"], reverse=True)[:top_k]
+                payload["score"] = (
+                    float(payload.get("score", 0.0)) + item.score * weight
+                )
+        return sorted(combined.values(), key=lambda item: item["score"], reverse=True)[
+            :top_k
+        ]
 
-    def community_summaries(self, tenant_id: str, limit: int = 3) -> list[CommunitySummary]:
+    def community_summaries(
+        self, tenant_id: str, limit: int = 3
+    ) -> list[CommunitySummary]:
         graph = self.graph_store.get(tenant_id)
         if not graph:
             return []
         summaries = graph.get("communities", [])[:limit]
         return [CommunitySummary(**summary) for summary in summaries]
-

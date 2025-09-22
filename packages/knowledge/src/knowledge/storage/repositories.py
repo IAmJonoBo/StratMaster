@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import datetime, timezone
+from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable, Mapping
 
 from .contracts import ArtefactRecord, RankedArtefact, TenantManifest
 
@@ -23,7 +23,9 @@ class VectorStore:
     def upsert(self, artefacts: Iterable[ArtefactRecord]) -> None:
         for artefact in artefacts:
             records = self._records[artefact.tenant_id]
-            filtered = [rec for rec in records if rec.document_id != artefact.document_id]
+            filtered = [
+                rec for rec in records if rec.document_id != artefact.document_id
+            ]
             filtered.append(artefact)
             self._records[artefact.tenant_id] = filtered
         self._flush()
@@ -67,7 +69,9 @@ class ManifestStore:
         self._manifests: dict[str, TenantManifest] = {}
         self._load_from_disk()
 
-    def write(self, tenant_id: str, artefact_ids: Iterable[str], graph_version: str) -> TenantManifest:
+    def write(
+        self, tenant_id: str, artefact_ids: Iterable[str], graph_version: str
+    ) -> TenantManifest:
         manifest = TenantManifest(
             tenant_id=tenant_id,
             artefact_ids=list(artefact_ids),
@@ -87,7 +91,9 @@ class ManifestStore:
     def _flush(self, tenant_id: str) -> None:
         manifest = self._manifests[tenant_id]
         path = self._manifest_path(tenant_id)
-        path.write_text(json.dumps(manifest.model_dump(), default=str), encoding="utf-8")
+        path.write_text(
+            json.dumps(manifest.model_dump(), default=str), encoding="utf-8"
+        )
 
     def _load_from_disk(self) -> None:
         for path in self._base_path.glob("*.json"):
@@ -97,7 +103,7 @@ class ManifestStore:
 
     @staticmethod
     def _now():  # pragma: no cover - trivial shim
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
 
 
 class GraphStore:
@@ -106,7 +112,9 @@ class GraphStore:
     def __init__(self, base_path: Path | str | None = None) -> None:
         self._base_path = Path(base_path or "artifacts/knowledge/graph")
         self._base_path.mkdir(parents=True, exist_ok=True)
-        self._graphs: dict[str, Mapping[str, list[dict[str, str | float | list[str]]]]] = {}
+        self._graphs: dict[
+            str, Mapping[str, list[dict[str, str | float | list[str]]]]
+        ] = {}
         self._load_from_disk()
 
     def write(
@@ -124,7 +132,9 @@ class GraphStore:
         self._graphs[tenant_id] = payload
         self._flush(tenant_id)
 
-    def get(self, tenant_id: str) -> Mapping[str, list[dict[str, str | float | list[str]]]] | None:
+    def get(
+        self, tenant_id: str
+    ) -> Mapping[str, list[dict[str, str | float | list[str]]]] | None:
         return self._graphs.get(tenant_id)
 
     def _graph_path(self, tenant_id: str) -> Path:
@@ -139,4 +149,3 @@ class GraphStore:
         for path in self._base_path.glob("*.json"):
             tenant_id = path.stem
             self._graphs[tenant_id] = json.loads(path.read_text(encoding="utf-8"))
-

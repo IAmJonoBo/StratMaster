@@ -7,11 +7,14 @@ and long-lived environments to guarantee deterministic secret provisioning.
 ## Bootstrap flow
 
 1. **Install the controller.**
+
    ```bash
    kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.26.3/controller.yaml
    ```
+
    - Pin the version in `helmfile.d` when moving to Helm management.
    - Verify the controller is healthy: `kubectl -n kube-system rollout status deploy sealed-secrets-controller`.
+
 2. **Generate a cluster key.**
    - For ephemeral preview environments rely on the auto-generated key pair.
    - For staging/prod, generate an offline key so you can recover seals if the
@@ -44,11 +47,11 @@ and long-lived environments to guarantee deterministic secret provisioning.
 
 ## Key management strategy
 
-| Environment | Source of truth                   | Rotation cadence | Storage |
-| ----------- | -------------------------------- | ---------------- | ------- |
-| `dev`       | Controller-managed (auto rotate)  | N/A (ephemeral)  | Namespace secret |
+| Environment | Source of truth                   | Rotation cadence | Storage                            |
+| ----------- | --------------------------------- | ---------------- | ---------------------------------- |
+| `dev`       | Controller-managed (auto rotate)  | N/A (ephemeral)  | Namespace secret                   |
 | `staging`   | Offline age identity (`ops/keys`) | 6 months         | Vault (sealed) + Git (public cert) |
-| `prod`      | Offline HSM-backed identity       | 3 months         | Vault (sealed) + secure enclave |
+| `prod`      | Offline HSM-backed identity       | 3 months         | Vault (sealed) + secure enclave    |
 
 - Store private keys in Vault using the platform automation namespace (see
   `ops/policies/sealed_secrets.hcl`).

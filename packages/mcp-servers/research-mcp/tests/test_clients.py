@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -87,7 +87,7 @@ def test_provenance_emitter_logs_when_minio_missing(caplog):
     page = CachedPageResource(
         url="https://example.com",
         content="data",
-        fetched_at=datetime.now(timezone.utc),
+        fetched_at=datetime.now(UTC),
         sha256="hash",
     )
     emitter.emit(page, "cache-1")

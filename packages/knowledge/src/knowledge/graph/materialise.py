@@ -36,7 +36,9 @@ class GraphMaterialiser:
         summaries: list[CommunitySummary] = []
         for idx, (tag, records) in enumerate(sorted(buckets.items())):
             community_id = f"comm-{idx+1}"
-            nodes.append(GraphNode(id=community_id, label=tag.title(), type="community"))
+            nodes.append(
+                GraphNode(id=community_id, label=tag.title(), type="community")
+            )
             key_entities: list[str] = []
             for artefact in records[: self._max_nodes]:
                 node_id = f"node-{community_id}-{artefact.document_id}"
@@ -66,4 +68,3 @@ class GraphMaterialiser:
                 )
             )
         return GraphArtefacts(nodes=nodes, edges=edges, summaries=summaries)
-

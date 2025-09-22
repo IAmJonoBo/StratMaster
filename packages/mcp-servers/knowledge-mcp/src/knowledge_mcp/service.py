@@ -7,8 +7,8 @@ swapped with real vector/keyword/graph backends (Qdrant, OpenSearch, NebulaGraph
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Iterable
+from collections.abc import Iterable
+from datetime import UTC, datetime
 
 from .config import AppConfig
 from .connectors import ConnectorBundle
@@ -24,13 +24,16 @@ from .models import (
 )
 
 try:  # pragma: no cover - optional dependency
-    from bge_reranker import BGEReranker, RerankDocument
+    from bge_reranker import (  # type: ignore[import-not-found]
+        BGEReranker,
+        RerankDocument,
+    )
 except ImportError:  # pragma: no cover
     BGEReranker = None  # type: ignore[assignment]
     RerankDocument = None  # type: ignore[assignment]
 
 try:  # pragma: no cover - optional dependency
-    from opentelemetry import metrics
+    from opentelemetry import metrics  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover
     metrics = None
 
@@ -50,6 +53,8 @@ if metrics is not None:  # pragma: no cover - requires OTEL SDK
 else:
     _DEGRADED_COUNTER = None
     _SUCCESS_COUNTER = None
+
+CONNECTOR_DEGRADED_EVENT = "connector.degraded"
 
 
 class KnowledgeService:
@@ -74,7 +79,7 @@ class KnowledgeService:
                 self._logger.warning(
                     "Qdrant connector unavailable; using synthetic dense hits",
                     extra={
-                        "event": "connector.degraded",
+                        "event": CONNECTOR_DEGRADED_EVENT,
                         "connector": "vector",
                         "tenant_id": payload.tenant_id,
                         "query": payload.query,
@@ -92,7 +97,7 @@ class KnowledgeService:
                 self._logger.warning(
                     "OpenSearch connector unavailable; using synthetic sparse hits",
                     extra={
-                        "event": "connector.degraded",
+                        "event": CONNECTOR_DEGRADED_EVENT,
                         "connector": "keyword",
                         "tenant_id": payload.tenant_id,
                         "query": payload.query,
@@ -154,7 +159,9 @@ class KnowledgeService:
                 for idx, text in enumerate(payload.documents, start=1)
             ]
             results = self._reranker.rerank(
-                query=payload.query, documents=request_documents, top_k=len(request_documents)
+                query=payload.query,
+                documents=request_documents,
+                top_k=len(request_documents),
             )
             reranked = [
                 RetrievalHit(
@@ -194,7 +201,7 @@ class KnowledgeService:
                 self._logger.warning(
                     "NebulaGraph connector unavailable; using synthetic graph summaries",
                     extra={
-                        "event": "connector.degraded",
+                        "event": CONNECTOR_DEGRADED_EVENT,
                         "connector": "graph",
                         "tenant_id": tenant_id,
                         "limit": limit,
@@ -214,7 +221,7 @@ class KnowledgeService:
             self._record_success("graph")
         self._refresh_connector_status()
         return CommunitySummariesResponse(
-            generated_at=datetime.now(tz=timezone.utc),
+            generated_at=datetime.now(UTC),
             summaries=summaries,
         )
 
@@ -339,15 +346,12 @@ class KnowledgeService:
             score /= weight
 
         snippet = " | ".join(snippet_parts) if snippet_parts else ""
-        source_url = str(
-            dense.source_url
-            if dense is not None
-            else (
-                sparse.source_url
-                if sparse is not None
-                else "https://example.com/hybrid"
-            )
-        )
+        if dense is not None:
+            source_url = str(dense.source_url)
+        elif sparse is not None:
+            source_url = str(sparse.source_url)
+        else:
+            source_url = "https://example.com/hybrid"
 
         doc_id_parts = ["hybrid", str(rank_hint)]
         if dense is not None:

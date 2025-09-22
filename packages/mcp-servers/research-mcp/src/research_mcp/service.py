@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from .clients import ClientBundle
@@ -36,7 +36,7 @@ class ResearchService:
         page = CachedPageResource(
             url=url,
             content=content,
-            fetched_at=datetime.now(tz=timezone.utc),
+            fetched_at=datetime.now(UTC),
             sha256=sha,
         )
         self.clients.storage.store_page(cache_key, page)

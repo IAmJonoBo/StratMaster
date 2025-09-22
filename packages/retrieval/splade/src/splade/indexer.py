@@ -29,7 +29,7 @@ class SpladeIndex:
         return output
 
     @classmethod
-    def load(cls, path: Path) -> "SpladeIndex":
+    def load(cls, path: Path) -> SpladeIndex:
         data = json.loads(path.read_text(encoding="utf-8"))
         return cls(
             name=data["name"],
@@ -53,4 +53,3 @@ class SpladeIndexer:
         index = self.build()
         base = output_dir or self.config.storage.output_dir / self.config.index.name
         return index.save(Path(base))
-

@@ -13,16 +13,16 @@ controls under `ops/policies/`.
 
 ## Component matrix
 
-| Source → Destination | Allowed? | Policy file |
-| -------------------- | -------- | ----------- |
-| API → Postgres       | ✅        | `api-to-postgres.yaml` |
-| API → Temporal       | ✅        | `api-to-temporal.yaml` |
-| API → Qdrant/OpenSearch | ✅     | `api-to-retrieval.yaml` |
-| API → MinIO          | ✅ (egress only) | `api-to-minio.yaml` |
-| MCP (Research, Knowledge, Compression) → API | ✅ | `mcp-to-api.yaml` |
-| MCP → External internet | 🚫 (except allow-list) | `mcp-egress.yaml` |
-| Temporal workers → External internet | ⚠️ limited | `temporal-egress.yaml` |
-| Observability stack → Everything | 🚫 | n/a (pull-based via scraping) |
+| Source → Destination                         | Allowed?               | Policy file                   |
+| -------------------------------------------- | ---------------------- | ----------------------------- |
+| API → Postgres                               | ✅                     | `api-to-postgres.yaml`        |
+| API → Temporal                               | ✅                     | `api-to-temporal.yaml`        |
+| API → Qdrant/OpenSearch                      | ✅                     | `api-to-retrieval.yaml`       |
+| API → MinIO                                  | ✅ (egress only)       | `api-to-minio.yaml`           |
+| MCP (Research, Knowledge, Compression) → API | ✅                     | `mcp-to-api.yaml`             |
+| MCP → External internet                      | 🚫 (except allow-list) | `mcp-egress.yaml`             |
+| Temporal workers → External internet         | ⚠️ limited             | `temporal-egress.yaml`        |
+| Observability stack → Everything             | 🚫                     | n/a (pull-based via scraping) |
 
 - External egress is only granted via named CIDR ranges or DNS names defined in
   `NetworkPolicy` objects.

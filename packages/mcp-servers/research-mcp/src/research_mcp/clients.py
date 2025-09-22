@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from contextlib import suppress
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import urlencode
@@ -27,18 +27,18 @@ except ImportError:  # pragma: no cover
     httpx = None
 
 try:  # pragma: no cover - optional dependency
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import sync_playwright  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover
     sync_playwright = None
 
 try:  # pragma: no cover - optional dependency
-    import boto3
+    import boto3  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover
     boto3 = None
 
 
 def _utcnow() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(UTC)
 
 
 class MetasearchClient:
@@ -120,12 +120,11 @@ class CrawlerClient:
                     try:
                         page = browser.new_page(user_agent=self.settings.user_agent)
                         page.goto(url, wait_until="networkidle")
-                        return page.content()
+                        content: str = str(page.content())
+                        return content
                     finally:  # pragma: no cover
                         browser.close()
-            logger.warning(
-                "Playwright rendering failed; returning synthetic content"
-            )
+            logger.warning("Playwright rendering failed; returning synthetic content")
             return self._synthetic_content(url, render_js)
 
         if self.settings.use_network and httpx is not None:
@@ -134,7 +133,8 @@ class CrawlerClient:
                 with httpx.Client(timeout=15.0, follow_redirects=True) as client:
                     response = client.get(url, headers=headers)
                     response.raise_for_status()
-                    return response.text
+                    text: str = str(response.text)
+                    return text
             except Exception as exc:  # pragma: no cover
                 logger.warning(
                     "Crawler network fetch failed; returning synthetic content",

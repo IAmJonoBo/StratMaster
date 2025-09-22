@@ -12,13 +12,13 @@ tenant policies, and observability hooks.
 
 ## Endpoint exposure
 
-| Endpoint                     | Method | Description |
-| ---------------------------- | ------ | ----------- |
-| `/v1/chat/completions`       | POST   | OpenAI-compatible chat completions. |
-| `/v1/completions`            | POST   | Legacy completion API. |
-| `/v1/embeddings`             | POST   | Embedding proxy (if enabled). |
-| `/v1/models`                 | GET    | Lists allowed models per tenant. |
-| `/internal/metrics`          | GET    | Prometheus metrics. |
+| Endpoint               | Method | Description                         |
+| ---------------------- | ------ | ----------------------------------- |
+| `/v1/chat/completions` | POST   | OpenAI-compatible chat completions. |
+| `/v1/completions`      | POST   | Legacy completion API.              |
+| `/v1/embeddings`       | POST   | Embedding proxy (if enabled).       |
+| `/v1/models`           | GET    | Lists allowed models per tenant.    |
+| `/internal/metrics`    | GET    | Prometheus metrics.                 |
 
 - Expose endpoints via the API gateway/ingress with mTLS enforced between the
   router and upstream providers when supported.

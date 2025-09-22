@@ -7,7 +7,6 @@ import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from .config import SpladeConfig
 
@@ -38,10 +37,14 @@ class SpladeExpander:
     def _walk(self, node: object, records: list[ExpansionRecord]) -> None:
         if isinstance(node, dict):
             if "id" in node:
-                text = " ".join(str(node.get(field, "")) for field in self.config.corpus.text_fields)
+                text = " ".join(
+                    str(node.get(field, "")) for field in self.config.corpus.text_fields
+                )
                 weights = self._expand_text(text)
                 if weights:
-                    records.append(ExpansionRecord(doc_id=str(node["id"]), expansion=weights))
+                    records.append(
+                        ExpansionRecord(doc_id=str(node["id"]), expansion=weights)
+                    )
             for value in node.values():
                 self._walk(value, records)
         elif isinstance(node, list):
@@ -65,7 +68,8 @@ class SpladeExpander:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as fh:
             for record in records:
-                fh.write(json.dumps({"doc_id": record.doc_id, "expansion": record.expansion}))
+                fh.write(
+                    json.dumps({"doc_id": record.doc_id, "expansion": record.expansion})
+                )
                 fh.write("\n")
         return output_path
-

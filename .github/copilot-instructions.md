@@ -17,6 +17,7 @@ StratMaster is a Python 3.11+ monorepo implementing an AI-powered Brand Strategy
 ## Development Commands
 
 ### **CRITICAL**: Build and Bootstrap - NEVER CANCEL
+
 **ALWAYS** run bootstrap first before any other commands:
 
 ```bash
@@ -33,25 +34,31 @@ make bootstrap
 ### **CRITICAL**: Testing - Multiple Options Available
 
 **Primary testing** (requires bootstrap first):
+
 ```bash
 # Run API tests only (recommended - works reliably)
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
+
 - **Time**: ~1 second, 17 tests pass
 - **Reliable**: Always works after bootstrap
 
 **Full test suite** (often has network issues):
+
 ```bash
 make test
 ```
+
 - **Time**: 2-5 minutes if successful
 - **Network dependency**: Often fails due to pip timeouts
 - **Alternative**: Use Docker approach if local environment has issues
 
 **Docker-based testing** (when local pip fails):
+
 ```bash
 make test-docker
 ```
+
 - **Time**: 3-10 minutes (includes Docker image pull)
 - **Use when**: Local pip has network timeouts
 - **NEVER CANCEL**: Allow full completion
@@ -59,19 +66,23 @@ make test-docker
 ### **CRITICAL**: Running the Application
 
 **API Server** (using bootstrap environment):
+
 ```bash
 .venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080
 ```
+
 - **Time**: Starts in ~2-3 seconds
 - **Endpoints**: Health at `/healthz`, OpenAPI docs at `/docs`
 - **Test**: `curl http://localhost:8080/healthz` should return `{"status":"ok"}`
 
 **Full stack** (when Docker images are available):
+
 ```bash
 make dev.up      # Start all services
 make dev.logs    # View logs
 make dev.down    # Stop all services
 ```
+
 - **Time**: 2-5 minutes to start all containers
 - **Services**: API (8080), Research MCP (8081), Knowledge MCP (8082), Router MCP (8083), etc.
 - **Known issue**: Some Docker images may have access restrictions
@@ -81,17 +92,21 @@ make dev.down    # Stop all services
 **ALWAYS** run these validation steps after making changes:
 
 1. **Bootstrap validation**:
+
 ```bash
 make bootstrap  # Should complete without errors
 ```
 
 2. **API test validation**:
+
 ```bash
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
+
 **Expected result**: `17 passed in ~1.02s`
 
 3. **API functionality validation**:
+
 ```bash
 # Start API server
 .venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080 &
@@ -106,15 +121,18 @@ curl http://localhost:8080/docs | grep "StratMaster API"
 ```
 
 4. **Helm chart validation**:
+
 ```bash
 helm lint helm/stratmaster-api
 helm lint helm/research-mcp
 ```
+
 **Expected result**: Charts should lint with 0 failures (warnings OK)
 
 ## Code Quality and Linting
 
 **Pre-commit hooks** (may have network timeouts):
+
 ```bash
 # Install hooks (part of bootstrap)
 .venv/bin/pre-commit install
@@ -124,12 +142,15 @@ helm lint helm/research-mcp
 ```
 
 **Trunk linting** (requires network access):
+
 ```bash
 trunk check --all --no-fix
 ```
+
 **Time**: 1-2 minutes when working
 
 **Manual file cleanup**:
+
 ```bash
 # Remove macOS artifacts (always safe to run)
 bash scripts/cleanup_appledouble.sh
@@ -166,7 +187,7 @@ bash scripts/cleanup_appledouble.sh
 ## **CRITICAL**: Timing Expectations
 
 - **make bootstrap**: 2-3 minutes (NEVER CANCEL - set 10+ min timeout)
-- **API tests**: 1-2 seconds 
+- **API tests**: 1-2 seconds
 - **API server startup**: 2-3 seconds
 - **make dev.up**: 2-5 minutes (when images are available)
 - **Helm linting**: 5-10 seconds per chart
@@ -175,12 +196,14 @@ bash scripts/cleanup_appledouble.sh
 ## **CRITICAL**: Manual Testing Scenarios
 
 **After making API changes**:
+
 1. Run `PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q`
 2. Start API server and test `/healthz` endpoint
 3. Check OpenAPI schema at `/openapi.json`
 4. Test a POST endpoint like `/research/plan` with proper JSON payload
 
 **After infrastructure changes**:
+
 1. Run `helm lint helm/stratmaster-api`
 2. Test `make dev.up` if Docker is available
 3. Check docker-compose.yml syntax
@@ -218,6 +241,7 @@ make test-docker                                        # 3-10 min (may fail on 
 ## CI/CD Pipeline
 
 The GitHub Actions CI pipeline:
+
 - Runs on Python 3.11 and 3.12
 - Installs packages and runs pytest
 - Lints and validates Helm charts
