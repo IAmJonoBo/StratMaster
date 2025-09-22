@@ -3,11 +3,42 @@
 ![CI](https://github.com/IAmJonoBo/StratMaster/actions/workflows/ci.yml/badge.svg)
 [![Trunk](https://img.shields.io/badge/Lint-Trunk-blue?logo=trunk)](https://github.com/IAmJonoBo/StratMaster/actions/workflows/trunk.yml)
 
-Initial scaffolding for the StratMaster monorepo. See `PROJECT.md` for the full engineering blueprint.
+**StratMaster** is an AI-powered Brand Strategy platform that combines evidence-grounded research, multi-agent debate, and constitutional AI to deliver reliable strategic recommendations. Built as a Python monorepo with FastAPI, multiple MCP servers, and comprehensive backing services.
 
-## Quick start
+## 📖 Documentation
 
+**Quick Start**: Jump to [Quick Start](#quick-start) for immediate setup
+
+**Comprehensive Guides**:
+- **[🏗️ Architecture Overview](docs/architecture.md)** - System design, components, and data flow
+- **[💻 Development Guide](docs/development.md)** - Setup, coding, testing, and contribution workflows  
+- **[🚀 Deployment Guide](docs/deployment.md)** - Local, staging, and production deployment
+- **[🔧 Infrastructure Guide](docs/infrastructure.md)** - All 12+ backing services configuration
+- **[🔒 Security Guide](docs/security.md)** - Security architecture and best practices
+- **[🩺 Troubleshooting Guide](docs/troubleshooting.md)** - Common issues and solutions
+
+**Additional Documentation**:
+- **[📋 Engineering Blueprint](PROJECT.md)** - Complete technical specification
+- **[📊 Project Backlog](docs/backlog.md)** - Development roadmap and status
+- **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
+- **[🛡️ Security Policy](SECURITY.md)** - Vulnerability reporting
+
+## Key Features
+
+- **🔍 Evidence-Grounded Research**: Web crawling with provenance tracking and PII hygiene
+- **🧠 Knowledge Fabric**: GraphRAG + hybrid retrieval (Qdrant + OpenSearch + NebulaGraph)  
+- **🤖 Multi-Agent Debate**: Constitutional AI with critic and adversary validation
+- **📊 Strategic Modeling**: CEPs, JTBD, DBAs, Experiments, and Forecasts as first-class objects
+- **🖥️ Modern Interface**: Desktop tri-pane UI and mobile read-only approvals
+- **🔌 MCP Architecture**: Model Context Protocol for all tool/resource access
+- **🔒 Security First**: Multi-tenant isolation, encryption, and audit logging
+- **☁️ Cloud Native**: Kubernetes-ready with Helm charts and auto-scaling
+
+## Quick Start
+
+**Prerequisites**:
 - Python 3.11+
+- Docker Desktop (for full stack)
 - Optional: uv or pipx
 
 ### Run the full stack (dev)
@@ -27,7 +58,17 @@ Knowledge MCP on <http://localhost:8082>, Router MCP on <http://localhost:8083>,
 <http://localhost:8088>, Langfuse on <http://localhost:3000>, MinIO console on
 <http://localhost:9001>, and Keycloak on <http://localhost:8089> (admin/admin).
 
-See `packages/api/README.md` for Python-only development instructions.
+**Service URLs** (when running full stack):
+- **API Gateway**: http://localhost:8080 (OpenAPI docs at `/docs`)
+- **Research MCP**: http://localhost:8081 (Web research and crawling)
+- **Knowledge MCP**: http://localhost:8082 (Vector and graph search)
+- **Router MCP**: http://localhost:8083 (Model routing and policies)
+- **Temporal UI**: http://localhost:8088 (Workflow management)
+- **Langfuse**: http://localhost:3000 (LLM observability)
+- **MinIO Console**: http://localhost:9001 (Object storage - stratmaster/stratmaster123)
+- **Keycloak**: http://localhost:8089 (Identity management - admin/admin)
+
+For Python-only development, see the [Development Guide](docs/development.md).
 
 ## Regression guard checklist
 
@@ -149,5 +190,52 @@ make test-fast
 
 ### CI dashboards
 
-- Lint: [Trunk workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/trunk.yml)
-- Tests/Helm: [CI workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/ci.yml)
+- **Lint**: [Trunk workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/trunk.yml)
+- **Tests/Helm**: [CI workflow](https://github.com/IAmJonoBo/StratMaster/actions/workflows/ci.yml)
+
+## System Architecture
+
+StratMaster follows a microservices architecture with multiple specialized components:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Web UI (Next.js)                            │
+├─────────────────────────────────────────────────────────────────┤
+│                  FastAPI Gateway                               │
+├─────────────────────────────────────────────────────────────────┤
+│  Research MCP │ Knowledge MCP │ Router MCP │ Evals MCP         │
+│  Web Crawling │ Vector Search │ Model Route│ Quality Gates     │
+├─────────────────────────────────────────────────────────────────┤
+│  PostgreSQL │ Qdrant │ OpenSearch │ NebulaGraph │ MinIO       │
+│  Relational │ Vectors│ Full-text  │ Graph DB     │ Objects     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Components**:
+- **MCP Servers**: Specialized microservices following Model Context Protocol
+- **Storage Layer**: Multi-modal data storage (relational, vector, graph, object)
+- **Infrastructure**: Temporal workflows, Keycloak auth, observability stack
+- **AI Pipeline**: Constitutional AI with multi-agent debate and eval gates
+
+For detailed architecture information, see the [Architecture Overview](docs/architecture.md).
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- **Development Setup**: Local environment and workflows
+- **Code Standards**: Python, TypeScript, and documentation requirements  
+- **Testing**: Unit, integration, and end-to-end testing approaches
+- **Security**: Security review process and vulnerability reporting
+- **Release Process**: How changes are reviewed and deployed
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Support
+
+- **Documentation**: Start with the [comprehensive guides](#-documentation) above
+- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/IAmJonoBo/StratMaster/issues)
+- **Security**: Report vulnerabilities via our [Security Policy](SECURITY.md)
+- **Discussions**: Join conversations in [GitHub Discussions](https://github.com/IAmJonoBo/StratMaster/discussions)
