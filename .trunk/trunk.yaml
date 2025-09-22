@@ -55,6 +55,9 @@ lint:
       # Exclude tests from static typing in Trunk (mypy.ini already excludes them, but enforce at Trunk level too)
       paths:
         - "**/tests/**"
+        # TEMP: avoid upstream mypy internal error when Trunk invokes these files directly
+        - "packages/mcp-servers/router-mcp/src/router_mcp/models.py"
+        - "packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/models.py"
     - linters: [ruff]
       # Avoid import-sorting noise and strict ruff checks in tests; keep runtime code strict
       paths:

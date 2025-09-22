@@ -1,4 +1,4 @@
-# mypy: ignore-errors  # TEMP: work around trunk-invoked mypy internal error on this file
+# mypy: ignore-errors
 """Pydantic schemas for router MCP."""
 
 from __future__ import annotations
