@@ -53,8 +53,15 @@ class ArtefactRecord(BaseModel):
             try:
                 sast = datetime.fromisoformat(sast.replace("Z", "+00:00"))
             except ValueError as exc:  # pragma: no cover - defensive guard
-                raise ValidationError.from_exception_data(  # type: ignore[attr-defined]
-                    "ArtefactRecord", [], str(exc)
+                raise ValidationError.from_exception_data(
+                    "ArtefactRecord",
+                    [
+                        {
+                            "loc": ("sast",),
+                            "msg": f"Invalid datetime format: {exc}",
+                            "type": "value_error.datetime",
+                        }
+                    ],
                 ) from exc
         tokens = _tokenise(f"{title} {summary}")
         token_counts = Counter(tokens)
