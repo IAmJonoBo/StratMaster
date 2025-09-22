@@ -57,6 +57,8 @@ lint:
         # TEMP: avoid upstream mypy internal error when Trunk invokes these files directly
         - "packages/mcp-servers/router-mcp/src/router_mcp/models.py"
         - "packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/models.py"
+        # TEMP: mypy false-positive under Trunk runner for optional cli-only deps
+        - "packages/mcp-servers/knowledge-mcp/src/knowledge_mcp/service.py"
     - linters: [ruff]
       # Avoid import-sorting noise and strict ruff checks in tests; keep runtime code strict
       paths:
