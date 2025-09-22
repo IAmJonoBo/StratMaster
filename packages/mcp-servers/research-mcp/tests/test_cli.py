@@ -42,7 +42,7 @@ def test_main_invokes_uvicorn_with_defaults(monkeypatch: pytest.MonkeyPatch) -> 
 
     assert captured["app"] == "research_mcp.app:create_app"
     kwargs = captured["kwargs"]
-    assert kwargs["host"] == "0.0.0.0"
+    assert kwargs["host"] == "127.0.0.1"
     assert kwargs["port"] == 8081
     assert kwargs["reload"] is False
     assert kwargs["log_level"] == "info"

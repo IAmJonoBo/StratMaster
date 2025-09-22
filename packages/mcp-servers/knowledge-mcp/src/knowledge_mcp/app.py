@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI
 from .config import load_config
 from .models import (
     ColbertSearchRequest,
+    CommunitySummariesResponse,
     HybridQueryRequest,
     HybridQueryResponse,
     InfoResponse,
@@ -72,8 +73,8 @@ def create_app() -> FastAPI:
 
     resources = APIRouter(prefix="/resources", tags=["resources"])
 
-    @resources.get("/graph/community_summaries")
-    async def community_summaries(tenant_id: str, limit: int = 3) -> list[dict]:
+    @resources.get("/graph/community_summaries", response_model=CommunitySummariesResponse)
+    async def community_summaries(tenant_id: str, limit: int = 3) -> CommunitySummariesResponse:
         return service.community_summaries(tenant_id=tenant_id, limit=limit)
 
     app.include_router(resources)
