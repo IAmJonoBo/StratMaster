@@ -28,6 +28,14 @@ class EvidenceGrade(str, Enum):
     INSUFFICIENT = "insufficient"
 
 
+class RecommendationStatus(str, Enum):
+    """Lifecycle status for a recommendation."""
+
+    COMPLETE = "complete"
+    NEEDS_REVIEW = "needs_review"
+    FAILED = "failed"
+
+
 class CommunityScore(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -294,3 +302,5 @@ class RecommendationOutcome(BaseModel):
     graph: GraphArtifacts
     metrics: dict[str, float]
     workflow: WorkflowMetadata
+    status: RecommendationStatus = RecommendationStatus.COMPLETE
+    failure_reasons: list[str] = Field(default_factory=list)
