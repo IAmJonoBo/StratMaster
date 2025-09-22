@@ -59,12 +59,12 @@ class RouterService:
         )
 
     def embed(self, payload: EmbeddingRequest) -> EmbeddingResponse:
-        tenant_policy, task_policy, route = self._select_route(
+        _tenant_policy, task_policy, route = self._select_route(
             payload.tenant_id,
             payload.task,
             default_model=payload.model or self.config.default_provider.embedding_model,
         )
-        self._validate_embedding(tenant_policy, task_policy, payload)
+        self._validate_embedding(task_policy, payload)
         model_name = (
             payload.model or route.model or self.config.default_provider.embedding_model
         )
@@ -177,7 +177,6 @@ class RouterService:
 
     def _validate_embedding(
         self,
-        tenant_policy: TenantPolicy,
         task_policy: TaskPolicy,
         payload: EmbeddingRequest,
     ) -> None:
@@ -309,6 +308,4 @@ class RouterService:
                         status_code=500, detail="structured decoding failed"
                     ) from exc
                 return text
-            if strict:
-                return fallback
             return fallback
