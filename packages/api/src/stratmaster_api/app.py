@@ -347,7 +347,7 @@ def _load_model_schemas() -> dict[str, Any]:
     schemas: dict[str, Any] = {}
     for json_file in sorted(schemas_path.glob("*.json")):
         # Skip hidden files or macOS resource fork files
-        if json_file.name.startswith('.') or json_file.name.startswith('._'):
+        if json_file.name.startswith('._') or json_file.name.startswith('.'):
             continue
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
