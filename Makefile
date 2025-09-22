@@ -1,5 +1,5 @@
 .PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
-        index.colbert index.splade
+        index.colbert index.splade lint format
 
 dev.up:
 	docker compose up -d
@@ -39,6 +39,15 @@ precommit-install:
 
 precommit:
 	. .venv/bin/activate && pre-commit run --all-files
+
+# Quick local lint check (requires ruff and black to be installed)
+lint:
+	.venv/bin/ruff check .
+	
+# Auto-format code (requires ruff and black to be installed)
+format:
+	.venv/bin/ruff check --fix .
+	.venv/bin/black .
 
 bootstrap:
 	[ -d .venv ] || python3 -m venv .venv

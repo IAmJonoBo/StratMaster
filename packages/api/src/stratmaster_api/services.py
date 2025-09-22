@@ -125,7 +125,10 @@ class ResearchMCPClient(BaseMCPClient):
     def crawl(self, url: str) -> dict[str, Any]:
         return self._post_json(
             "/tools/crawl",
-            {"tenant_id": "system", "spec": {"url": url, "max_depth": DEFAULT_MAX_DEPTH}},
+            {
+                "tenant_id": "system",
+                "spec": {"url": url, "max_depth": DEFAULT_MAX_DEPTH},
+            },
         )
 
 
@@ -214,7 +217,9 @@ class RouterMCPClient(BaseMCPClient):
 class EvalsMCPClient(BaseMCPClient):
     """HTTP client for the evals MCP server."""
 
-    def __init__(self, base_url: str | None = None, timeout: float = DEFAULT_TIMEOUT) -> None:
+    def __init__(
+        self, base_url: str | None = None, timeout: float = DEFAULT_TIMEOUT
+    ) -> None:
         super().__init__(
             env_url_key="EVALS_MCP_URL",
             default_url="http://localhost:8084",
@@ -327,9 +332,13 @@ class OrchestratorService:
     # ------------------------------------------------------------------
     # Research planning/execution
     # ------------------------------------------------------------------
-    def plan_research(self, query: str, tenant_id: str, max_sources: int) -> dict[str, Any]:
+    def plan_research(
+        self, query: str, tenant_id: str, max_sources: int
+    ) -> dict[str, Any]:
         sources = self._sources_from_metasearch(query, max_sources)
-        tasks = [f"Validate insight: {src.title}" for src in sources[:DEFAULT_MAX_SOURCES]] or [
+        tasks = [
+            f"Validate insight: {src.title}" for src in sources[:DEFAULT_MAX_SOURCES]
+        ] or [
             "Collect baseline market context",
             "Identify competitive moves",
             "Quantify demand signals",
@@ -345,7 +354,9 @@ class OrchestratorService:
 
     def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
         graph = GraphArtifacts(
-            nodes=[GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)],
+            nodes=[
+                GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
+            ],
             edges=[
                 GraphEdge(
                     source=f"{focus}-node",
@@ -399,7 +410,9 @@ class OrchestratorService:
         metasearch_sources = self._sources_from_metasearch(
             plan_id or tenant_id, DEFAULT_MAX_SOURCES
         )
-        knowledge_hits = self._knowledge_hits(tenant_id, plan_id or tenant_id, DEFAULT_MAX_SOURCES)
+        knowledge_hits = self._knowledge_hits(
+            tenant_id, plan_id or tenant_id, DEFAULT_MAX_SOURCES
+        )
         claims = [
             Claim(
                 id="claim-1",
@@ -447,7 +460,9 @@ class OrchestratorService:
                 provenance_id="prov-1",
             )
         ]
-        graph = self._graph_from_knowledge_summaries(tenant_id, fallback_claims=["claim-1"])
+        graph = self._graph_from_knowledge_summaries(
+            tenant_id, fallback_claims=["claim-1"]
+        )
         retrieval = self._rerank_records(
             tenant_id=tenant_id,
             query=plan_id or tenant_id,
@@ -466,7 +481,9 @@ class OrchestratorService:
     def _graph_research(self, state: dict[str, Any]) -> dict[str, Any]:
         plan_id = state.get("plan_id") or f"plan-{uuid4().hex[:8]}"
         state["plan_id"] = plan_id
-        state["research"] = self._collect_research(plan_id=plan_id, tenant_id=state["tenant_id"])
+        state["research"] = self._collect_research(
+            plan_id=plan_id, tenant_id=state["tenant_id"]
+        )
         self._record_stage(state, "research")
         return state
 
@@ -511,7 +528,9 @@ class OrchestratorService:
             raise TypeError("pipeline produced unexpected recommendation type")
         return outcome
 
-    def query_retrieval(self, tenant_id: str, query: str, top_k: int) -> list[RetrievalRecord]:
+    def query_retrieval(
+        self, tenant_id: str, query: str, top_k: int
+    ) -> list[RetrievalRecord]:
         records = [
             RetrievalRecord(
                 document_id=f"doc-{i}",
@@ -549,7 +568,9 @@ class OrchestratorService:
         _payload = payload
         return f"exp-{uuid4().hex[:8]}"
 
-    def create_forecast(self, tenant_id: str, metric_id: str, horizon_days: int) -> Forecast:
+    def create_forecast(
+        self, tenant_id: str, metric_id: str, horizon_days: int
+    ) -> Forecast:
         _tenant_id = tenant_id
         metric = Metric(id=metric_id, name="Metric", definition="Synthetic")
         return Forecast(
@@ -594,7 +615,9 @@ class OrchestratorService:
             )
         return sources[:max_sources]
 
-    def _retrieval_records_from_sources(self, sources: Iterable[Source]) -> list[RetrievalRecord]:
+    def _retrieval_records_from_sources(
+        self, sources: Iterable[Source]
+    ) -> list[RetrievalRecord]:
         records: list[RetrievalRecord] = []
         for src in sources:
             try:
@@ -623,7 +646,9 @@ class OrchestratorService:
             )
         return records
 
-    def _knowledge_hits(self, tenant_id: str, query: str, top_k: int) -> Sequence[dict[str, Any]]:
+    def _knowledge_hits(
+        self, tenant_id: str, query: str, top_k: int
+    ) -> Sequence[dict[str, Any]]:
         try:
             payload = self.knowledge_client.hybrid_query(
                 tenant_id=tenant_id, query=query, top_k=top_k
@@ -663,7 +688,9 @@ class OrchestratorService:
         self, tenant_id: str, fallback_claims: list[str]
     ) -> GraphArtifacts:
         try:
-            payload = self.knowledge_client.community_summaries(tenant_id=tenant_id, limit=3)
+            payload = self.knowledge_client.community_summaries(
+                tenant_id=tenant_id, limit=3
+            )
             summaries = payload.get("summaries", [])
         except (httpx.HTTPError, ValueError, TypeError):
             summaries = []
@@ -700,7 +727,9 @@ class OrchestratorService:
             title = summary.get("title", community_id)
             key_nodes: list[str] = summary.get("representative_nodes", [])
             summary_text = summary.get("summary", "")
-            community_scores.append(CommunityScore(community_id=community_id, score=0.75))
+            community_scores.append(
+                CommunityScore(community_id=community_id, score=0.75)
+            )
             community_summaries.append(
                 CommunitySummary(
                     community_id=community_id,
@@ -745,7 +774,9 @@ class OrchestratorService:
     ) -> list[RetrievalRecord]:
         if not records:
             return []
-        documents = [{"id": record.document_id, "text": record.chunk_hash} for record in records]
+        documents = [
+            {"id": record.document_id, "text": record.chunk_hash} for record in records
+        ]
         try:
             payload = self.router_client.rerank(
                 tenant_id=tenant_id,
@@ -753,11 +784,16 @@ class OrchestratorService:
                 documents=documents,
                 top_k=max_results,
             )
-            order = {item["id"]: index for index, item in enumerate(payload.get("results", []))}
+            order = {
+                item["id"]: index
+                for index, item in enumerate(payload.get("results", []))
+            }
             if order:
                 records.sort(key=lambda rec: order.get(rec.document_id, len(order)))
         except (httpx.HTTPError, ValueError, TypeError) as exc:
-            logger.warning("rerank request failed; returning original order", exc_info=exc)
+            logger.warning(
+                "rerank request failed; returning original order", exc_info=exc
+            )
         return records[:max_results]
 
     def _create_synthetic_claims_and_assumptions(
@@ -785,7 +821,9 @@ class OrchestratorService:
         ]
         return claims, assumptions
 
-    def _create_synthetic_experiments_and_forecast(self) -> tuple[list[Experiment], Forecast]:
+    def _create_synthetic_experiments_and_forecast(
+        self,
+    ) -> tuple[list[Experiment], Forecast]:
         """Create synthetic experiments and forecast for recommendations."""
         experiments = [
             Experiment(
@@ -834,7 +872,10 @@ class OrchestratorService:
         return DecisionBrief(
             id=f"brief-{uuid4().hex[:8]}",
             cep=cep,
-            jtbd=[JTBD(id=j, actor="Customer", motivation="", outcome="") for j in jtbd_ids],
+            jtbd=[
+                JTBD(id=j, actor="Customer", motivation="", outcome="")
+                for j in jtbd_ids
+            ],
             dbas=[],
             assumptions=assumptions,
             claims=claims,
@@ -856,7 +897,9 @@ class OrchestratorService:
         tenant_id: str,
     ) -> RecommendationOutcome:
         """Handle the case where evaluation thresholds are not met."""
-        decision.recommendation = "Evaluation thresholds not met. Additional research required."
+        decision.recommendation = (
+            "Evaluation thresholds not met. Additional research required."
+        )
         workflow = WorkflowMetadata(
             workflow_id=f"wf-{uuid4().hex[:6]}",
             tenant_id=tenant_id,
@@ -937,7 +980,9 @@ class OrchestratorService:
                 evaluation, decision, graph, retrieval_records, tenant_id
             )
 
-        self._generate_ai_recommendation(tenant_id, claims, assumptions, risk_tolerance, decision)
+        self._generate_ai_recommendation(
+            tenant_id, claims, assumptions, risk_tolerance, decision
+        )
 
         workflow = WorkflowMetadata(
             workflow_id=f"wf-{uuid4().hex[:6]}",
@@ -946,7 +991,9 @@ class OrchestratorService:
             langfuse_span_id=None,
         )
         metrics = {
-            "risk_tolerance": {"low": 0.4, "medium": 0.6, "high": 0.2}.get(risk_tolerance, 0.5),
+            "risk_tolerance": {"low": 0.4, "medium": 0.6, "high": 0.2}.get(
+                risk_tolerance, 0.5
+            ),
             "evaluation_passed": 1.0 if (evaluation or {}).get("passed", True) else 0.0,
         }
 
