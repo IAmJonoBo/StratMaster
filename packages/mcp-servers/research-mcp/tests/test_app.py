@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from fastapi.testclient import TestClient
 from research_mcp.app import create_app

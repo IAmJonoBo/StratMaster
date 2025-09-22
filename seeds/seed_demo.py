@@ -40,7 +40,7 @@ class SeedConfig:
     minio_secure: bool
 
     @staticmethod
-    def from_env(dataset_path: Path) -> "SeedConfig":
+    def from_env(dataset_path: Path) -> SeedConfig:
         return SeedConfig(
             dataset_path=dataset_path,
             postgres_dsn=os.getenv(
