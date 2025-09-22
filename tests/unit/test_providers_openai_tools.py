@@ -1,36 +1,21 @@
 from fastapi.testclient import TestClient
 from stratmaster_api.app import create_app
-
-
-def test_list_tools_raw_contains_expected_schema_keys():
+from stratmaster_api.models.schema_export import SCHEMA_VERSION
+def test_list_model_schemas_includes_recommendation_contracts():
     app = create_app()
     client = TestClient(app)
-    r = client.get("/providers/openai/tools", params={"format": "raw"})
-    assert r.status_code == 200
-    data = r.json()
-    assert "schemas" in data and isinstance(data["schemas"], dict)
-    assert data["count"] == len(data["schemas"]) > 0
-    assert "web_search" in data["schemas"], "expected web_search schema to be present"
+    response = client.get("/schemas/models")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["count"] == len(payload["schemas"]) > 0
+    assert "recommendation-outcome" in payload["schemas"]
 
 
-def test_list_tools_openai_format():
+def test_get_single_model_schema():
     app = create_app()
     client = TestClient(app)
-    r = client.get("/providers/openai/tools", params={"format": "openai"})
-    assert r.status_code == 200
-    data = r.json()
-    assert "tools" in data and isinstance(data["tools"], list)
-    assert data["count"] == len(data["tools"]) > 0
-    sample = data["tools"][0]
-    assert sample["type"] == "function"
-    assert "function" in sample and "parameters" in sample["function"]
-
-
-def test_get_single_tool_schema():
-    app = create_app()
-    client = TestClient(app)
-    r = client.get("/providers/openai/tools/web_search")
-    assert r.status_code == 200
-    schema = r.json()
-    assert isinstance(schema, dict)
-    assert schema.get("type") in ("object", None)
+    response = client.get("/schemas/models/recommendation-outcome")
+    assert response.status_code == 200
+    schema = response.json()
+    assert schema["$id"].endswith(f"/{SCHEMA_VERSION}")
+    assert schema["$schema"].startswith("https://json-schema.org/")

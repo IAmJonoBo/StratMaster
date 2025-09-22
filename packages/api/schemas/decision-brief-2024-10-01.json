@@ -1,0 +1,455 @@
+{
+  "$defs": {
+    "Assumption": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "provenance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provenance Ids",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "confidence",
+        "provenance_ids"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "CEP": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "jobs_to_be_done": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Jobs To Be Done",
+          "type": "array"
+        },
+        "narrative": {
+          "title": "Narrative",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "narrative",
+        "jobs_to_be_done"
+      ],
+      "title": "CEP",
+      "type": "object"
+    },
+    "Claim": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_grade": {
+          "$ref": "#/$defs/EvidenceGrade"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "provenance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provenance Ids",
+          "type": "array"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "evidence_grade",
+        "provenance_ids"
+      ],
+      "title": "Claim",
+      "type": "object"
+    },
+    "DBA": {
+      "additionalProperties": false,
+      "properties": {
+        "assumption_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Assumption Ids",
+          "type": "array"
+        },
+        "bet": {
+          "title": "Bet",
+          "type": "string"
+        },
+        "decision": {
+          "title": "Decision",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "decision",
+        "bet",
+        "assumption_ids"
+      ],
+      "title": "DBA",
+      "type": "object"
+    },
+    "EvidenceGrade": {
+      "enum": [
+        "high",
+        "moderate",
+        "low",
+        "insufficient"
+      ],
+      "title": "EvidenceGrade",
+      "type": "string"
+    },
+    "Experiment": {
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis_id": {
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "launch_conditions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Launch Conditions",
+          "type": "array"
+        },
+        "minimum_detectable_effect": {
+          "title": "Minimum Detectable Effect",
+          "type": "number"
+        },
+        "primary_metric": {
+          "$ref": "#/$defs/Metric"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/ExperimentVariant"
+          },
+          "title": "Variants",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "hypothesis_id",
+        "variants",
+        "primary_metric",
+        "minimum_detectable_effect"
+      ],
+      "title": "Experiment",
+      "type": "object"
+    },
+    "ExperimentVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prior_probability": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prior Probability"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "title": "ExperimentVariant",
+      "type": "object"
+    },
+    "Forecast": {
+      "additionalProperties": false,
+      "properties": {
+        "horizon_days": {
+          "title": "Horizon Days",
+          "type": "integer"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "intervals": {
+          "items": {
+            "$ref": "#/$defs/ForecastInterval"
+          },
+          "title": "Intervals",
+          "type": "array"
+        },
+        "metric": {
+          "$ref": "#/$defs/Metric"
+        },
+        "point_estimate": {
+          "title": "Point Estimate",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "metric",
+        "point_estimate",
+        "intervals",
+        "horizon_days"
+      ],
+      "title": "Forecast",
+      "type": "object"
+    },
+    "ForecastInterval": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "enum": [
+            50,
+            90
+          ],
+          "title": "Confidence",
+          "type": "integer"
+        },
+        "lower": {
+          "title": "Lower",
+          "type": "number"
+        },
+        "upper": {
+          "title": "Upper",
+          "type": "number"
+        }
+      },
+      "required": [
+        "confidence",
+        "lower",
+        "upper"
+      ],
+      "title": "ForecastInterval",
+      "type": "object"
+    },
+    "JTBD": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "title": "Actor",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "motivation": {
+          "title": "Motivation",
+          "type": "string"
+        },
+        "outcome": {
+          "title": "Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "actor",
+        "motivation",
+        "outcome"
+      ],
+      "title": "JTBD",
+      "type": "object"
+    },
+    "Metric": {
+      "additionalProperties": false,
+      "properties": {
+        "current_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current Value"
+        },
+        "definition": {
+          "title": "Definition",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "definition"
+      ],
+      "title": "Metric",
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.stratmaster.ai/decision-brief/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "cep": {
+      "$ref": "#/$defs/CEP"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/Claim"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "dbas": {
+      "items": {
+        "$ref": "#/$defs/DBA"
+      },
+      "title": "Dbas",
+      "type": "array"
+    },
+    "evidence_grade": {
+      "$ref": "#/$defs/EvidenceGrade"
+    },
+    "experiments": {
+      "items": {
+        "$ref": "#/$defs/Experiment"
+      },
+      "title": "Experiments",
+      "type": "array"
+    },
+    "forecasts": {
+      "items": {
+        "$ref": "#/$defs/Forecast"
+      },
+      "title": "Forecasts",
+      "type": "array"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "jtbd": {
+      "items": {
+        "$ref": "#/$defs/JTBD"
+      },
+      "title": "Jtbd",
+      "type": "array"
+    },
+    "provenance_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Provenance Ids",
+      "type": "array"
+    },
+    "recommendation": {
+      "title": "Recommendation",
+      "type": "string"
+    },
+    "safer_alternative": {
+      "title": "Safer Alternative",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "cep",
+    "jtbd",
+    "dbas",
+    "assumptions",
+    "claims",
+    "experiments",
+    "forecasts",
+    "recommendation",
+    "safer_alternative",
+    "evidence_grade",
+    "provenance_ids",
+    "confidence"
+  ],
+  "title": "DecisionBrief",
+  "type": "object"
+}
