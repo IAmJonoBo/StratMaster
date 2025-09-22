@@ -31,7 +31,7 @@ All POST routes require the `Idempotency-Key` header (8–128 chars, `[A-Za-z0-9
 ## Running locally
 
 ```bash
-uvicorn stratmaster_api.app:create_app --factory --reload --port 8080
+uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080
 ```
 
 Or use the Make target, which installs the package in editable mode first:
@@ -53,7 +53,7 @@ Run these quick checks locally to guard against regressions:
 
 ```bash
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
-# Expect: 17 passed
+# Expect: 19 passed
 ```
 
 1. In‑process smoke (no network sockets)
@@ -66,8 +66,8 @@ PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 1. Manual run + health
 
 ```bash
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080 &
-curl -s http://localhost:8080/healthz
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080 &
+curl -s http://127.0.0.1:8080/healthz
 # Expect: {"status":"ok"}
 ```
 

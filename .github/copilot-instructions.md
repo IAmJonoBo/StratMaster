@@ -40,7 +40,7 @@ make bootstrap
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
 
-- **Time**: ~1 second, 17 tests pass
+- **Time**: ~1 second, 19 tests pass
 - **Reliable**: Always works after bootstrap
 
 **Full test suite** (often has network issues):
@@ -68,7 +68,7 @@ make test-docker
 **API Server** (using bootstrap environment):
 
 ```bash
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080
 ```
 
 - **Time**: Starts in ~2-3 seconds
@@ -103,13 +103,13 @@ make bootstrap  # Should complete without errors
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
 
-**Expected result**: `17 passed in ~1.02s`
+**Expected result**: `19 passed in ~1.6s`
 
 3. **API functionality validation**:
 
 ```bash
 # Start API server
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080 &
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080 &
 
 # Test health endpoint
 curl http://localhost:8080/healthz
@@ -214,7 +214,7 @@ bash scripts/cleanup_appledouble.sh
 # Commands that work when network allows:
 make bootstrap                                           # 2-3 min (often fails due to network)
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q  # 1-2 sec (after bootstrap)
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080  # 2-3 sec (after bootstrap)
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080  # 2-3 sec (after bootstrap)
 helm lint helm/stratmaster-api                          # 5-10 sec
 bash scripts/cleanup_appledouble.sh                     # instant
 
@@ -230,7 +230,7 @@ make test-docker                                        # 3-10 min (may fail on 
 ## Important Files and Locations
 
 - **Main API**: `packages/api/src/stratmaster_api/`
-- **API Tests**: `packages/api/tests/` (17 tests, all pass)
+- **API Tests**: `packages/api/tests/` (19 tests, all pass)
 - **MCP Server**: `packages/mcp-servers/research-mcp/`
 - **Docker Compose**: `docker-compose.yml` (12+ services)
 - **Makefile**: All build targets and commands

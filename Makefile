@@ -13,12 +13,12 @@ dev.logs:
 api.run:
 	[ -d .venv ] || python -m venv .venv
 	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api
-	.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --port 8080
+	.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080
 
 research-mcp.run:
 	[ -d .venv ] || python -m venv .venv
 	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/mcp-servers/research-mcp
-	.venv/bin/uvicorn research_mcp.app:create_app --factory --reload --port 8081
+	.venv/bin/uvicorn research_mcp.app:create_app --factory --reload --host 127.0.0.1 --port 8081
 
 api.docker:
 	docker build -t stratmaster-api:dev ./packages/api && docker run --rm -p 8080:8080 stratmaster-api:dev

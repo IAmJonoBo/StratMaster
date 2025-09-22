@@ -43,7 +43,7 @@ make bootstrap
 
 ```bash
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
-# Expected: 17 passed
+# Expected: 19 passed
 ```
 
 1. Full repo tests (optional, ~2–5s locally)
@@ -63,8 +63,8 @@ PYTHONNOUSERSITE=1 .venv/bin/python -m pytest -q
 1. Manual health (uvicorn)
 
 ```bash
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --port 8080 &
-curl -s http://localhost:8080/healthz
+.venv/bin/uvicorn stratmaster_api.app:create_app --factory --host 127.0.0.1 --port 8080 &
+curl -s http://127.0.0.1:8080/healthz
 # Expected: {"status":"ok"}
 ```
 
@@ -87,6 +87,7 @@ Notes:
 
 - If local pip installs time out (corporate network), document as “fails due to firewall/network limitations” and use `make test-docker` instead.
 - Prefer installing from lock files (`requirements.lock`, `requirements-dev.lock`) for reproducible environments.
+- Helm charts are currently at version 0.1.1 and values files set `image.tag: "0.1.1"`. If you haven't published container images for that tag yet, temporarily set `image.tag` back to `dev` in your local values to run.
 
 ## Running tests
 
