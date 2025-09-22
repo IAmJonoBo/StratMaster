@@ -367,9 +367,6 @@ class OrchestratorService:
         max_turns: int,
     ) -> dict[str, Any]:
         # alias to preserve variable names used previously
-        _tenant_id = tenant_id
-        _hypothesis_id = hypothesis_id
-        _claim_ids = claim_ids
         turns = [
             DebateTurn(
                 agent="agent-1",
