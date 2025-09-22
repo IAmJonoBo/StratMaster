@@ -44,7 +44,13 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# Constants
 _UNEXPECTED_RESPONSE = "Unexpected response payload"
+DEFAULT_TIMEOUT = 10.0
+DEFAULT_MAX_DEPTH = 1
+DEFAULT_MAX_TOKENS = 256
+DEFAULT_TOP_K = 5
+DEFAULT_MAX_SOURCES = 3
 
 
 def _utcnow() -> datetime:
@@ -56,19 +62,15 @@ class BaseMCPClient:
 
     def __init__(
         self,
-        base_url: str | None = None,
-        timeout: float = 10.0,
         env_url_key: str,
         default_url: str,
+        base_url: str | None = None,
+        timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         self.base_url = base_url or os.getenv(env_url_key, default_url)
         self.timeout = timeout
 
-    def _post_json(
-        self,
-        endpoint: str,
-        json_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _post_json(self, endpoint: str, json_data: dict[str, Any]) -> dict[str, Any]:
         """Make a POST request and return validated JSON response."""
         resp = httpx.post(
             f"{self.base_url}{endpoint}",
@@ -105,13 +107,13 @@ class ResearchMCPClient(BaseMCPClient):
     def __init__(
         self,
         base_url: str | None = None,
-        timeout: float = 10.0,
+        timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         super().__init__(
-            base_url=base_url,
-            timeout=timeout,
             env_url_key="RESEARCH_MCP_URL",
             default_url="http://localhost:8081",
+            base_url=base_url,
+            timeout=timeout,
         )
 
     def metasearch(self, query: str, limit: int) -> dict[str, Any]:
@@ -123,7 +125,7 @@ class ResearchMCPClient(BaseMCPClient):
     def crawl(self, url: str) -> dict[str, Any]:
         return self._post_json(
             "/tools/crawl",
-            {"tenant_id": "system", "spec": {"url": url, "max_depth": 1}},
+            {"tenant_id": "system", "spec": {"url": url, "max_depth": DEFAULT_MAX_DEPTH}},
         )
 
 
@@ -133,17 +135,17 @@ class KnowledgeMCPClient(BaseMCPClient):
     def __init__(
         self,
         base_url: str | None = None,
-        timeout: float = 10.0,
+        timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         super().__init__(
-            base_url=base_url,
-            timeout=timeout,
             env_url_key="KNOWLEDGE_MCP_URL",
             default_url="http://localhost:8082",
+            base_url=base_url,
+            timeout=timeout,
         )
 
     def hybrid_query(
-        self, tenant_id: str, query: str, top_k: int = 5
+        self, tenant_id: str, query: str, top_k: int = DEFAULT_TOP_K
     ) -> dict[str, Any]:
         return self._post_json(
             "/tools/hybrid_query",
@@ -163,20 +165,20 @@ class RouterMCPClient(BaseMCPClient):
     def __init__(
         self,
         base_url: str | None = None,
-        timeout: float = 10.0,
+        timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         super().__init__(
-            base_url=base_url,
-            timeout=timeout,
             env_url_key="ROUTER_MCP_URL",
             default_url="http://localhost:8083",
+            base_url=base_url,
+            timeout=timeout,
         )
 
     def complete(
         self,
         tenant_id: str,
         prompt: str,
-        max_tokens: int = 256,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
         task: str = "reasoning",
     ) -> dict[str, Any]:
         return self._post_json(
@@ -212,12 +214,12 @@ class RouterMCPClient(BaseMCPClient):
 class EvalsMCPClient(BaseMCPClient):
     """HTTP client for the evals MCP server."""
 
-    def __init__(self, base_url: str | None = None, timeout: float = 10.0) -> None:
+    def __init__(self, base_url: str | None = None, timeout: float = DEFAULT_TIMEOUT) -> None:
         super().__init__(
-            base_url=base_url,
-            timeout=timeout,
             env_url_key="EVALS_MCP_URL",
             default_url="http://localhost:8084",
+            base_url=base_url,
+            timeout=timeout,
         )
 
     def run(
@@ -325,11 +327,9 @@ class OrchestratorService:
     # ------------------------------------------------------------------
     # Research planning/execution
     # ------------------------------------------------------------------
-    def plan_research(
-        self, query: str, tenant_id: str, max_sources: int
-    ) -> dict[str, Any]:
+    def plan_research(self, query: str, tenant_id: str, max_sources: int) -> dict[str, Any]:
         sources = self._sources_from_metasearch(query, max_sources)
-        tasks = [f"Validate insight: {src.title}" for src in sources[:3]] or [
+        tasks = [f"Validate insight: {src.title}" for src in sources[:DEFAULT_MAX_SOURCES]] or [
             "Collect baseline market context",
             "Identify competitive moves",
             "Quantify demand signals",
@@ -345,9 +345,7 @@ class OrchestratorService:
 
     def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
         graph = GraphArtifacts(
-            nodes=[
-                GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
-            ],
+            nodes=[GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)],
             edges=[
                 GraphEdge(
                     source=f"{focus}-node",
@@ -398,8 +396,10 @@ class OrchestratorService:
         return {"debate_id": f"deb-{uuid4().hex[:8]}", "debate": trace}
 
     def _collect_research(self, plan_id: str, tenant_id: str) -> dict[str, Any]:
-        metasearch_sources = self._sources_from_metasearch(plan_id or tenant_id, 3)
-        knowledge_hits = self._knowledge_hits(tenant_id, plan_id or tenant_id, 3)
+        metasearch_sources = self._sources_from_metasearch(
+            plan_id or tenant_id, DEFAULT_MAX_SOURCES
+        )
+        knowledge_hits = self._knowledge_hits(tenant_id, plan_id or tenant_id, DEFAULT_MAX_SOURCES)
         claims = [
             Claim(
                 id="claim-1",
@@ -447,9 +447,7 @@ class OrchestratorService:
                 provenance_id="prov-1",
             )
         ]
-        graph = self._graph_from_knowledge_summaries(
-            tenant_id, fallback_claims=["claim-1"]
-        )
+        graph = self._graph_from_knowledge_summaries(tenant_id, fallback_claims=["claim-1"])
         retrieval = self._rerank_records(
             tenant_id=tenant_id,
             query=plan_id or tenant_id,
@@ -468,9 +466,7 @@ class OrchestratorService:
     def _graph_research(self, state: dict[str, Any]) -> dict[str, Any]:
         plan_id = state.get("plan_id") or f"plan-{uuid4().hex[:8]}"
         state["plan_id"] = plan_id
-        state["research"] = self._collect_research(
-            plan_id=plan_id, tenant_id=state["tenant_id"]
-        )
+        state["research"] = self._collect_research(plan_id=plan_id, tenant_id=state["tenant_id"])
         self._record_stage(state, "research")
         return state
 
@@ -515,9 +511,7 @@ class OrchestratorService:
             raise TypeError("pipeline produced unexpected recommendation type")
         return outcome
 
-    def query_retrieval(
-        self, tenant_id: str, query: str, top_k: int
-    ) -> list[RetrievalRecord]:
+    def query_retrieval(self, tenant_id: str, query: str, top_k: int) -> list[RetrievalRecord]:
         records = [
             RetrievalRecord(
                 document_id=f"doc-{i}",
@@ -555,9 +549,7 @@ class OrchestratorService:
         _payload = payload
         return f"exp-{uuid4().hex[:8]}"
 
-    def create_forecast(
-        self, tenant_id: str, metric_id: str, horizon_days: int
-    ) -> Forecast:
+    def create_forecast(self, tenant_id: str, metric_id: str, horizon_days: int) -> Forecast:
         _tenant_id = tenant_id
         metric = Metric(id=metric_id, name="Metric", definition="Synthetic")
         return Forecast(
@@ -602,9 +594,7 @@ class OrchestratorService:
             )
         return sources[:max_sources]
 
-    def _retrieval_records_from_sources(
-        self, sources: Iterable[Source]
-    ) -> list[RetrievalRecord]:
+    def _retrieval_records_from_sources(self, sources: Iterable[Source]) -> list[RetrievalRecord]:
         records: list[RetrievalRecord] = []
         for src in sources:
             try:
@@ -633,9 +623,7 @@ class OrchestratorService:
             )
         return records
 
-    def _knowledge_hits(
-        self, tenant_id: str, query: str, top_k: int
-    ) -> Sequence[dict[str, Any]]:
+    def _knowledge_hits(self, tenant_id: str, query: str, top_k: int) -> Sequence[dict[str, Any]]:
         try:
             payload = self.knowledge_client.hybrid_query(
                 tenant_id=tenant_id, query=query, top_k=top_k
@@ -675,9 +663,7 @@ class OrchestratorService:
         self, tenant_id: str, fallback_claims: list[str]
     ) -> GraphArtifacts:
         try:
-            payload = self.knowledge_client.community_summaries(
-                tenant_id=tenant_id, limit=3
-            )
+            payload = self.knowledge_client.community_summaries(tenant_id=tenant_id, limit=3)
             summaries = payload.get("summaries", [])
         except (httpx.HTTPError, ValueError, TypeError):
             summaries = []
@@ -714,9 +700,7 @@ class OrchestratorService:
             title = summary.get("title", community_id)
             key_nodes: list[str] = summary.get("representative_nodes", [])
             summary_text = summary.get("summary", "")
-            community_scores.append(
-                CommunityScore(community_id=community_id, score=0.75)
-            )
+            community_scores.append(CommunityScore(community_id=community_id, score=0.75))
             community_summaries.append(
                 CommunitySummary(
                     community_id=community_id,
@@ -761,9 +745,7 @@ class OrchestratorService:
     ) -> list[RetrievalRecord]:
         if not records:
             return []
-        documents = [
-            {"id": record.document_id, "text": record.chunk_hash} for record in records
-        ]
+        documents = [{"id": record.document_id, "text": record.chunk_hash} for record in records]
         try:
             payload = self.router_client.rerank(
                 tenant_id=tenant_id,
@@ -771,31 +753,19 @@ class OrchestratorService:
                 documents=documents,
                 top_k=max_results,
             )
-            order = {
-                item["id"]: index
-                for index, item in enumerate(payload.get("results", []))
-            }
+            order = {item["id"]: index for index, item in enumerate(payload.get("results", []))}
             if order:
                 records.sort(key=lambda rec: order.get(rec.document_id, len(order)))
         except (httpx.HTTPError, ValueError, TypeError) as exc:
-            logger.warning(
-                "rerank request failed; returning original order", exc_info=exc
-            )
+            logger.warning("rerank request failed; returning original order", exc_info=exc)
         return records[:max_results]
 
-    def _compose_recommendation(
-        self,
-        tenant_id: str,
-        cep_id: str,
-        jtbd_ids: list[str],
-        risk_tolerance: str,
-        research: dict[str, Any] | None,
-        evaluation: dict[str, Any] | None,
-    ) -> RecommendationOutcome:
+    def _create_synthetic_claims_and_assumptions(
+        self, research: dict[str, Any] | None
+    ) -> tuple[list[Claim], list[Assumption]]:
+        """Create synthetic claims and assumptions when research is incomplete."""
         if research is None:
-            research = self._collect_research(
-                plan_id=f"plan-{uuid4().hex[:8]}", tenant_id=tenant_id
-            )
+            research = {}
 
         claims: list[Claim] = list(research.get("claims", [])) or [
             Claim(
@@ -813,6 +783,10 @@ class OrchestratorService:
                 provenance_ids=["prov-1"],
             )
         ]
+        return claims, assumptions
+
+    def _create_synthetic_experiments_and_forecast(self) -> tuple[list[Experiment], Forecast]:
+        """Create synthetic experiments and forecast for recommendations."""
         experiments = [
             Experiment(
                 id="exp-1",
@@ -839,19 +813,28 @@ class OrchestratorService:
             ],
             horizon_days=90,
         )
+        return experiments, forecast
+
+    def _create_decision_brief(
+        self,
+        cep_id: str,
+        jtbd_ids: list[str],
+        assumptions: list[Assumption],
+        claims: list[Claim],
+        experiments: list[Experiment],
+        forecast: Forecast,
+    ) -> DecisionBrief:
+        """Create a decision brief with the given components."""
         cep = CEP(
             id=cep_id,
             title="Customer expansion programme",
             narrative="Outline of customer journey",
             jobs_to_be_done=["Understand the market", "Prioritise bets"],
         )
-        decision = DecisionBrief(
+        return DecisionBrief(
             id=f"brief-{uuid4().hex[:8]}",
             cep=cep,
-            jtbd=[
-                JTBD(id=j, actor="Customer", motivation="", outcome="")
-                for j in jtbd_ids
-            ],
+            jtbd=[JTBD(id=j, actor="Customer", motivation="", outcome="") for j in jtbd_ids],
             dbas=[],
             assumptions=assumptions,
             claims=claims,
@@ -864,42 +847,40 @@ class OrchestratorService:
             confidence=0.62,
         )
 
-        retrieval_records: list[RetrievalRecord] = list(research.get("retrieval", []))
-        graph: GraphArtifacts | None = research.get("artifacts")
-        if graph is None:
-            graph = self._graph_from_knowledge_summaries(
-                tenant_id, fallback_claims=[c.id for c in claims]
-            )
-
-        retrieval_records = self._rerank_records(
+    def _handle_failed_evaluation(
+        self,
+        evaluation: dict[str, Any],
+        decision: DecisionBrief,
+        graph: GraphArtifacts,
+        retrieval_records: list[RetrievalRecord],
+        tenant_id: str,
+    ) -> RecommendationOutcome:
+        """Handle the case where evaluation thresholds are not met."""
+        decision.recommendation = "Evaluation thresholds not met. Additional research required."
+        workflow = WorkflowMetadata(
+            workflow_id=f"wf-{uuid4().hex[:6]}",
             tenant_id=tenant_id,
-            query=decision.recommendation,
-            records=retrieval_records,
-            max_results=3,
+            trace_id=uuid4().hex,
+            langfuse_span_id=None,
+        )
+        return RecommendationOutcome(
+            decision_brief=decision,
+            debate=DebateTrace(turns=[]),
+            retrieval=retrieval_records,
+            graph=graph,
+            metrics={"evaluation_passed": 0.0},
+            workflow=workflow,
         )
 
-        if evaluation and not evaluation.get("passed", True):
-            decision.recommendation = (
-                "Evaluation thresholds not met. Additional research required."
-            )
-            outcome_graph = graph
-            outcome_retrieval = retrieval_records
-            metrics = {"evaluation_passed": 0.0}
-            workflow = WorkflowMetadata(
-                workflow_id=f"wf-{uuid4().hex[:6]}",
-                tenant_id=tenant_id,
-                trace_id=uuid4().hex,
-                langfuse_span_id=None,
-            )
-            return RecommendationOutcome(
-                decision_brief=decision,
-                debate=DebateTrace(turns=[]),
-                retrieval=outcome_retrieval,
-                graph=outcome_graph,
-                metrics=metrics,
-                workflow=workflow,
-            )
-
+    def _generate_ai_recommendation(
+        self,
+        tenant_id: str,
+        claims: list[Claim],
+        assumptions: list[Assumption],
+        risk_tolerance: str,
+        decision: DecisionBrief,
+    ) -> None:
+        """Generate AI-powered recommendation using the router client."""
         prompt = (
             "You are the Recommender agent. Produce a short decision brief.\n"
             f"Claims: {[c.statement for c in claims]}\n"
@@ -917,6 +898,47 @@ class OrchestratorService:
                 exc_info=exc,
             )
 
+    def _compose_recommendation(
+        self,
+        tenant_id: str,
+        cep_id: str,
+        jtbd_ids: list[str],
+        risk_tolerance: str,
+        research: dict[str, Any] | None,
+        evaluation: dict[str, Any] | None,
+    ) -> RecommendationOutcome:
+        if research is None:
+            research = self._collect_research(
+                plan_id=f"plan-{uuid4().hex[:8]}", tenant_id=tenant_id
+            )
+
+        claims, assumptions = self._create_synthetic_claims_and_assumptions(research)
+        experiments, forecast = self._create_synthetic_experiments_and_forecast()
+        decision = self._create_decision_brief(
+            cep_id, jtbd_ids, assumptions, claims, experiments, forecast
+        )
+
+        retrieval_records: list[RetrievalRecord] = list(research.get("retrieval", []))
+        graph: GraphArtifacts | None = research.get("artifacts")
+        if graph is None:
+            graph = self._graph_from_knowledge_summaries(
+                tenant_id, fallback_claims=[c.id for c in claims]
+            )
+
+        retrieval_records = self._rerank_records(
+            tenant_id=tenant_id,
+            query=decision.recommendation,
+            records=retrieval_records,
+            max_results=DEFAULT_MAX_SOURCES,
+        )
+
+        if evaluation and not evaluation.get("passed", True):
+            return self._handle_failed_evaluation(
+                evaluation, decision, graph, retrieval_records, tenant_id
+            )
+
+        self._generate_ai_recommendation(tenant_id, claims, assumptions, risk_tolerance, decision)
+
         workflow = WorkflowMetadata(
             workflow_id=f"wf-{uuid4().hex[:6]}",
             tenant_id=tenant_id,
@@ -924,9 +946,7 @@ class OrchestratorService:
             langfuse_span_id=None,
         )
         metrics = {
-            "risk_tolerance": {"low": 0.4, "medium": 0.6, "high": 0.2}.get(
-                risk_tolerance, 0.5
-            ),
+            "risk_tolerance": {"low": 0.4, "medium": 0.6, "high": 0.2}.get(risk_tolerance, 0.5),
             "evaluation_passed": 1.0 if (evaluation or {}).get("passed", True) else 0.0,
         }
 
