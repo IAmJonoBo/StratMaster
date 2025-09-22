@@ -35,12 +35,15 @@ from .models import (
     Metric,
     NarrativeChunk,
     RecommendationOutcome,
+    RecommendationStatus,
     RetrievalRecord,
     RetrievalScore,
     Source,
     SourceType,
     WorkflowMetadata,
 )
+
+from stratmaster_orchestrator import StrategyState, build_strategy_graph
 
 logger = logging.getLogger(__name__)
 
@@ -295,6 +298,7 @@ class OrchestratorService:
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
         self._pipeline: Pipeline = self._build_pipeline()
+        self._strategy_graph = build_strategy_graph()
 
     def _build_pipeline(self) -> Pipeline:
         # Lazy-import LangGraph to avoid hard dependency and import-order lint issues
@@ -509,23 +513,35 @@ class OrchestratorService:
     def generate_recommendation(
         self, tenant_id: str, cep_id: str, jtbd_ids: list[str], risk_tolerance: str
     ) -> RecommendationOutcome:
-        initial_state: dict[str, Any] = {
-            "tenant_id": tenant_id,
-            "plan_id": f"plan-{uuid4().hex[:8]}",
-            "cep_id": cep_id,
-            "jtbd_ids": jtbd_ids,
-            "risk_tolerance": risk_tolerance,
-            "evaluation_suite": "rag",
-            "research": None,
-            "evaluation": None,
-            "recommendation": None,
-        }
-        final_state = self._pipeline.invoke(initial_state)
-        outcome = final_state.get("recommendation")
-        if outcome is None:
-            raise RuntimeError("recommendation pipeline failed to produce an outcome")
-        if not isinstance(outcome, RecommendationOutcome):
-            raise TypeError("pipeline produced unexpected recommendation type")
+        workflow = WorkflowMetadata(workflow_id=f"wf-{uuid4().hex[:6]}", tenant_id=tenant_id)
+        initial_state = StrategyState(
+            tenant_id=tenant_id,
+            query=f"{cep_id} {risk_tolerance} strategy",
+            workflow=workflow,
+        )
+        result = self._strategy_graph(initial_state)
+        outcome = result.outcome
+        eval_summary = self.run_eval(tenant_id=tenant_id, suite="rag")
+        if not eval_summary.get("passed", True):
+            outcome.status = RecommendationStatus.FAILED
+            if "evaluation_thresholds" not in outcome.failure_reasons:
+                outcome.failure_reasons.append("evaluation_thresholds")
+            outcome.metrics.update(eval_summary.get("metrics", {}))
+            outcome.metrics["evaluation_passed"] = 0.0
+            if outcome.decision_brief is not None:
+                outcome.decision_brief.recommendation = (
+                    "Evaluation thresholds not met. Additional research required."
+                )
+        else:
+            if outcome.decision_brief is not None:
+                self._generate_ai_recommendation(
+                    tenant_id=tenant_id,
+                    claims=list(result.state.claims),
+                    assumptions=list(result.state.assumptions),
+                    risk_tolerance=risk_tolerance,
+                    decision=outcome.decision_brief,
+                )
+            outcome.metrics.setdefault("evaluation_passed", 1.0)
         return outcome
 
     def query_retrieval(
@@ -913,6 +929,8 @@ class OrchestratorService:
             graph=graph,
             metrics={"evaluation_passed": 0.0},
             workflow=workflow,
+            status=RecommendationStatus.FAILED,
+            failure_reasons=["evaluation_thresholds"],
         )
 
     def _generate_ai_recommendation(
@@ -1004,6 +1022,8 @@ class OrchestratorService:
             graph=graph,
             metrics=metrics,
             workflow=workflow,
+            status=RecommendationStatus.COMPLETE,
+            failure_reasons=[],
         )
 
     def _record_stage(self, state: dict[str, Any], stage: str) -> None:
