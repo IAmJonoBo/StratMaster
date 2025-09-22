@@ -65,7 +65,7 @@ class BaseMCPClient:
         self.timeout = timeout
 
     def _post_json(
-        self, 
+        self,
         endpoint: str, 
         json_data: dict[str, Any]
     ) -> dict[str, Any]:
