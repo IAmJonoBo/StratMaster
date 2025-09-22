@@ -46,9 +46,9 @@ class ProviderAdapter:
                     api_base=self.config.base_url,
                     api_key=self.config.api_key,
                 )
-                text = response.choices[0].message["content"]  # type: ignore[attr-defined]
-                tokens = response.usage["total_tokens"]  # type: ignore[index]
-                provider = response.model  # type: ignore[attr-defined]
+                text = response.choices[0].message["content"]
+                tokens = response.usage["total_tokens"]
+                provider = response.model
                 return {
                     "text": text,
                     "tokens": tokens,
@@ -79,7 +79,7 @@ class ProviderAdapter:
                     api_base=self.config.base_url,
                     api_key=self.config.api_key,
                 )
-                vectors = [item.embedding for item in response.data]  # type: ignore[attr-defined]
+                vectors = [item.embedding for item in response.data]
             except Exception as exc:
                 logger.warning("Provider embedding failed; falling back", exc_info=exc)
         if not vectors:

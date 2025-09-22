@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi.testclient import TestClient
-
 from stratmaster_api.app import create_app
 
 
