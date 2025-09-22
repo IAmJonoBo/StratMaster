@@ -24,6 +24,12 @@ from .models import (
 )
 
 try:  # pragma: no cover - optional dependency
+    from bge_reranker import BGEReranker, RerankDocument
+except ImportError:  # pragma: no cover
+    BGEReranker = None  # type: ignore[assignment]
+    RerankDocument = None  # type: ignore[assignment]
+
+try:  # pragma: no cover - optional dependency
     from opentelemetry import metrics
 except ImportError:  # pragma: no cover
     metrics = None
@@ -52,6 +58,7 @@ class KnowledgeService:
         self.connectors = ConnectorBundle.from_config(config)
         self._connector_status_cache = self.connectors.as_statuses()
         self._logger = logging.getLogger(__name__)
+        self._reranker = BGEReranker() if BGEReranker is not None else None
 
     # ------------------------------------------------------------------
     # Hybrid retrieval
@@ -141,17 +148,37 @@ class KnowledgeService:
         )
 
     def rerank(self, payload: RankingRequest) -> RankingResponse:
-        reranked = [
-            RetrievalHit(
-                document_id=f"rerank-{idx}",
-                score=1.0 - idx * 0.05,
-                method="rerank",
-                snippet=doc[:160],
-                source_url="https://example.com/rerank",
-                metadata={"position": str(idx)},
+        if self._reranker is not None and RerankDocument is not None:
+            request_documents = [
+                RerankDocument(id=f"doc-{idx}", text=text)
+                for idx, text in enumerate(payload.documents, start=1)
+            ]
+            results = self._reranker.rerank(
+                query=payload.query, documents=request_documents, top_k=len(request_documents)
             )
-            for idx, doc in enumerate(payload.documents, start=1)
-        ]
+            reranked = [
+                RetrievalHit(
+                    document_id=item.id,
+                    score=float(item.score),
+                    method="rerank",
+                    snippet=item.text[:160],
+                    source_url="https://example.com/rerank",
+                    metadata={"rank": str(item.rank)},
+                )
+                for item in results
+            ]
+        else:
+            reranked = [
+                RetrievalHit(
+                    document_id=f"rerank-{idx}",
+                    score=1.0 - idx * 0.05,
+                    method="rerank",
+                    snippet=doc[:160],
+                    source_url="https://example.com/rerank",
+                    metadata={"position": str(idx)},
+                )
+                for idx, doc in enumerate(payload.documents, start=1)
+            ]
         self._refresh_connector_status()
         return RankingResponse(reranked=reranked)
 
