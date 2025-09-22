@@ -34,12 +34,12 @@ class RouterService:
     # Public API
     # ------------------------------------------------------------------
     def complete(self, payload: CompletionRequest) -> CompletionResponse:
-        tenant_policy, task_policy, route = self._select_route(
+        _tenant_policy, task_policy, route = self._select_route(
             payload.tenant_id,
             payload.task,
             default_model=self.config.default_provider.completion_model,
         )
-        self._validate_completion(tenant_policy, task_policy, payload)
+        self._validate_completion(_tenant_policy, task_policy, payload)
         adapter = self._adapter_for(
             route.provider,
             completion_model=route.model,

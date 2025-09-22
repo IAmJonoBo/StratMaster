@@ -4,6 +4,7 @@ import json
 import os
 import re
 from collections.abc import Callable
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, cast
 
@@ -146,85 +147,8 @@ def create_app() -> FastAPI:
     async def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/debug/config/{section}/{name:path}")
-    async def get_config(section: str, name: str) -> dict[str, Any]:
-        if os.getenv("STRATMASTER_ENABLE_DEBUG_ENDPOINTS") != "1":
-            raise HTTPException(status_code=404, detail="not found")
-        if section not in ALLOWED_SECTIONS:
-            raise HTTPException(status_code=400, detail="invalid section")
-        safe = _safe_name(name)
-        data = _load_yaml_file(section, safe)
-
-        validator = VALIDATORS.get(section)
-        if validator is not None:
-            cfg = validator(data)
-        else:
-            # When no validator is provided, cast the YAML payload to a dict
-            cfg = cast(
-                dict[str, Any],
-                dict(data) if isinstance(data, dict) else {"value": data},
-            )
-        return {"section": section, "name": safe, "config": cfg}
-
-    def _schemas_dir() -> Path:
-        root = Path(__file__).resolve().parents[4]
-        return root / "packages" / "providers" / "openai" / "tool-schemas"
-
-    def _load_tool_schemas() -> dict[str, Any]:
-        schemas_path = _schemas_dir()
-        if not schemas_path.exists() or not schemas_path.is_dir():
-            raise HTTPException(
-                status_code=500, detail=f"Schemas directory not found: {schemas_path}"
-            )
-        tools: dict[str, Any] = {}
-        for json_file in sorted(schemas_path.glob("*.json")):
-            if json_file.name.startswith("._") or json_file.name.startswith("."):
-                continue
-            try:
-                data = json.loads(json_file.read_text(encoding="utf-8"))
-            except Exception as e:  # pragma: no cover
-                raise HTTPException(
-                    status_code=500, detail=f"Failed to parse {json_file.name}: {e}"
-                ) from e
-            tools[json_file.stem] = data
-        if not tools:
-            raise HTTPException(status_code=500, detail="No tool schemas found")
-        return tools
-
-    @app.get("/providers/openai/tools")
-    async def list_openai_tool_schemas(format: str = "raw") -> dict[str, Any]:
-        if format not in ("raw", "openai"):
-            raise HTTPException(
-                status_code=400, detail="format must be 'raw' or 'openai'"
-            )
-        tools = _load_tool_schemas()
-        if format == "raw":
-            return {"schemas": tools, "count": len(tools)}
-        oa_tools: list[dict[str, Any]] = []
-        for name, schema in tools.items():
-            oa_tools.append(
-                {
-                    "type": "function",
-                    "function": {
-                        "name": name,
-                        "description": schema.get("description", ""),
-                        "parameters": schema,
-                    },
-                }
-            )
-        return {"tools": oa_tools, "count": len(oa_tools)}
-
-    @app.get("/providers/openai/tools/{name}")
-    async def get_openai_tool_schema(name: str) -> dict[str, Any]:
-        tools = _load_tool_schemas()
-        schema = tools.get(name)
-        if not schema:
-            raise HTTPException(
-                status_code=404, detail=f"Tool schema not found: {name}"
-            )
-        if not isinstance(schema, dict):
-            raise HTTPException(status_code=500, detail="invalid tool schema shape")
-        return cast(dict[str, Any], schema)
+    register_debug_config_endpoint(app)
+    register_openai_tool_endpoints(app)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -378,3 +302,88 @@ def create_app() -> FastAPI:
     app.include_router(evals_router)
 
     return app
+
+
+def register_debug_config_endpoint(app: FastAPI) -> None:
+    @app.get("/debug/config/{section}/{name:path}")
+    async def get_config(section: str, name: str) -> dict[str, Any]:
+        if os.getenv("STRATMASTER_ENABLE_DEBUG_ENDPOINTS") != "1":
+            raise HTTPException(status_code=404, detail="not found")
+        if section not in ALLOWED_SECTIONS:
+            raise HTTPException(status_code=400, detail="invalid section")
+        safe = _safe_name(name)
+        data = _load_yaml_file(section, safe)
+
+        validator = VALIDATORS.get(section)
+        if validator is not None:
+            cfg = validator(data)
+        else:
+            cfg = cast(
+                dict[str, Any],
+                dict(data) if isinstance(data, dict) else {"value": data},
+            )
+        return {"section": section, "name": safe, "config": cfg}
+
+
+def _schemas_dir() -> Path:
+    root = Path(__file__).resolve().parents[4]
+    return root / "packages" / "providers" / "openai" / "tool-schemas"
+
+
+def _load_tool_schemas() -> dict[str, Any]:
+    schemas_path = _schemas_dir()
+    if not schemas_path.exists() or not schemas_path.is_dir():
+        raise HTTPException(
+            status_code=500, detail=f"Schemas directory not found: {schemas_path}"
+        )
+    tools: dict[str, Any] = {}
+    for json_file in sorted(schemas_path.glob("*.json")):
+        if json_file.name.startswith("._") or json_file.name.startswith("."):
+            continue
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except (JSONDecodeError, OSError) as e:  # pragma: no cover
+            raise HTTPException(
+                status_code=500, detail=f"Failed to parse {json_file.name}: {e}"
+            ) from e
+        tools[json_file.stem] = data
+    if not tools:
+        raise HTTPException(status_code=500, detail="No tool schemas found")
+    return tools
+
+
+def register_openai_tool_endpoints(app: FastAPI) -> None:
+    @app.get("/providers/openai/tools")
+    async def list_openai_tool_schemas(format: str = "raw") -> dict[str, Any]:
+        if format not in ("raw", "openai"):
+            raise HTTPException(
+                status_code=400, detail="format must be 'raw' or 'openai'"
+            )
+        tools = _load_tool_schemas()
+        if format == "raw":
+            return {"schemas": tools, "count": len(tools)}
+        oa_tools: list[dict[str, Any]] = []
+        for name, schema in tools.items():
+            oa_tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": schema.get("description", ""),
+                        "parameters": schema,
+                    },
+                }
+            )
+        return {"tools": oa_tools, "count": len(oa_tools)}
+
+    @app.get("/providers/openai/tools/{name}")
+    async def get_openai_tool_schema(name: str) -> dict[str, Any]:
+        tools = _load_tool_schemas()
+        schema = tools.get(name)
+        if not schema:
+            raise HTTPException(
+                status_code=404, detail=f"Tool schema not found: {name}"
+            )
+        if not isinstance(schema, dict):
+            raise HTTPException(status_code=500, detail="invalid tool schema shape")
+        return cast(dict[str, Any], schema)
