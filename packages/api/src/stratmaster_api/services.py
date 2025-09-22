@@ -329,8 +329,6 @@ class OrchestratorService:
         return self._collect_research(plan_id=plan_id, tenant_id=tenant_id)
 
     def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
-        # alias to preserve prior underscore-prefixed name used internally
-        _tenant_id = tenant_id
         graph = GraphArtifacts(
             nodes=[
                 GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
