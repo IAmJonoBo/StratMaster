@@ -141,7 +141,11 @@ class RouterMCPClient:
         self.timeout = timeout
 
     def complete(
-        self, tenant_id: str, prompt: str, max_tokens: int = 256
+        self,
+        tenant_id: str,
+        prompt: str,
+        max_tokens: int = 256,
+        task: str = "reasoning",
     ) -> dict[str, Any]:
         resp = httpx.post(
             f"{self.base_url}/tools/complete",
@@ -149,6 +153,7 @@ class RouterMCPClient:
                 "tenant_id": tenant_id,
                 "prompt": prompt,
                 "max_tokens": max_tokens,
+                "task": task,
             },
             timeout=self.timeout,
         )
@@ -164,6 +169,7 @@ class RouterMCPClient:
         query: str,
         documents: list[dict[str, str]],
         top_k: int,
+        task: str = "rerank",
     ) -> dict[str, Any]:
         resp = httpx.post(
             f"{self.base_url}/tools/rerank",
@@ -172,6 +178,7 @@ class RouterMCPClient:
                 "query": query,
                 "documents": documents,
                 "top_k": top_k,
+                "task": task,
             },
             timeout=self.timeout,
         )

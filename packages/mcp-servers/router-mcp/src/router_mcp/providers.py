@@ -15,19 +15,33 @@ try:  # pragma: no cover - optional dependency
 except ImportError:  # pragma: no cover
     litellm = None
 
+try:  # pragma: no cover - optional dependency
+    from bge_reranker import BGEReranker, RerankDocument
+except ImportError:  # pragma: no cover
+    BGEReranker = None  # type: ignore[assignment]
+    RerankDocument = None  # type: ignore[assignment]
+
 
 @dataclass
 class ProviderAdapter:
     config: ProviderConfig
 
-    def complete(self, prompt: str, max_tokens: int) -> dict[str, Any]:
+    def complete(
+        self,
+        prompt: str,
+        max_tokens: int,
+        model: str | None = None,
+        temperature: float | None = None,
+    ) -> dict[str, Any]:
+        target_model = model or self.config.completion_model
+        temperature = self.config.temperature if temperature is None else temperature
         if self.config.name in {"openai", "litellm", "vllm"} and litellm is not None:
             try:  # pragma: no cover - network path
                 response = litellm.completion(
-                    model=self.config.completion_model,
+                    model=target_model,
                     messages=[{"role": "user", "content": prompt}],
                     max_tokens=max_tokens,
-                    temperature=self.config.temperature,
+                    temperature=temperature,
                     api_base=self.config.base_url,
                     api_key=self.config.api_key,
                 )
@@ -38,7 +52,7 @@ class ProviderAdapter:
                     "text": text,
                     "tokens": tokens,
                     "provider": provider,
-                    "model": self.config.completion_model,
+                    "model": target_model,
                 }
             except Exception as exc:
                 logger.warning(
@@ -50,15 +64,16 @@ class ProviderAdapter:
             + "\nRecommended: consolidate premium positioning with phased rollout.",
             "tokens": min(len(prompt.split()) + 12, max_tokens),
             "provider": self.config.name,
-            "model": self.config.completion_model,
+            "model": target_model,
         }
 
-    def embed(self, inputs: Iterable[str], model: str) -> dict[str, Any]:
+    def embed(self, inputs: Iterable[str], model: str | None = None) -> dict[str, Any]:
         vectors = []
+        target_model = model or self.config.embedding_model
         if self.config.name in {"openai", "litellm", "vllm"} and litellm is not None:
             try:  # pragma: no cover
                 response = litellm.embedding(
-                    model=model or self.config.embedding_model,
+                    model=target_model,
                     input=list(inputs),
                     api_base=self.config.base_url,
                     api_key=self.config.api_key,
@@ -72,16 +87,36 @@ class ProviderAdapter:
         return {
             "embeddings": vectors,
             "provider": self.config.name,
-            "model": model or self.config.embedding_model,
+            "model": target_model,
         }
 
     def rerank(
-        self, query: str, documents: list[dict[str, str]], top_k: int
+        self,
+        query: str,
+        documents: list[dict[str, str]],
+        top_k: int,
+        model: str | None = None,
     ) -> dict[str, Any]:
+        target_model = model or self.config.rerank_model
+        if self.config.name == "local" and BGEReranker is not None and RerankDocument is not None:
+            reranker = BGEReranker(model_name=target_model)
+            request_docs = [
+                RerankDocument(id=doc["id"], text=doc["text"])
+                for doc in documents
+            ]
+            results = reranker.rerank(query=query, documents=request_docs, top_k=top_k)
+            return {
+                "results": [
+                    {"id": item.id, "score": float(item.score), "text": item.text}
+                    for item in results
+                ],
+                "provider": self.config.name,
+                "model": target_model,
+            }
         if self.config.name in {"openai", "litellm", "vllm"} and litellm is not None:
             try:  # pragma: no cover
                 response = litellm.rerank(
-                    model=self.config.rerank_model,
+                    model=target_model,
                     query=query,
                     documents=[doc["text"] for doc in documents],
                     api_base=self.config.base_url,
@@ -98,7 +133,7 @@ class ProviderAdapter:
                 return {
                     "results": results[:top_k],
                     "provider": self.config.name,
-                    "model": self.config.rerank_model,
+                    "model": target_model,
                 }
             except Exception as exc:
                 logger.warning("Provider rerank failed; falling back", exc_info=exc)
@@ -109,5 +144,5 @@ class ProviderAdapter:
         return {
             "results": scored[:top_k],
             "provider": self.config.name,
-            "model": self.config.rerank_model,
+            "model": target_model,
         }

@@ -1,4 +1,9 @@
 # ColBERT retrieval config
+corpus:
+  path: seeds/demo-ceps-jtbd-dbas.json
+  text_fields:
+    - summary
+    - title
 index:
   name: colbert-default
   shards: 1
@@ -18,6 +23,7 @@ storage:
   opensearch:
     host: http://opensearch:9200
     index_prefix: colbert_
+  output_dir: artifacts/colbert
 telemetry:
   enabled: true
   otlp_endpoint: http://otel-collector:4317

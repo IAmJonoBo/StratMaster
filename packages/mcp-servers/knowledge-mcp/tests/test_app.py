@@ -48,7 +48,7 @@ def test_rerank_returns_in_order(client=client()):
     )
     assert resp.status_code == 200
     reranked = resp.json()["reranked"]
-    assert reranked[0]["document_id"].startswith("rerank-")
+    assert reranked[0]["document_id"].startswith("doc-")
 
 
 def test_community_summaries_endpoint(client=client()):
