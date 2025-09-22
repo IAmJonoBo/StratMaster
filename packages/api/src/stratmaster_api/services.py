@@ -51,7 +51,55 @@ def _utcnow() -> datetime:
     return datetime.now(tz=UTC)
 
 
-class ResearchMCPClient:
+class BaseMCPClient:
+    """Base HTTP client for MCP servers with common functionality."""
+
+    def __init__(
+        self,
+        base_url: str | None = None,
+        timeout: float = 10.0,
+        env_url_key: str = "",
+        default_url: str = "",
+    ) -> None:
+        self.base_url = base_url or os.getenv(env_url_key, default_url)
+        self.timeout = timeout
+
+    def _post_json(
+        self, 
+        endpoint: str, 
+        json_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Make a POST request and return validated JSON response."""
+        resp = httpx.post(
+            f"{self.base_url}{endpoint}",
+            json=json_data,
+            timeout=self.timeout,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
+
+    def _get_json(
+        self,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Make a GET request and return validated JSON response."""
+        resp = httpx.get(
+            f"{self.base_url}{endpoint}",
+            params=params,
+            timeout=self.timeout,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError(_UNEXPECTED_RESPONSE)
+        return data
+
+
+class ResearchMCPClient(BaseMCPClient):
     """Lightweight HTTP client for the research MCP server."""
 
     def __init__(
@@ -59,37 +107,27 @@ class ResearchMCPClient:
         base_url: str | None = None,
         timeout: float = 10.0,
     ) -> None:
-        self.base_url = base_url or os.getenv(
-            "RESEARCH_MCP_URL", "http://localhost:8081"
+        super().__init__(
+            base_url=base_url,
+            timeout=timeout,
+            env_url_key="RESEARCH_MCP_URL",
+            default_url="http://localhost:8081",
         )
-        self.timeout = timeout
 
     def metasearch(self, query: str, limit: int) -> dict[str, Any]:
-        resp = httpx.post(
-            f"{self.base_url}/tools/metasearch",
-            json={"tenant_id": "system", "query": query, "limit": limit},
-            timeout=self.timeout,
+        return self._post_json(
+            "/tools/metasearch",
+            {"tenant_id": "system", "query": query, "limit": limit},
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
     def crawl(self, url: str) -> dict[str, Any]:
-        resp = httpx.post(
-            f"{self.base_url}/tools/crawl",
-            json={"tenant_id": "system", "spec": {"url": url, "max_depth": 1}},
-            timeout=self.timeout,
+        return self._post_json(
+            "/tools/crawl",
+            {"tenant_id": "system", "spec": {"url": url, "max_depth": 1}},
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
 
-class KnowledgeMCPClient:
+class KnowledgeMCPClient(BaseMCPClient):
     """HTTP client for the knowledge MCP server."""
 
     def __init__(
@@ -97,39 +135,29 @@ class KnowledgeMCPClient:
         base_url: str | None = None,
         timeout: float = 10.0,
     ) -> None:
-        self.base_url = base_url or os.getenv(
-            "KNOWLEDGE_MCP_URL", "http://localhost:8082"
+        super().__init__(
+            base_url=base_url,
+            timeout=timeout,
+            env_url_key="KNOWLEDGE_MCP_URL",
+            default_url="http://localhost:8082",
         )
-        self.timeout = timeout
 
     def hybrid_query(
         self, tenant_id: str, query: str, top_k: int = 5
     ) -> dict[str, Any]:
-        resp = httpx.post(
-            f"{self.base_url}/tools/hybrid_query",
-            json={"tenant_id": tenant_id, "query": query, "top_k": top_k},
-            timeout=self.timeout,
+        return self._post_json(
+            "/tools/hybrid_query",
+            {"tenant_id": tenant_id, "query": query, "top_k": top_k},
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
     def community_summaries(self, tenant_id: str, limit: int = 3) -> dict[str, Any]:
-        resp = httpx.get(
-            f"{self.base_url}/resources/graph/community_summaries",
-            params={"tenant_id": tenant_id, "limit": limit},
-            timeout=self.timeout,
+        return self._get_json(
+            "/resources/graph/community_summaries",
+            {"tenant_id": tenant_id, "limit": limit},
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
 
-class RouterMCPClient:
+class RouterMCPClient(BaseMCPClient):
     """HTTP client for the router MCP server."""
 
     def __init__(
@@ -137,8 +165,12 @@ class RouterMCPClient:
         base_url: str | None = None,
         timeout: float = 10.0,
     ) -> None:
-        self.base_url = base_url or os.getenv("ROUTER_MCP_URL", "http://localhost:8083")
-        self.timeout = timeout
+        super().__init__(
+            base_url=base_url,
+            timeout=timeout,
+            env_url_key="ROUTER_MCP_URL",
+            default_url="http://localhost:8083",
+        )
 
     def complete(
         self,
@@ -147,21 +179,15 @@ class RouterMCPClient:
         max_tokens: int = 256,
         task: str = "reasoning",
     ) -> dict[str, Any]:
-        resp = httpx.post(
-            f"{self.base_url}/tools/complete",
-            json={
+        return self._post_json(
+            "/tools/complete",
+            {
                 "tenant_id": tenant_id,
                 "prompt": prompt,
                 "max_tokens": max_tokens,
                 "task": task,
             },
-            timeout=self.timeout,
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
     def rerank(
         self,
@@ -171,30 +197,28 @@ class RouterMCPClient:
         top_k: int,
         task: str = "rerank",
     ) -> dict[str, Any]:
-        resp = httpx.post(
-            f"{self.base_url}/tools/rerank",
-            json={
+        return self._post_json(
+            "/tools/rerank",
+            {
                 "tenant_id": tenant_id,
                 "query": query,
                 "documents": documents,
                 "top_k": top_k,
                 "task": task,
             },
-            timeout=self.timeout,
         )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
 
 
-class EvalsMCPClient:
+class EvalsMCPClient(BaseMCPClient):
     """HTTP client for the evals MCP server."""
 
     def __init__(self, base_url: str | None = None, timeout: float = 10.0) -> None:
-        self.base_url = base_url or os.getenv("EVALS_MCP_URL", "http://localhost:8084")
-        self.timeout = timeout
+        super().__init__(
+            base_url=base_url,
+            timeout=timeout,
+            env_url_key="EVALS_MCP_URL",
+            default_url="http://localhost:8084",
+        )
 
     def run(
         self, tenant_id: str, suite: str, thresholds: dict[str, float] | None = None
@@ -202,16 +226,7 @@ class EvalsMCPClient:
         body: dict[str, Any] = {"tenant_id": tenant_id, "suite": suite}
         if thresholds:
             body["thresholds"] = thresholds
-        resp = httpx.post(
-            f"{self.base_url}/tools/run",
-            json=body,
-            timeout=self.timeout,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, dict):
-            raise TypeError(_UNEXPECTED_RESPONSE)
-        return data
+        return self._post_json("/tools/run", body)
 
 
 class _SequentialPipeline:
