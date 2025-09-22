@@ -66,7 +66,7 @@ class BaseMCPClient:
 
     def _post_json(
         self,
-        endpoint: str, 
+        endpoint: str,
         json_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Make a POST request and return validated JSON response."""
