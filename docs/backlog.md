@@ -6,6 +6,9 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-201 — Knowledge MCP connectors
 
+- Status: ✅ **Complete** — Knowledge MCP bootstraps optional connectors, surfaces
+  runtime availability in `/info`, and degrades gracefully when backends are
+  absent or unhealthy.【285a30†L1-L105】【29aa2e†L417-L468】【8585dc†L19-L70】
 - Issue stub: `issue/sp2-201-knowledge-mcp-connectors`
 - PR slices:
   1. `pr/sp2-201a-config-health` — tighten environment config, add readiness/telemetry hooks.
@@ -15,6 +18,9 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-202 — Knowledge fabric storage & GraphRAG materialisation
 
+- Status: ⏳ **Pending** — the `packages/knowledge` package only carries design
+  notes and lacks the storage contract and GraphRAG implementation modules referenced
+  in the plan.【05eb90†L1-L54】【10eb41†L1-L2】
 - Issue stub: `issue/sp2-202-knowledge-fabric`
 - PR slices:
   1. `pr/sp2-202a-tenant-layout` — define per-tenant storage contracts and schema registry.
@@ -24,6 +30,8 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-203 — Retrieval index toolchain (ColBERT/SPLADE + hybrid orchestrator)
 
+- Status: ⏳ **Pending** — both retrieval subpackages are documentation-only;
+  the ColBERT/SPLADE CLIs and tests described in the plan have not been implemented yet.【6c173d†L1-L2】【0bbba4†L1-L39】
 - Issue stub: `issue/sp2-203-retrieval-indexing`
 - PR slices:
   1. `pr/sp2-203a-colbert-cli` — CLI + docs for building/querying ColBERT indexes from seeds.
@@ -33,6 +41,8 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-204 — BGE reranker package
 
+- Status: ⏳ **Pending** — the reranker package still consists of README
+  guidance without the Python module, CLI, or tests that the sprint calls for.【326cef†L1-L2】【061aad†L1-L41】
 - Issue stub: `issue/sp2-204-bge-reranker`
 - PR slices:
   1. `pr/sp2-204a-wrapper` — package cross-encoder inference utilities with device selection.
@@ -41,6 +51,9 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-205 — Router per-task policies
 
+- Status: ⏳ **Pending** — router MCP still routes everything through a single
+  default provider and does not enforce per-task model policies or validation
+  gates from `configs/router/models-policy.yaml`.【439a49†L15-L44】【3365df†L1-L70】
 - Issue stub: `issue/sp2-205-router-policies`
 - PR slices:
   1. `pr/sp2-205a-schema` — extend models-policy schema for reasoning/embedding/rerank routing.
@@ -49,6 +62,8 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP2-210 — Research MCP CLI/bootstrap
 
+- Status: ✅ **Complete** — `python -m research_mcp` now boots the FastAPI app via
+  uvicorn and wires CLI flags/environment toggles for local usage as described in the sprint scope.【1cb3ee†L1-L6】【94db32†L1-L55】
 - Issue stub: `issue/sp2-210-research-mcp-cli`
 - PR slices:
   1. `pr/sp2-210a-uvicorn-cli` — make entrypoint start FastAPI app via uvicorn.
