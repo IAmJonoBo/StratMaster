@@ -2,7 +2,9 @@
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         phase2.up phase2.down phase2.full phase2.status telemetry.up collaboration.up ml.up dev.phase2 setup health-check \
         assets.plan assets.pull assets.verify assets.required deps.check deps.plan deps.upgrade deps.upgrade.safe \
-        security.scan security.install security.baseline security.check
+        security.scan security.install security.baseline security.check \
+        accessibility.scan accessibility.fix accessibility.test \
+        test.advanced test.property test.contract test.load test.integration
 
 dev.up:
 	docker compose up -d
@@ -248,3 +250,55 @@ security.check:
 	@echo "🔒 Quick security check..."
 	@bandit -c .security.cfg -r packages/ -f json -o bandit-report.json || echo "  ⚠️  Bandit scan issues found"
 	@echo "Security scan complete. Check bandit-report.json for details."
+
+# Accessibility Enhancement System - WCAG 2.1 AA compliance
+accessibility.scan:
+	@echo "♿ Running accessibility audit..."
+	.venv/bin/python scripts/accessibility_audit.py scan
+
+accessibility.fix:
+	@echo "🔧 Applying accessibility fixes..."
+	.venv/bin/python scripts/accessibility_audit.py fix
+
+accessibility.test:
+	@echo "⌨️  Testing keyboard navigation..."
+	.venv/bin/python scripts/accessibility_audit.py test-keyboard
+
+# Accessibility dry runs
+accessibility.scan.dry:
+	@echo "🔍 Dry run: Accessibility scan"
+	.venv/bin/python scripts/accessibility_audit.py --dry-run scan
+
+accessibility.fix.dry:
+	@echo "🔍 Dry run: Accessibility fixes"
+	.venv/bin/python scripts/accessibility_audit.py --dry-run fix
+
+# Advanced Testing Suite - Frontier-grade testing capabilities
+test.advanced:
+	@echo "🧪 Running advanced test suite..."
+	.venv/bin/python scripts/advanced_testing.py all
+
+test.property:
+	@echo "🧪 Running property-based tests..."
+	.venv/bin/python scripts/advanced_testing.py property-tests
+
+test.contract:
+	@echo "📋 Running API contract tests..."
+	.venv/bin/python scripts/advanced_testing.py contract-tests
+
+test.load:
+	@echo "⚡ Running load tests..."
+	.venv/bin/python scripts/advanced_testing.py load-test --duration 30
+
+test.integration:
+	@echo "🔗 Running integration tests..."
+	.venv/bin/python scripts/advanced_testing.py integration-tests
+
+# Advanced testing dry runs
+test.advanced.dry:
+	@echo "🔍 Dry run: Advanced testing suite"
+	.venv/bin/python scripts/advanced_testing.py --dry-run all
+
+test.load.dry:
+	@echo "🔍 Dry run: Load testing"
+	.venv/bin/python scripts/advanced_testing.py --dry-run load-test

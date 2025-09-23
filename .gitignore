@@ -96,6 +96,12 @@ dependency_check.log
 upgrade_plan.log
 upgrade_result.log
 
+# Advanced Testing Reports
+advanced-test-report.json
+accessibility-audit-report.json
+property-test-results.json
+load-test-results.json
+
 # Misc
 *.swp
 *.swo
