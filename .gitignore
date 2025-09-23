@@ -1,3 +1,13 @@
+# macOS artifacts
+.DS_Store
+._*
+__MACOSX/
+.AppleDouble/
+Icon?
+.Spotlight-V100
+.Trashes
+.fseventsd
+.metadata_never_index
 # macOS
 .DS_Store
 ._*
