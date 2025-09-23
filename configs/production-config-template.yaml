@@ -1,0 +1,252 @@
+---
+# Production Configuration Management
+# Environment-specific configurations and secret management
+
+# Database configurations
+database:
+  primary:
+    host: "{{ .Values.database.host }}"
+    port: 5432
+    database: "{{ .Values.database.name }}"
+    username: "{{ .Values.database.username }}"
+    password: "{{ .Values.database.password }}"
+    ssl_mode: "require"
+    max_connections: 50
+    connection_timeout: 30
+  
+  read_replica:
+    enabled: "{{ .Values.database.readReplica.enabled }}"
+    host: "{{ .Values.database.readReplica.host }}"
+    port: 5432
+    max_connections: 20
+
+# Redis configuration for caching and sessions
+redis:
+  primary:
+    host: "{{ .Values.redis.host }}"
+    port: 6379
+    password: "{{ .Values.redis.password }}"
+    database: 0
+    ssl: true
+    max_connections: 100
+  
+  sessions:
+    database: 1
+    ttl: 86400  # 24 hours
+
+# Qdrant vector database
+qdrant:
+  url: "{{ .Values.qdrant.url }}"
+  api_key: "{{ .Values.qdrant.apiKey }}"
+  collection_name: "{{ .Values.qdrant.collection }}"
+  timeout: 30
+
+# OpenSearch configuration
+opensearch:
+  hosts:
+    - "{{ .Values.opensearch.host }}:9200"
+  username: "{{ .Values.opensearch.username }}"
+  password: "{{ .Values.opensearch.password }}"
+  ssl: true
+  verify_certs: true
+  index_prefix: "stratmaster-{{ .Values.environment }}"
+
+# MinIO object storage
+minio:
+  endpoint: "{{ .Values.minio.endpoint }}"
+  access_key: "{{ .Values.minio.accessKey }}"
+  secret_key: "{{ .Values.minio.secretKey }}"
+  secure: true
+  bucket_name: "stratmaster-{{ .Values.environment }}"
+  region: "{{ .Values.minio.region }}"
+
+# Authentication and SSO
+authentication:
+  keycloak:
+    server_url: "{{ .Values.keycloak.serverUrl }}"
+    realm: "{{ .Values.keycloak.realm }}"
+    client_id: "{{ .Values.keycloak.clientId }}"
+    client_secret: "{{ .Values.keycloak.clientSecret }}"
+    ssl_required: "external"
+  
+  jwt:
+    secret: "{{ .Values.jwt.secret }}"
+    algorithm: "HS256"
+    expiration: 3600  # 1 hour
+    refresh_expiration: 604800  # 7 days
+  
+  session:
+    secret: "{{ .Values.session.secret }}"
+    secure: true
+    http_only: true
+    same_site: "strict"
+
+# ML and AI configurations
+ml:
+  model_storage:
+    type: "s3"
+    bucket: "ml-models-{{ .Values.environment }}"
+    region: "{{ .Values.minio.region }}"
+  
+  mlflow:
+    tracking_uri: "{{ .Values.mlflow.trackingUri }}"
+    registry_uri: "{{ .Values.mlflow.registryUri }}"
+    username: "{{ .Values.mlflow.username }}"
+    password: "{{ .Values.mlflow.password }}"
+  
+  constitutional_compliance:
+    thresholds:
+      safety: 0.85
+      accuracy: 0.90
+      bias: 0.80
+      fairness: 0.82
+      transparency: 0.75
+      privacy: 0.88
+      robustness: 0.80
+
+# Mobile and notifications
+mobile:
+  firebase:
+    project_id: "{{ .Values.firebase.projectId }}"
+    private_key_id: "{{ .Values.firebase.privateKeyId }}"
+    private_key: "{{ .Values.firebase.privateKey }}"
+    client_email: "{{ .Values.firebase.clientEmail }}"
+    client_id: "{{ .Values.firebase.clientId }}"
+    auth_uri: "https://accounts.google.com/o/oauth2/auth"
+    token_uri: "https://oauth2.googleapis.com/token"
+  
+  push_notifications:
+    enabled: true
+    priority: "high"
+    ttl: 86400  # 24 hours
+    collapse_key: "approval_request"
+
+# Analytics and monitoring
+analytics:
+  prometheus:
+    enabled: true
+    port: 8080
+    path: "/metrics"
+  
+  grafana:
+    datasources:
+      - name: "prometheus"
+        url: "{{ .Values.prometheus.url }}"
+      - name: "postgres"
+        url: "{{ .Values.database.connectionString }}"
+  
+  custom_metrics:
+    retention_days: 90
+    aggregation_interval: 300  # 5 minutes
+
+# Temporal workflow engine
+temporal:
+  frontend_address: "{{ .Values.temporal.frontendAddress }}"
+  namespace: "{{ .Values.temporal.namespace }}"
+  task_queue: "stratmaster-{{ .Values.environment }}"
+  workflow_timeout: 3600  # 1 hour
+  activity_timeout: 300   # 5 minutes
+
+# Security configurations
+security:
+  encryption:
+    key: "{{ .Values.encryption.key }}"
+    algorithm: "AES-256-GCM"
+  
+  rate_limiting:
+    requests_per_minute: 1000
+    burst_limit: 1500
+    enable_redis: true
+  
+  cors:
+    enabled: true
+    origins:
+      - "{{ .Values.frontend.url }}"
+      - "{{ .Values.mobile.deepLinkDomain }}"
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    headers: ["Content-Type", "Authorization", "X-Requested-With"]
+    credentials: true
+  
+  headers:
+    x_frame_options: "DENY"
+    x_content_type_options: "nosniff"
+    x_xss_protection: "1; mode=block"
+    strict_transport_security: "max-age=31536000; includeSubDomains"
+    content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+
+# Logging configuration
+logging:
+  level: "{{ .Values.logging.level | default \"INFO\" }}"
+  format: "json"
+  handlers:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      level: "DEBUG"
+      filename: "/var/log/stratmaster/app.log"
+      max_size: "100MB"
+      backup_count: 5
+    - type: "syslog"
+      level: "WARNING"
+      facility: "local0"
+  
+  loggers:
+    stratmaster_api:
+      level: "{{ .Values.logging.apiLevel | default \"INFO\" }}"
+    sqlalchemy:
+      level: "{{ .Values.logging.sqlLevel | default \"WARNING\" }}"
+    httpx:
+      level: "WARNING"
+
+# Application-specific settings
+application:
+  name: "StratMaster"
+  version: "{{ .Values.image.tag }}"
+  environment: "{{ .Values.environment }}"
+  debug: false
+  
+  features:
+    approval_workflows: true
+    ml_training: true
+    mobile_notifications: true
+    advanced_analytics: true
+    enterprise_sso: true
+  
+  limits:
+    max_upload_size: "100MB"
+    max_request_timeout: 30
+    max_concurrent_workflows: 1000
+    max_ml_experiments: 100
+  
+  performance:
+    enable_caching: true
+    cache_ttl: 3600
+    enable_compression: true
+    compression_threshold: 1024
+
+# Environment-specific overrides
+production:
+  database:
+    max_connections: 100
+  redis:
+    max_connections: 200
+  security:
+    rate_limiting:
+      requests_per_minute: 2000
+  logging:
+    level: "WARNING"
+
+staging:
+  logging:
+    level: "INFO"
+  application:
+    debug: false
+
+development:
+  logging:
+    level: "DEBUG"
+  application:
+    debug: true
+  security:
+    cors:
+      origins: ["*"]  # Allow all origins in development

@@ -1,0 +1,160 @@
+---
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        type: string
+        default: 'latest'
+      dry_run:
+        description: 'Perform dry run deployment'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate-deployment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.validate.outputs.environment }}
+      image_tag: ${{ steps.validate.outputs.image_tag }}
+      values_file: ${{ steps.validate.outputs.values_file }}
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Validate inputs
+        id: validate
+        run: |
+          # Set environment
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          
+          # Set image tag (use SHA if latest, otherwise use provided tag)
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+          if [[ "$IMAGE_TAG" == "latest" ]]; then
+            IMAGE_TAG="${{ github.sha }}"
+          fi
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          
+          # Set values file based on environment
+          VALUES_FILE="helm/values-${ENVIRONMENT}.yaml"
+          echo "values_file=$VALUES_FILE" >> $GITHUB_OUTPUT
+          
+          echo "Deploying to: $ENVIRONMENT"
+          echo "Image tag: $IMAGE_TAG"
+          echo "Values file: $VALUES_FILE"
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+      
+      - name: Validate Helm charts
+        run: |
+          helm lint helm/stratmaster-api
+          helm lint helm/research-mcp
+          helm template helm/stratmaster-api -f ${{ steps.validate.outputs.values_file }} > /dev/null
+          helm template helm/research-mcp -f ${{ steps.validate.outputs.values_file }} > /dev/null
+
+  deploy:
+    needs: validate-deployment
+    runs-on: ubuntu-latest
+    environment: ${{ needs.validate-deployment.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          if [[ "${{ needs.validate-deployment.outputs.environment }}" == "staging" ]]; then
+            echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+          else
+            echo "${{ secrets.KUBECONFIG_PROD }}" | base64 -d > kubeconfig
+          fi
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+      
+      - name: Pre-deployment database migration
+        if: needs.validate-deployment.outputs.environment == 'production'
+        run: |
+          # Set database URL from secrets
+          if [[ "${{ needs.validate-deployment.outputs.environment }}" == "staging" ]]; then
+            export POSTGRES_URL="${{ secrets.STAGING_DATABASE_URL }}"
+          else
+            export POSTGRES_URL="${{ secrets.PROD_DATABASE_URL }}"
+          fi
+          
+          # Run database migrations
+          ./database/migrate.sh --verbose
+      
+      - name: Deploy to ${{ needs.validate-deployment.outputs.environment }}
+        run: |
+          DEPLOY_CMD="deploy-${{ needs.validate-deployment.outputs.environment }}"
+          
+          ./scripts/deploy.sh $DEPLOY_CMD \
+            --image-tag "${{ needs.validate-deployment.outputs.image_tag }}" \
+            --values-file "${{ needs.validate-deployment.outputs.values_file }}" \
+            --wait \
+            --timeout 900s \
+            ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+      
+      - name: Post-deployment verification
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          # Wait for deployment to stabilize
+          sleep 120
+          
+          # Run health checks
+          python scripts/health_check.py --environment "${{ needs.validate-deployment.outputs.environment }}"
+          
+          # Run smoke tests for production
+          if [[ "${{ needs.validate-deployment.outputs.environment }}" == "production" ]]; then
+            python scripts/smoke_api.py --environment production --comprehensive
+          fi
+      
+      - name: Deploy ArgoCD Applications
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          # Apply ArgoCD applications for automated GitOps
+          kubectl apply -f argocd/applications/
+          
+          # Sync applications
+          for app in stratmaster-api research-mcp knowledge-mcp router-mcp; do
+            if command -v argocd &> /dev/null; then
+              argocd app sync "$app-${{ needs.validate-deployment.outputs.environment }}" --timeout 300
+            fi
+          done
+
+  notify:
+    needs: [validate-deployment, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Deployment notification
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            Deployment to ${{ needs.validate-deployment.outputs.environment }} completed
+            Environment: ${{ needs.validate-deployment.outputs.environment }}
+            Image Tag: ${{ needs.validate-deployment.outputs.image_tag }}
+            Status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
