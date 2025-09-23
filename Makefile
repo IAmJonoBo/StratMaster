@@ -1,5 +1,5 @@
 .PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
-        index.colbert index.splade lint format
+        index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up
 
 dev.up:
 	docker compose up -d
@@ -20,6 +20,21 @@ research-mcp.run:
 	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/mcp-servers/research-mcp
 	.venv/bin/uvicorn research_mcp.app:create_app --factory --reload --host 127.0.0.1 --port 8081
 
+expertise-mcp.run:
+	[ -d .venv ] || python -m venv .venv
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/mcp-servers/expertise-mcp -e packages/api
+	cd packages/mcp-servers/expertise-mcp && PYTHONPATH=../../../packages/api/src:src python main.py
+
+# Generate JSON schemas for Expert Council models
+expertise-mcp.schemas:
+	[ -d .venv ] || python -m venv .venv
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api
+	PYTHONNOUSERSITE=1 .venv/bin/python packages/api/src/stratmaster_api/models/experts/generate_json_schemas.py
+
+# Start expertise-mcp in Docker
+experts.mcp.up:
+	docker compose up -d expertise-mcp
+
 api.docker:
 	docker build -t stratmaster-api:dev ./packages/api && docker run --rm -p 8080:8080 stratmaster-api:dev
 
@@ -28,7 +43,7 @@ clean:
 
 test:
 	[ -d .venv ] || python3 -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api -e packages/mcp-servers/research-mcp pytest
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api -e packages/mcp-servers/research-mcp -e packages/mcp-servers/expertise-mcp pytest
 	PYTHONNOUSERSITE=1 .venv/bin/python -m pytest -q
 
 precommit-install:

@@ -1,0 +1,56 @@
+discipline: psychology
+title: "Psychology Expert Doctrine"
+description: "Psychological evaluation criteria including reactance detection and COM-B model"
+version: "1.0"
+
+reactance_phrases:
+  - "you must"
+  - "you should" 
+  - "you have to"
+  - "you need to"
+  - "it's required that you"
+  - "it's mandatory"
+  - "you cannot"
+  - "you are not allowed"
+  - "there is no choice"
+  - "this is the only way"
+  - "you will"
+  - "obviously you should"
+  - "clearly you must"
+  - "everyone knows"
+  - "it's common sense"
+  - "don't miss out"
+  - "act now"
+  - "hurry"
+  - "limited time"
+  - "exclusive offer"
+
+comb_elements:
+  capability:
+    - "skill"
+    - "knowledge"
+    - "ability"
+    - "training"
+    - "education"
+    - "learn"
+    - "understand"
+  motivation:
+    - "want"
+    - "desire"
+    - "benefit"
+    - "value"
+    - "important"
+    - "meaningful"
+    - "rewarding"
+  opportunity:
+    - "time"
+    - "resources"
+    - "environment"
+    - "support"
+    - "access"
+    - "available"
+    - "convenient"
+
+thresholds:
+  reactance_severity: "warning"  # severity level when reactance phrases found
+  comb_min_elements: 2  # minimum COM-B elements required
