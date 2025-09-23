@@ -488,7 +488,7 @@ class ToolRegistry:
                 response_payload = self._evals_client.run(
                     self.tenant_id, suite, thresholds=serialised_thresholds
                 )
-            except Exception as e:
+            except (RuntimeError, ValueError, ConnectionError, TimeoutError) as e:
                 import logging
 
                 logging.warning(
