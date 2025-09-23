@@ -1,0 +1,40 @@
+# Message Map Structure for Strategic Communication
+# Enforces structured audience→problem→value→proof→CTA pattern
+# Based on strategic communication and marketing best practices
+
+title: "Strategic Message Map"
+id: "communication/message-map"
+discipline: "communication"
+type: "checklist"
+rules:
+  - id: "audience-defined"
+    severity: "blocker"
+    desc: "Target audience must be clearly and specifically defined with demographic, psychographic, and contextual characteristics."
+    
+  - id: "problem-clear"
+    severity: "blocker"
+    desc: "The problem or challenge faced by the audience must be clearly articulated and relatable to their experience."
+    
+  - id: "value-proposition"
+    severity: "blocker"
+    desc: "The value proposition must clearly explain how the solution addresses the audience's problem and what benefits they receive."
+    
+  - id: "proof-credible"
+    severity: "warn"
+    desc: "Evidence supporting the value proposition must be credible, relevant, and compelling (data, testimonials, case studies, demonstrations)."
+    
+  - id: "cta-specific"
+    severity: "blocker"
+    desc: "Call-to-action must be specific, actionable, and clearly state what the audience should do next."
+    
+  - id: "consistency-alignment"
+    severity: "warn"
+    desc: "All message components must be logically consistent and aligned with each other and the overall strategic objective."
+    
+  - id: "audience-language"
+    severity: "warn"
+    desc: "Language, tone, and terminology must be appropriate for the target audience's knowledge level, cultural context, and communication preferences."
+
+references:
+  - "Strategic Communication Planning Framework"
+  - "Heath, R. L. (2013). Encyclopedia of Public Relations. SAGE Publications."

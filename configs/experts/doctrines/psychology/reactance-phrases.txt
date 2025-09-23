@@ -1,0 +1,49 @@
+# Psychological Reactance Trigger Phrases
+# List of phrases that may trigger psychological reactance and their autonomy-supportive alternatives
+# Based on psychological reactance theory (Brehm, 1966) and self-determination theory
+
+# High-risk trigger phrases that may cause psychological reactance:
+you must
+you should
+you have to
+you need to
+it's required that you
+it's mandatory
+you cannot
+you are not allowed
+there is no choice
+this is the only way
+you will
+obviously you should
+clearly you must
+everyone knows
+it's common sense
+don't you think
+surely you realize
+you'd be crazy not to
+any reasonable person would
+you owe it to yourself
+you can't afford not to
+you'll regret it if you don't
+what are you waiting for
+stop making excuses
+just do it
+there's no excuse
+you're being stubborn
+you're not thinking clearly
+don't be ridiculous
+that's not how it works
+
+# Autonomy-supportive alternatives (examples):
+# Instead of "you must" → "you might consider" or "one option is"
+# Instead of "you should" → "you could" or "it may be helpful to"
+# Instead of "you have to" → "you have the choice to" or "you might find it useful to"
+# Instead of "you need to" → "you might want to" or "consider"
+# Instead of "it's required" → "to participate, the expectation is" or "if you choose to join"
+# Instead of "you cannot" → "another approach might be" or "you have other options"
+# Instead of "there is no choice" → "while options may be limited" or "given the constraints"
+# Instead of "this is the only way" → "this is one proven approach" or "a reliable method is"
+
+# References:
+# Brehm, J. W. (1966). A theory of psychological reactance. Academic Press.
+# Deci, E. L., & Ryan, R. M. (2012). Self-determination theory. Handbook of theories of social psychology, 1, 416-436.

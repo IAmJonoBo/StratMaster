@@ -1,0 +1,52 @@
+# Nielsen Norman Group 10 Usability Heuristics for User Interface Design
+# Based on Jakob Nielsen's canonical 10 heuristics (1994, revised)
+# References: https://www.nngroup.com/articles/ten-usability-heuristics/
+
+title: "NN/g 10 Usability Heuristics"
+id: "design/heuristics-nng"
+discipline: "design"
+type: "rubric"
+rules:
+  - id: "visibility-system-status"
+    severity: "blocker"
+    desc: "The design should always keep users informed about what is going on, through appropriate feedback within reasonable time."
+    
+  - id: "match-system-world"
+    severity: "blocker" 
+    desc: "The design should speak the users' language, with words, phrases and concepts familiar to the user, rather than internal jargon."
+    
+  - id: "user-control-freedom"
+    severity: "warn"
+    desc: "Users need a clearly marked emergency exit to leave the unwanted action without having to go through an extended process."
+    
+  - id: "consistency-standards"
+    severity: "blocker"
+    desc: "Users should not have to wonder whether different words, situations, or actions mean the same thing. Follow platform and industry conventions."
+    
+  - id: "error-prevention"
+    severity: "warn"
+    desc: "Good error messages are important, but the best designs carefully prevent problems from occurring in the first place."
+    
+  - id: "recognition-vs-recall"
+    severity: "warn"
+    desc: "Minimize the user's memory load by making elements, actions, and options visible. Instructions for use of the system should be visible or easily retrievable."
+    
+  - id: "flexibility-efficiency"
+    severity: "info"
+    desc: "Shortcuts — hidden from novice users — may often speed up the interaction for the expert user such that the design can cater to both inexperienced and experienced users."
+    
+  - id: "aesthetic-minimalist"
+    severity: "info"
+    desc: "Interfaces should not contain information which is irrelevant or rarely needed. Every extra unit of information in an interface competes with the relevant units of information."
+    
+  - id: "help-recognize-errors"
+    severity: "warn"
+    desc: "Error messages should be expressed in plain language (no error codes), precisely indicate the problem, and constructively suggest a solution."
+    
+  - id: "help-documentation"
+    severity: "info"
+    desc: "It's best if the system doesn't need any additional explanation. However, it may be necessary to provide documentation which should be easy to search and focused on the user's task."
+
+references:
+  - "https://www.nngroup.com/articles/ten-usability-heuristics/"
+  - "Nielsen, J. (1994). Usability Engineering. Academic Press, Boston."

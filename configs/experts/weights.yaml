@@ -1,0 +1,22 @@
+# Expert Council Weight Configuration
+#
+# Default weights for discipline experts in the Expert Council system.
+# Weights are used to compute weighted averages of expert opinions and
+# can be updated using Bayesian methods based on observed outcomes.
+
+defaults:
+  psychology: 0.22
+  design: 0.20
+  communication: 0.18
+  brand_science: 0.20
+  economics: 0.20
+
+update:
+  # method: beta
+  #   Specifies the expert weight update algorithm. 'beta' refers to a Bayesian update using the Beta distribution,
+  #   where expert weights are treated as probabilities and updated based on observed outcomes.
+  method: beta
+  # lr: 0.1
+  #   Learning rate for expert weight updates. Controls how much the weights change in response to new evidence;
+  #   higher values mean faster adaptation, lower values mean more stability.
+  lr: 0.1

@@ -1,0 +1,53 @@
+# WCAG 2.1 AA Accessibility Minimum Requirements
+# Focused on text/structure checks for copy-first reviews
+# Based on W3C WCAG 2.1/2.2 Level AA guidelines
+
+title: "WCAG 2.1 AA Minimum"
+id: "accessibility/wcag21-aa-min"
+discipline: "accessibility"
+type: "checklist"
+rules:
+  - id: "contrast-text"
+    severity: "blocker"
+    desc: "Text content must have a contrast ratio of at least 4.5:1 against its background (3:1 for large text 18pt+/14pt+ bold)."
+    
+  - id: "contrast-non-text"
+    severity: "warn"
+    desc: "UI components and graphical objects must have a contrast ratio of at least 3:1 against adjacent colors."
+    
+  - id: "keyboard-accessible"
+    severity: "blocker"
+    desc: "All interactive elements must be accessible via keyboard navigation without requiring specific timings for individual keystrokes."
+    
+  - id: "focus-visible"
+    severity: "blocker"
+    desc: "Keyboard focus indicator must be visible and have sufficient contrast (at least 3:1) against adjacent colors."
+    
+  - id: "meaningful-labels"
+    severity: "blocker"
+    desc: "Form inputs, buttons, and interactive elements must have accessible names that describe their purpose or function."
+    
+  - id: "heading-structure"
+    severity: "warn"
+    desc: "Content must use properly nested heading structure (h1→h2→h3) without skipping levels for screen reader navigation."
+    
+  - id: "link-purpose"
+    severity: "warn"
+    desc: "Link text must describe the destination or purpose of the link, either from link text alone or combined with programmatically determined context."
+    
+  - id: "error-identification"
+    severity: "blocker"
+    desc: "Form validation errors must be clearly identified and described to users, with suggestions for correction where possible."
+    
+  - id: "text-spacing"
+    severity: "info"
+    desc: "Content must remain readable and functional when line height is 1.5x, paragraph spacing 2x, letter spacing 0.12x, and word spacing 0.16x the font size."
+    
+  - id: "reflow-responsive"
+    severity: "warn"
+    desc: "Content must reflow to fit in 320px width without horizontal scrolling (equivalent to 400% zoom on 1280px viewport)."
+
+references:
+  - "https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=aa"
+  - "https://www.w3.org/WAI/WCAG22/quickref/?versions=2.2&levels=aa"
+  - "W3C Web Content Accessibility Guidelines (WCAG) 2.1"
