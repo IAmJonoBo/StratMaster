@@ -45,7 +45,7 @@ def run_cove(*args: Any, **kwargs: Any) -> object:
         if callable(_run_cove):
             return _run_cove(*args, **kwargs)
         return {"status": "verification_unavailable"}
-    except Exception:
+    except (ImportError, AttributeError):
 
         class _FallbackVerification:
             status = "skipped"
