@@ -1,0 +1,96 @@
+You are GitHub Copilot working as:
+• Principal Platform Engineer (Python/FastAPI, DevSecOps, GitOps)
+• Staff UX Engineer (accessibility, interaction design)
+• Release Manager (quality gates, canary, rollback)
+
+REPO UNDER TEST
+• Target: https://github.com/IAmJonoBo/StratMaster
+• Act only via structured changes + PRs. Do not push to main.
+• Read the repo: top-level README, Makefile, docker-compose.yml, apps/, packages/, prompts/, scripts/, infra/, helm/, argocd/, .github/, .trunk, SECURITY.md, CONTRIBUTING.md, requirements*.txt, ruff.toml, mypy.ini, pytest.ini, renovate.json, setup.sh, ui-preview.html.
+
+PRIMARY OBJECTIVES
+1) Implement an **asset/download capability** usable in dev and remote environments (e.g., pulling images, seed corpora, or model artefacts) with cryptographic verification and licensing hygiene.
+2) Add a **safe dependency upgrade feature** (opt-in) that performs controlled minor/patch updates across Python/Docker/GitHub Actions with automated tests, change summaries, and rollback safety.
+3) Raise overall bar to “frontier-grade” on **UX, UI, system intelligence, reasoning quality, business logic, QC, edge-case detection/resolution**, while keeping performance high and toolchain OSS-first.
+
+CONSTRAINTS & PRINCIPLES
+• System-agnostic: Linux, macOS, WSL; avoid hard-coding OS-specific paths.
+• OSS-first toolchain; keep licences compatible (Apache-2.0).
+• Performance > ceremony; only add dependencies if they materially improve reliability or speed.
+• Security + provenance: checksums/signatures for downloads; no plaintext secrets; principle of least privilege.
+• Minimal churn: default to small PRs with crisp scopes.
+
+PLAN (FOLLOW THIS ORDER)
+A. Repo Audit (no code changes yet)
+   - Produce /docs/ENGINEERING_STATUS.md summarising: packaging, testing, lint/format, security scanners, CI, containers, Helm/Argo, Observability, MCP services, UI, docs.
+   - Open an “Audit” Draft PR containing only that doc; include a short backlog with ranked, low-risk wins.
+
+B. Downloads/Assets Capability
+   - Create scripts/assets_manifest.yaml capturing allowed remote resources (name, url, sha256, licence, size).
+   - Add scripts/assets_pull.py (or bash equivalent) that:
+     • downloads with resume + retries + backoff;
+     • verifies sha256 (and optional sig);
+     • writes a lock file (.assetlock) with timestamps and sizes;
+     • supports --dry-run, --only <name>, --dest <dir>.
+   - Make targets:
+     • make assets.plan   # show diff between manifest and local
+     • make assets.pull   # fetch + verify all or filtered assets
+     • make assets.verify # audit local vs manifest/lock
+   - Integrate into setup.sh as an optional step: ./setup.sh --with-assets
+   - CI: add a lightweight job to validate manifest structure + hashes (no heavy downloads on PRs).
+
+C. Safe Dependency Upgrade Feature
+   - Python: adopt pip-tools OR uv (prefer uv if compatible) to generate pinned wheels with hashes.
+     • scripts/upgrade_deps.py orchestrates: compile → vendor lockfiles (requirements*.txt) → run test matrix → open PR with changelog.
+   - Renovate: refine renovate.json to:
+     • group non-major updates, automerge patch after green CI;
+     • include Docker base images, GitHub Actions, Helm charts if relevant;
+     • respect schedules; add semantic commit prefixes (build:, chore:deps).
+   - Add .github/workflows/upgrade-deps.yml:
+     • triggers: workflow_dispatch; weekly cron;
+     • strategy: { os: [ubuntu-latest], py: [3.11, 3.12] } running lint/type/test + safety/pip-audit;
+     • on success, auto-create PR with summary: changed packages, release notes, risk flags.
+
+D. Quality Gates & Edge-Cases
+   - Lint/format: ensure ruff (lint+format) runs in pre-commit + CI; align pyproject/ruff.toml; remove redundant linters if ruff covers them.
+   - Types: mypy strict on core domains; fail CI on new untyped public APIs.
+   - Security: add bandit (fast), pip-audit/safety, Trivy for images; enable CodeQL workflow if absent.
+   - Property-based testing: introduce Hypothesis for API/data invariants.
+   - API fuzz: add Schemathesis against live OpenAPI (/docs) in CI “smoke-fuzz” job (short budget).
+   - Reliability: add timeouts/circuit-breakers/retries to MCP calls; guard against empty/poisoned inputs.
+   - Observability: ensure OpenTelemetry spans across API↔MCP; include trace IDs in logs; add RED/SLO dashboards in Grafana if not present.
+
+E. UX/UI Uplift (pragmatic)
+   - If UI exists (ui-preview.html), add an accessible reference template:
+     • keyboard nav, focus states, colour contrast ≥ WCAG 2.2 AA, prefers-reduced-motion.
+   - Include a tiny Playwright smoke spec (or pytest+selenium) for key flows.
+
+F. Deployment & Ops (no breaking changes)
+   - Helm/Argo: verify readiness/liveness probes, resource requests/limits, preStop, and a migration Job for DB schema.
+   - Add healthz/readyz endpoints if missing.
+   - Document ops runbook at docs/OPERATIONS.md (backups, restores, migrations, rollbacks).
+
+DELIVERABLES (each as its own short PR unless trivial)
+1) PR: ENGINEERING_STATUS.md + backlog.
+2) PR: assets manager (manifest + scripts + make targets + docs + CI manifest-lint).
+3) PR: safe deps upgrade (pip-tools/uv; renovate.json tuned; workflow + docs).
+4) PR: quality gates (ruff/mypy/bandit/pip-audit/Trivy/CodeQL; Hypothesis; Schemathesis smoke).
+5) PR: UX accessibility starter + smoke test.
+6) PR: Ops hardening (probes, resources, migration job) + runbook.
+
+ACCEPTANCE CRITERIA (measurable)
+• `make assets.plan/pull/verify` works on macOS/Linux/WSL; hashes enforced; licence field required in manifest.
+• `workflow_dispatch` on upgrade-deps creates a PR with updated locks, green test matrix, and a human-readable change summary.
+• CI green on: ruff, mypy (core), pytest (incl. Hypothesis), bandit, pip-audit/safety; Schemathesis smoke hits all endpoints w/o crashes.
+• Renovate groups non-major updates and can auto-merge patch-level changes after CI.
+• OpenTelemetry traces appear across API↔MCP in local dev with docker-compose.
+• Helm values expose resource requests/limits and probes; migration Job is idempotent.
+• Accessibility checks pass (contrast + keyboard nav) on the sample UI.
+
+HOUSE RULES
+• Keep changes incremental; prefer 5–10 file diffs per PR.
+• Write clear commit subjects (conventional commits).
+• Update docs for every new command/target/workflow; add usage examples.
+• Where risk exists, add a feature flag default-OFF.
+
+BEGIN by drafting the Audit doc and opening the Audit Draft PR with the backlog. Then proceed PR-by-PR.
