@@ -3,14 +3,24 @@ from __future__ import annotations
 import json
 import os
 import re
+import uuid
 from collections.abc import Callable
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, cast
 
 import yaml  # type: ignore[import-untyped]
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
+from opentelemetry import trace
 from pydantic import ValidationError
+from starlette.middleware.base import BaseHTTPMiddleware
+
+# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    OTEL_FASTAPI_AVAILABLE = True
+except ImportError:
+    OTEL_FASTAPI_AVAILABLE = False
 
 from .models import RecommendationOutcome
 from .models.requests import (
@@ -35,6 +45,7 @@ from .models.requests import (
 from .models.schema_export import SCHEMA_VERSION
 from .dependencies import require_idempotency_key
 from .routers import ingestion as ingestion_router
+from .tracing import tracing_manager
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -132,8 +143,43 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 }
 
 
+class TracingMiddleware(BaseHTTPMiddleware):
+    """Middleware to add trace ID headers and OTEL spans for Sprint 0."""
+    
+    async def dispatch(self, request: Request, call_next):
+        # Generate or extract trace ID
+        trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
+        
+        # Get the current span from OTEL
+        current_span = trace.get_current_span()
+        if current_span:
+            # Set trace ID as span attribute
+            current_span.set_attribute("http.request.trace_id", trace_id)
+            current_span.set_attribute("http.method", request.method)
+            current_span.set_attribute("http.url", str(request.url))
+        
+        # Process the request
+        response = await call_next(request)
+        
+        # Add trace ID to response headers
+        response.headers["X-Trace-Id"] = trace_id
+        
+        # Add span attributes for response
+        if current_span:
+            current_span.set_attribute("http.status_code", response.status_code)
+        
+        return response
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="StratMaster API", version="0.2.0")
+    
+    # Add tracing middleware
+    app.add_middleware(TracingMiddleware)
+    
+    # Initialize OTEL instrumentation for FastAPI if available
+    if OTEL_FASTAPI_AVAILABLE:
+        FastAPIInstrumentor.instrument_app(app)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
@@ -151,23 +197,32 @@ def create_app() -> FastAPI:
         payload: ResearchPlanRequest,
         _: str = Depends(require_idempotency_key),
     ) -> ResearchPlanResponse:
-        result = orchestrator_stub.plan_research(
-            query=payload.query,
-            tenant_id=payload.tenant_id,
-            max_sources=payload.max_sources,
-        )
-        return ResearchPlanResponse(**result)
+        with tracing_manager.trace_operation("research:plan", {
+            "tenant_id": payload.tenant_id,
+            "query": payload.query[:100],  # Truncate for tracing
+            "max_sources": payload.max_sources
+        }) as trace_context:
+            result = orchestrator_stub.plan_research(
+                query=payload.query,
+                tenant_id=payload.tenant_id,
+                max_sources=payload.max_sources,
+            )
+            return ResearchPlanResponse(**result)
 
     @research_router.post("/run", response_model=ResearchRunResponse)
     async def run_research(
         payload: ResearchRunRequest,
         _: str = Depends(require_idempotency_key),
     ) -> ResearchRunResponse:
-        result = orchestrator_stub.run_research(
-            plan_id=payload.plan_id,
-            tenant_id=payload.tenant_id,
-        )
-        return ResearchRunResponse(**result)
+        with tracing_manager.trace_operation("research:run", {
+            "tenant_id": payload.tenant_id,
+            "plan_id": payload.plan_id
+        }) as trace_context:
+            result = orchestrator_stub.run_research(
+                plan_id=payload.plan_id,
+                tenant_id=payload.tenant_id,
+            )
+            return ResearchRunResponse(**result)
 
     app.include_router(research_router)
 
@@ -194,13 +249,19 @@ def create_app() -> FastAPI:
         payload: DebateRunRequest,
         _: str = Depends(require_idempotency_key),
     ) -> DebateRunResponse:
-        result = orchestrator_stub.run_debate(
-            _tenant_id=payload.tenant_id,
-            _hypothesis_id=payload.hypothesis_id,
-            _claim_ids=payload.claim_ids,
-            max_turns=payload.max_turns,
-        )
-        return DebateRunResponse(**result)
+        with tracing_manager.trace_operation("debate:start", {
+            "tenant_id": payload.tenant_id,
+            "hypothesis_id": payload.hypothesis_id,
+            "claim_count": len(payload.claim_ids),
+            "max_turns": payload.max_turns
+        }) as trace_context:
+            result = orchestrator_stub.run_debate(
+                _tenant_id=payload.tenant_id,
+                _hypothesis_id=payload.hypothesis_id,
+                _claim_ids=payload.claim_ids,
+                max_turns=payload.max_turns,
+            )
+            return DebateRunResponse(**result)
 
     app.include_router(debate_router)
 
