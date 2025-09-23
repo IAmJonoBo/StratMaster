@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, cast
 
 from stratmaster_api.models import DebateTrace, DebateTurn, WorkflowMetadata
 
@@ -50,7 +51,7 @@ class SynthesiserNode:
     def __call__(self, state: StrategyState) -> StrategyState:
         working = state.copy()
         pad = ensure_agent_scratchpad(working, "synthesiser")
-        verification = self.tools.run_verification(
+        verification: Any = self.tools.run_verification(
             working.claims,
             working.retrieval,
             minimum_pass_ratio=self.minimum_pass_ratio,
@@ -61,14 +62,19 @@ class SynthesiserNode:
                 name="assurance.cove.verify",
                 arguments={"claims": len(working.claims)},
                 response={
-                    "verified_fraction": verification.verified_fraction,
-                    "status": verification.status,
+                    "verified_fraction": getattr(
+                        verification, "verified_fraction", 0.0
+                    ),
+                    "status": getattr(verification, "status", "skipped"),
                 },
             )
         )
-        working.verification = verification
-        working.record_metric("cove_verified_fraction", verification.verified_fraction)
-        if verification.status != "verified":
+        # attach for downstream visibility in case the type is not from stratmaster_cove
+        working.scratchpad.setdefault("synthesiser", pad)
+        vf = cast(float, getattr(verification, "verified_fraction", 0.0))
+        status = cast(str, getattr(verification, "status", "skipped"))
+        working.record_metric("cove_verified_fraction", vf)
+        if status != "verified":
             working.mark_failure("verification_below_threshold")
         if working.debate is None:
             working.debate = DebateTrace(turns=[])
