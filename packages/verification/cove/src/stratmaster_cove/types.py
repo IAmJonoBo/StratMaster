@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from enum import Enum
-from typing import Iterable, Literal, Sequence
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -56,7 +57,7 @@ class VerificationResult(BaseModel):
         questions: Sequence[VerificationQuestion],
         answers: Sequence[VerificationAnswer],
         minimum_pass_ratio: float,
-    ) -> "VerificationResult":
+    ) -> VerificationResult:
         """Build a result from questions and their answers."""
 
         question_index = {q.id: q for q in questions}
@@ -102,9 +103,9 @@ def build_questions_for_claims(
     """Generate deterministic verification questions for claims."""
 
     questions: list[VerificationQuestion] = []
-
-    for idx, (claim_id, statement) in enumerate(zip(claim_ids, claim_statements, strict=True), start=1):
-
+    for idx, (claim_id, statement) in enumerate(
+        zip(claim_ids, claim_statements, strict=True), start=1
+    ):
         questions.append(
             VerificationQuestion(
                 id=f"{prefix}-{idx:03d}",

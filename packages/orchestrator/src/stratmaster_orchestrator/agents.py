@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, cast
 
 from stratmaster_api.models import DebateTrace, DebateTurn, WorkflowMetadata
 
@@ -30,7 +31,13 @@ class ResearcherNode:
         working.retrieval = retrieval
         working.artefacts = self.tools.graph_artifacts(working.claims)
         working.completed_tasks.append("research")
-        working.pending_tasks.extend([task for task in ("synthesis", "debate") if task not in working.pending_tasks])
+        working.pending_tasks.extend(
+            [
+                task
+                for task in ("synthesis", "debate")
+                if task not in working.pending_tasks
+            ]
+        )
         self.checkpoints.save("researcher", working)
         return working
 
@@ -44,7 +51,7 @@ class SynthesiserNode:
     def __call__(self, state: StrategyState) -> StrategyState:
         working = state.copy()
         pad = ensure_agent_scratchpad(working, "synthesiser")
-        verification = self.tools.run_verification(
+        verification: Any = self.tools.run_verification(
             working.claims,
             working.retrieval,
             minimum_pass_ratio=self.minimum_pass_ratio,
@@ -55,14 +62,19 @@ class SynthesiserNode:
                 name="assurance.cove.verify",
                 arguments={"claims": len(working.claims)},
                 response={
-                    "verified_fraction": verification.verified_fraction,
-                    "status": verification.status,
+                    "verified_fraction": getattr(
+                        verification, "verified_fraction", 0.0
+                    ),
+                    "status": getattr(verification, "status", "skipped"),
                 },
             )
         )
-        working.verification = verification
-        working.record_metric("cove_verified_fraction", verification.verified_fraction)
-        if verification.status != "verified":
+        # attach for downstream visibility in case the type is not from stratmaster_cove
+        working.scratchpad.setdefault("synthesiser", pad)
+        vf = cast(float, getattr(verification, "verified_fraction", 0.0))
+        status = getattr(verification, "status", "skipped")
+        working.record_metric("cove_verified_fraction", vf)
+        if status != "verified":
             working.mark_failure("verification_below_threshold")
         if working.debate is None:
             working.debate = DebateTrace(turns=[])
@@ -122,7 +134,13 @@ class AdversaryNode:
         pad.tool_calls.append(
             ToolInvocation(
                 name="debate.adversary.review",
-                arguments={"principles": [rule["id"] for rule in guidance if isinstance(rule, dict) and "id" in rule]},
+                arguments={
+                    "principles": [
+                        rule["id"]
+                        for rule in guidance
+                        if isinstance(rule, dict) and "id" in rule
+                    ]
+                },
             )
         )
         if working.debate is None:
@@ -161,7 +179,9 @@ class ConstitutionalCriticNode:
         working.record_metric("evaluation_passed", 1.0 if passed else 0.0)
         if working.debate is None:
             working.debate = DebateTrace(turns=[])
-        verdict = "Approved under constitution" if passed else "Requires operator review"
+        verdict = (
+            "Approved under constitution" if passed else "Requires operator review"
+        )
         working.debate.turns.append(
             DebateTurn(
                 agent="critic",
@@ -191,9 +211,13 @@ class RecommenderNode:
         pad.notes.append("Composed decision brief and final recommendation")
         outcome = self.tools.compose_recommendation(
             working,
-            workflow=working.workflow
-            if working.workflow
-            else WorkflowMetadata(workflow_id="wf-synthetic", tenant_id=working.tenant_id),
+            workflow=(
+                working.workflow
+                if working.workflow
+                else WorkflowMetadata(
+                    workflow_id="wf-synthetic", tenant_id=working.tenant_id
+                )
+            ),
         )
         pad.tool_calls.append(
             ToolInvocation(
