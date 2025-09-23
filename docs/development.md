@@ -6,7 +6,7 @@ This guide covers everything you need to develop, test, and contribute to StratM
 
 ### Prerequisites
 
-- **Python 3.11+**: Required for all Python components
+- **Python 3.13+**: Required for all Python components
 - **Docker Desktop**: For full-stack development and testing
 - **Git**: With signed commits recommended
 - **Node.js 18+**: For web UI development (optional)
@@ -65,7 +65,7 @@ The project uses a Python virtual environment for dependency isolation:
 ├── bin/pip            # Package installer
 ├── bin/pytest         # Test runner
 ├── bin/uvicorn        # ASGI server
-└── lib/python3.11/    # Installed packages
+└── lib/python3.13/    # Installed packages
 ```
 
 ### Environment Variables

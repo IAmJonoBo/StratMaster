@@ -2,7 +2,7 @@
 
 This folder will contain a thin client/wrapper for calling the configured LLM provider.
 
-- Runtime: Python 3.11+
+- Runtime: Python 3.13+
 - Transport: LiteLLM or direct OpenAI SDK
 
 Example (placeholder):

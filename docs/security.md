@@ -489,7 +489,7 @@ class AdversarialTester:
 
 ```dockerfile
 # Secure Dockerfile practices
-FROM python:3.11-slim as builder
+FROM python:3.13-slim as builder
 
 # Create non-root user
 RUN groupadd -r stratmaster && useradd -r -g stratmaster stratmaster
@@ -498,10 +498,10 @@ RUN groupadd -r stratmaster && useradd -r -g stratmaster stratmaster
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Copy user and dependencies
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 

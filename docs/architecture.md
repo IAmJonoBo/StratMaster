@@ -180,7 +180,7 @@ Eval Gates → Quality Scoring → Final Decision Brief
 ## Technology Stack
 
 ### Backend
-- **Python 3.11+**: Core runtime with strict typing
+- **Python 3.13+**: Core runtime with strict typing
 - **FastAPI**: Async web framework with OpenAPI
 - **Pydantic v2**: Data validation and serialization
 - **LangGraph**: Multi-agent workflow orchestration

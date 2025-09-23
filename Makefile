@@ -68,7 +68,7 @@ test-docker:
 	docker run --rm -t \
 		-v $(PWD):/work \
 		-w /work \
-		python:3.12-slim bash -lc "python -m venv .venv && . .venv/bin/activate && pip install -e packages/api -e packages/mcp-servers/research-mcp pytest && pytest -q"
+		python:3.13-slim bash -lc "python -m venv .venv && . .venv/bin/activate && pip install -e packages/api -e packages/mcp-servers/research-mcp pytest && pytest -q"
 
 # Generate lock files with pinned, hashed dependencies from requirements*.txt
 lock:

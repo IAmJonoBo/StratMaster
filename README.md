@@ -40,7 +40,7 @@
 
 **Prerequisites**:
 
-- Python 3.11+
+- Python 3.13+
 - Docker Desktop (for full stack)
 - Optional: uv or pipx
 
