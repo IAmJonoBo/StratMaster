@@ -12,8 +12,11 @@ services:
       STRATMASTER_API_DB_URL: postgresql+psycopg://postgres:postgres@postgres:5432/stratmaster
       LANGFUSE_SERVER_URL: http://langfuse:3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     develop:
       watch:
@@ -235,6 +238,18 @@ services:
     ports:
       - "8089:8080"
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   nebula:
     image: vesoft/nebula-standalone:latest
     environment:
@@ -266,3 +281,4 @@ volumes:
   minio_data:
   research_cache:
   nebula_data:
+  redis_data:

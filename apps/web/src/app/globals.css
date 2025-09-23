@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for StratMaster */
+.tri-pane-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  height: calc(100vh - 4rem);
+}
+
+@media (max-width: 1024px) {
+  .tri-pane-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+}
+
+.pane {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+}
+
+.pane-header {
+  @apply px-4 py-3 border-b border-gray-200 bg-gray-50 font-medium text-gray-900;
+}
+
+.pane-content {
+  @apply p-4 overflow-y-auto;
+}
+
+/* Expert Panel specific styles */
+.expert-panel {
+  @apply space-y-4;
+}
+
+.discipline-card {
+  @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow;
+}
+
+.severity-error {
+  @apply border-red-300 bg-red-50;
+}
+
+.severity-warning {
+  @apply border-yellow-300 bg-yellow-50;
+}
+
+.severity-info {
+  @apply border-blue-300 bg-blue-50;
+}
+
+/* Persuasion Risk Gauge styles */
+.risk-gauge {
+  @apply relative w-32 h-32 mx-auto;
+}
+
+.gauge-arc {
+  fill: none;
+  stroke-width: 8;
+}
+
+.gauge-background {
+  stroke: #e5e7eb;
+}
+
+.gauge-foreground {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+
+.risk-low .gauge-foreground {
+  stroke: #059669;
+}
+
+.risk-medium .gauge-foreground {
+  stroke: #d97706;
+}
+
+.risk-high .gauge-foreground {
+  stroke: #dc2626;
+}
+
+/* Message Map styles */
+.message-map {
+  @apply bg-white border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.message-node {
+  @apply bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm relative;
+}
+
+.message-connector {
+  @apply absolute w-px h-4 bg-gray-300 left-1/2 -translate-x-1/2;
+}
