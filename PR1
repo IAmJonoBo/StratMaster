@@ -1,0 +1,223 @@
+Awesome—here are two drop-in PR skeletons with exact files, contents, and acceptance checks. They fold the Expert Council into StratMaster with minimal blast radius and align with your existing blueprint (MCP-first, LangGraph orchestration, Pydantic v2 schemas, FastAPI routers, Helm/compose). Where I assert standards or interfaces, I anchor them to primary docs (MCP, LangGraph, Pydantic v2, FastAPI, WCAG, NN/g, COM-B/EAST) for traceability.
+
+⸻
+
+PR-1 — feat(experts): schemas, doctrines, configs, thresholds
+
+Goal. Introduce Expert Council domain models, doctrine/rubric configs, weights, and evaluation thresholds—without running any new services yet. All outputs are Pydantic v2 models with JSON-Schema served and versioned. (Pydantic v2 emits JSON Schema Draft 2020-12 + OpenAPI 3.1; we rely on that guarantee.)  ￼
+
+File tree (new & modified)
+
+packages/api/models/experts/
+  __init__.py
+  base.py
+  expert_profile.py
+  doctrine.py
+  memo.py
+  vote.py
+  message_map.py
+  persuasion_risk.py
+  schema_registry.py
+  generate_json_schemas.py
+
+configs/experts/
+  weights.yaml
+  doctrines/
+    design/heuristics.nng.yaml
+    accessibility/wcag21-aa-min.yaml
+    psychology/com-b.yaml
+    psychology/east.yaml
+    communication/message-map.yaml
+    psychology/reactance-phrases.txt
+
+configs/evals/thresholds.yaml        # (modified) add discipline gates
+
+prompts/experts/
+  delphi-instructions.md
+  council-style.md
+
+tests/unit/models/experts/
+  test_schemas_roundtrip.py
+  test_message_map_minimum.py
+
+Key files (contents)
+
+packages/api/models/experts/base.py
+
+from __future__ import annotations
+from pydantic import BaseModel, Field, AwareDatetime, ConfigDict
+
+class Model(BaseModel):
+    model_config = ConfigDict(
+        ser_json_inf_nan=False,
+        frozen=False,
+        extra="forbid",
+        strict=True,
+        title="{cls.__name__}"
+    )
+
+class WithMeta(Model):
+    id: str = Field(..., pattern=r"^[a-z0-9\-\:\.]+$")
+    version: int = 1
+    created_at: AwareDatetime | None = None
+    source_strategy_id: str | None = None
+
+expert_profile.py
+
+from pydantic import Field
+from .base import WithMeta
+
+class ExpertProfile(WithMeta):
+    discipline: str = Field(..., description="e.g., psychology, design, communication")
+    doctrine_ids: list[str] = Field(default_factory=list)
+    capabilities: list[str] = Field(default_factory=list)
+    weight_prior: float = Field(ge=0.0, le=1.0, default=0.5)
+    calibration: dict = Field(default_factory=dict)
+
+doctrine.py (rubrics/checklists)
+
+from pydantic import Field
+from .base import WithMeta
+
+class DoctrineRule(WithMeta):
+    severity: str = Field(..., pattern=r"^(blocker|warn|info)$")
+    desc: str
+
+class Doctrine(WithMeta):
+    discipline: str
+    type: str = Field(..., pattern=r"^(rubric|checklist)$")
+    rules: list[DoctrineRule] = []
+    references: list[str] = []
+
+memo.py (discipline memo output)
+
+from pydantic import Field
+from .base import WithMeta
+
+class Finding(WithMeta):
+    issue: str
+    severity: str = Field(..., pattern=r"^(high|medium|low)$")
+    evidence: list[str] = []
+    fix: str | None = None
+
+class DisciplineMemo(WithMeta):
+    discipline: str
+    applies_to: str
+    findings: list[Finding] = []
+    scores: dict = {}
+    recommendations: list[dict] = []
+
+vote.py (weighted council vote)
+
+from pydantic import Field
+from .base import WithMeta
+
+class DisciplineVote(WithMeta):
+    discipline: str
+    score: float = Field(ge=0, le=1)
+    justification: str | None = None
+
+class CouncilVote(WithMeta):
+    strategy_id: str
+    votes: list[DisciplineVote]
+    weighted_score: float = Field(ge=0, le=1)
+    weights: dict[str, float]
+
+message_map.py & persuasion_risk.py
+
+# message_map.py
+from pydantic import Field
+from .base import WithMeta
+
+class MessageMap(WithMeta):
+    audience: str
+    problem: str
+    value: str
+    proof: str
+    cta: str
+
+# persuasion_risk.py
+from pydantic import Field
+from .base import WithMeta
+
+class PersuasionRisk(WithMeta):
+    reactance_risk: float = Field(ge=0, le=1)  # 0=none, 1=extreme
+    notes: list[str] = []
+
+schema_registry.py and generator
+
+# schema_registry.py
+from .expert_profile import ExpertProfile
+from .doctrine import Doctrine
+from .memo import DisciplineMemo
+from .vote import CouncilVote
+from .message_map import MessageMap
+from .persuasion_risk import PersuasionRisk
+
+REGISTRY = [ExpertProfile, Doctrine, DisciplineMemo, CouncilVote, MessageMap, PersuasionRisk]
+
+# generate_json_schemas.py
+from pydantic.json_schema import models_json_schema
+from .schema_registry import REGISTRY
+
+def main():
+    core_schema, defs = models_json_schema(models=REGISTRY, title="StratMaster Experts", components=None)
+    print(core_schema)
+
+if __name__ == "__main__":
+    main()
+
+Why JSON-Schema? We’ll expose these to tools/clients (incl. MCP tools and OpenAI tool-calling) and want schema-valid I/O. Pydantic v2 guarantees JSON-Schema/OpenAPI 3.1 compliance for generated schemas.  ￼
+
+configs/experts/weights.yaml
+
+defaults:
+  psychology: 0.22
+  design: 0.20
+  communication: 0.18
+  brand_science: 0.20
+  economics: 0.20
+update:
+  method: beta
+  lr: 0.1
+
+Doctrine exemplars (trimmed)
+
+design/heuristics.nng.yaml – NN/g 10 heuristics as rubric rules with severities; used by Design Expert. (Use the canonical list for rule names.)  ￼
+
+accessibility/wcag21-aa-min.yaml – AA subset of text/structure checks (contrast, keyboard, labels, headings) for copy-first reviews; aligns with W3C WCAG 2.1/2.2 quick refs.  ￼
+
+psychology/com-b.yaml – COM-B prompts for capability/opportunity/motivation; attach reference to Behaviour Change Wheel paper.  ￼
+
+psychology/east.yaml – EAST (Easy, Attractive, Social, Timely) objectives; attach BIT handbook/link.  ￼
+
+communication/message-map.yaml – enforce audience→problem→value→proof→CTA.
+
+psychology/reactance-phrases.txt – list of trigger phrases → autonomy-supportive alternatives (basis: psychological reactance literature).
+
+configs/evals/thresholds.yaml (append)
+
+experts:
+  usability_score_min: 0.75            # design+comm composite
+  wcag_aa_required: true               # must-pass subset
+  reactance_risk_warn: 0.40
+  reactance_risk_block: 0.50
+  message_map_min: 0.85                # completeness
+  council_score_min: 0.75
+  council_stability_delta_warn: 0.10   # Delphi round delta
+
+Docs/prompts
+	•	prompts/experts/delphi-instructions.md – two-round Delphi pattern for council convergence.
+	•	prompts/experts/council-style.md – instruct experts to cite discipline doctrines and propose specific edits (copy-ready).
+
+Tests
+	•	test_schemas_roundtrip.py: generate JSON-Schema → validate minimal instances round-trip.
+	•	test_message_map_minimum.py: ensure required fields; confirm extra="forbid" behaviour.
+
+Acceptance criteria
+	•	poetry run python packages/api/models/experts/generate_json_schemas.py prints valid schemas (validated via jsonschema).
+	•	Thresholds present; no service changes yet.
+	•	Doctrine files render and load (YAML parse) in tests.
+	•	PR title: feat(experts): add Expert Council models, doctrines, thresholds (squash merge OK).
+
+⸻
