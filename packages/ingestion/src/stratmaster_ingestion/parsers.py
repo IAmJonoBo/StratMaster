@@ -183,7 +183,7 @@ class ParserRegistry:
     @staticmethod
     def build_statistics(text: str) -> ChunkStatistics:
         char_count = len(text)
-        word_count = len(text.split())
+        word_count = sum(1 for _ in text.split())
         line_count = text.count("\n") + (1 if text else 0)
         whitespace = sum(ch.isspace() for ch in text)
         whitespace_ratio = whitespace / char_count if char_count else 0.0
