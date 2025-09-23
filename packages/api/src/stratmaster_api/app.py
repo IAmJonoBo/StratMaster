@@ -8,7 +8,7 @@ from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, cast
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
 from pydantic import ValidationError
 
