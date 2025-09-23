@@ -366,7 +366,9 @@ class ToolRegistry:
                     summaries = cast(Iterable[Mapping[str, Any]], raw_summaries)
                 else:
                     summaries = []
-            except Exception:
+            except (KeyError, AttributeError, TypeError) as e:
+                # Log the error for debugging; in production, consider using a logger
+                print(f"Error in community_summaries: {e}")
                 summaries = []
             nodes: list[GraphNode] = [
                 GraphNode(id="focus", label=self.query.title(), type="topic", score=0.8)
