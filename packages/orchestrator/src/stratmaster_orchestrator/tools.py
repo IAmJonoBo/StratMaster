@@ -129,7 +129,7 @@ class ToolRegistry:
 
         try:
             services = importlib.import_module("stratmaster_api.services")
-        except Exception:  # pragma: no cover - optional dependency
+        except ImportError:  # pragma: no cover - optional dependency
             return None
         client_cls = getattr(services, name, None)
         if client_cls is None:
