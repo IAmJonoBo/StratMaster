@@ -1,0 +1,89 @@
+# Economics discipline doctrine for StratMaster expert evaluation
+# Focuses on economic viability, business model validation, and financial considerations
+
+name: "Economics"
+version: "1.0.0"
+discipline: "economics"
+
+description: |
+  Evaluates strategic proposals from an economic perspective, focusing on business
+  viability, financial sustainability, and market dynamics.
+
+# Key economic concepts that should be considered in strategies
+economic_concepts:
+  - "roi"
+  - "return on investment"
+  - "cost"
+  - "revenue"
+  - "profit"
+  - "budget"
+  - "pricing"
+  - "value"
+  - "market size"
+  - "competition"
+  - "demand"
+  - "supply"
+  - "scalability"
+  - "unit economics"
+  - "customer acquisition cost"
+  - "lifetime value"
+
+# Business model elements for comprehensive evaluation
+business_model_elements:
+  - "revenue model"
+  - "value proposition"
+  - "cost structure"
+  - "target market"
+  - "channels"
+  - "customer segments"
+  - "competitive advantage"
+  - "key resources"
+  - "key partnerships"
+
+# Economic risk factors to flag
+risk_factors:
+  - "untested assumptions"
+  - "high customer acquisition costs"
+  - "low switching costs"
+  - "strong network effects"
+  - "regulatory dependency"
+  - "single point of failure"
+
+# Market analysis components
+market_analysis:
+  required_elements:
+    - "market_size"
+    - "target_audience"
+    - "competitive_landscape"
+    - "market_trends"
+    - "barriers_to_entry"
+  
+  growth_indicators:
+    - "growing market"
+    - "market expansion"
+    - "increasing demand"
+    - "market opportunity"
+    - "emerging trends"
+
+# Financial sustainability indicators
+sustainability_indicators:
+  positive:
+    - "recurring revenue"
+    - "subscription model"
+    - "high margins"
+    - "scalable"
+    - "network effects"
+    - "switching costs"
+  
+  negative:
+    - "one-time purchase"
+    - "low margins"
+    - "high churn"
+    - "price competition"
+    - "commoditized"
+
+# Evaluation thresholds
+thresholds:
+  economic_concept_coverage: 0.3  # At least 30% of concepts should be mentioned
+  business_model_coverage: 0.4    # At least 40% of business model elements
+  risk_tolerance: "medium"        # How sensitive to risk factors

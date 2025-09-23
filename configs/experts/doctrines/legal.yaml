@@ -1,0 +1,144 @@
+# Legal discipline doctrine for StratMaster expert evaluation
+# Focuses on legal compliance, risk mitigation, and regulatory considerations
+
+name: "Legal"
+version: "1.0.0"
+discipline: "legal"
+
+description: |
+  Evaluates strategic proposals for legal compliance risks, regulatory requirements,
+  and potential liability issues.
+
+# Compliance keywords that indicate legal awareness
+compliance_keywords:
+  - "gdpr"
+  - "privacy"
+  - "data protection"
+  - "terms"
+  - "conditions"
+  - "disclaimer"
+  - "compliance"
+  - "regulatory"
+  - "legal"
+  - "copyright"
+  - "trademark"
+  - "consent"
+  - "opt-in"
+  - "opt-out"
+  - "cookies"
+  - "accessibility"
+  - "ada compliance"
+  - "ccpa"
+  - "hipaa"
+
+# Risky phrases that could lead to legal issues
+risky_phrases:
+  - "guaranteed"
+  - "risk-free"
+  - "100% effective"
+  - "never fails"
+  - "always works"
+  - "miracle"
+  - "instant"
+  - "overnight success"
+  - "no effort required"
+  - "secret formula"
+  - "breakthrough discovery"
+  - "scientifically proven"
+  - "doctor recommended"
+  - "clinically tested"
+
+# Intellectual property keywords
+ip_keywords:
+  - "copyright"
+  - "trademark"
+  - "patent"
+  - "intellectual property"
+  - "licensing"
+  - "fair use"
+  - "attribution"
+  - "original content"
+  - "derivative work"
+  - "public domain"
+  - "creative commons"
+  - "royalty-free"
+
+# Industry-specific regulations to consider
+regulations:
+  finance:
+    - "sec compliance"
+    - "finra"
+    - "sox"
+    - "banking regulations"
+    - "kyc"
+    - "aml"
+  
+  healthcare:
+    - "hipaa"
+    - "fda"
+    - "medical claims"
+    - "patient privacy"
+  
+  advertising:
+    - "ftc guidelines"
+    - "truth in advertising"
+    - "disclosure requirements"
+    - "endorsement guidelines"
+    - "native advertising"
+  
+  data_privacy:
+    - "gdpr"
+    - "ccpa"
+    - "coppa"
+    - "privacy shield"
+    - "data retention"
+
+# Contract and agreement considerations
+contract_elements:
+  - "terms of service"
+  - "privacy policy"
+  - "user agreement"
+  - "service level agreement"
+  - "data processing agreement"
+  - "non-disclosure agreement"
+  - "liability limitations"
+  - "indemnification"
+  - "dispute resolution"
+  - "governing law"
+
+# Risk assessment levels
+risk_levels:
+  high:
+    - "absolute claims"
+    - "medical claims"
+    - "financial advice"
+    - "data processing"
+    - "international operations"
+  
+  medium:
+    - "user-generated content"
+    - "third-party integrations"
+    - "subscription models"
+    - "email marketing"
+  
+  low:
+    - "informational content"
+    - "basic e-commerce"
+    - "simple lead generation"
+
+# Evaluation criteria
+evaluation_criteria:
+  compliance_awareness: 0.7    # 70% weight for compliance considerations
+  risk_mitigation: 0.2        # 20% weight for risk mitigation
+  ip_consideration: 0.1       # 10% weight for IP considerations
+
+# Red flags that require immediate attention
+red_flags:
+  - "collect children's data"
+  - "medical diagnosis"
+  - "investment advice"
+  - "legal advice"
+  - "tax advice"
+  - "health claims"
+  - "weight loss promises"
+  - "income guarantees"
