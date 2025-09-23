@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StratMaster - Expert Panel Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tri-pane-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            height: calc(100vh - 4rem);
+        }
+        .pane {
+            @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+        }
+        .pane-header {
+            @apply px-4 py-3 border-b border-gray-200 bg-gray-50 font-medium text-gray-900;
+        }
+        .pane-content {
+            @apply p-4 overflow-y-auto;
+        }
+        .risk-gauge {
+            width: 128px;
+            height: 128px;
+            position: relative;
+            margin: 0 auto;
+        }
+        .gauge-arc {
+            fill: none;
+            stroke-width: 8;
+        }
+        .gauge-background {
+            stroke: #e5e7eb;
+        }
+        .gauge-foreground {
+            stroke: #d97706;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 125;
+            transition: stroke-dashoffset 1.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <!-- Navigation -->
+        <nav class="bg-blue-600">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <h1 class="text-white font-bold text-xl">StratMaster</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900">Strategy Dashboard</h1>
+                    <p class="mt-2 text-gray-600">
+                        AI-powered brand strategy evaluation with expert discipline analysis
+                    </p>
+                </div>
+
+                <div class="tri-pane-layout">
+                    <!-- Left Pane: Expert Panel -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 font-medium text-gray-900">
+                            <h2 class="text-lg font-medium">Expert Panel</h2>
+                        </div>
+                        <div class="p-4 overflow-y-auto space-y-4">
+                            <!-- Strategy Input -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Strategy Content</label>
+                                <textarea class="w-full h-24 p-3 border border-gray-300 rounded-lg text-sm" 
+                                         placeholder="Enter your strategy content here...">Launch our revolutionary new product with guaranteed results. This breakthrough technology will transform your life overnight with no effort required.</textarea>
+                            </div>
+
+                            <!-- Discipline Selection -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Expert Disciplines</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" checked class="rounded border-gray-300 text-blue-600">
+                                        <span class="font-medium">Psychology</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" checked class="rounded border-gray-300 text-blue-600">
+                                        <span class="font-medium">Legal</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" checked class="rounded border-gray-300 text-blue-600">
+                                        <span class="font-medium">Economics</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" class="rounded border-gray-300 text-blue-600">
+                                        <span class="font-medium">Design</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Evaluate Button -->
+                            <button class="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                                Evaluate Strategy
+                            </button>
+
+                            <!-- Expert Results -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Expert Evaluations (3)</h3>
+                                
+                                <!-- Legal Card -->
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">Legal</h4>
+                                                <p class="text-sm text-gray-500">Legal Expert</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full text-red-600 bg-red-100">45%</span>
+                                            <span class="text-xs text-gray-400">2 findings</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 p-3 rounded-lg border border-red-300 bg-red-50">
+                                        <div class="flex items-start space-x-2">
+                                            <span class="text-sm">🚫</span>
+                                            <div>
+                                                <h6 class="text-sm font-medium">Risky Claims Detected</h6>
+                                                <p class="text-xs text-gray-600 mt-1">Strategy contains absolute claims like "guaranteed results" that may lead to legal issues</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Economics Card -->
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">Economics</h4>
+                                                <p class="text-sm text-gray-500">Economics Expert</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="px-2 py-1 text-xs font-medium rounded-full text-yellow-600 bg-yellow-100">62%</span>
+                                            <span class="text-xs text-gray-400">1 finding</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Pane: Risk Analysis -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 font-medium text-gray-900">
+                            <h2 class="text-lg font-medium">Risk Analysis</h2>
+                        </div>
+                        <div class="p-4 overflow-y-auto space-y-6">
+                            <!-- Risk Gauge -->
+                            <div class="p-6 border rounded-lg bg-yellow-50 border-yellow-200">
+                                <div class="risk-gauge">
+                                    <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="50" class="gauge-arc gauge-background"/>
+                                        <circle cx="60" cy="60" r="50" class="gauge-arc gauge-foreground"/>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-yellow-600">65%</div>
+                                            <div class="text-xs font-medium text-gray-600 uppercase tracking-wide">Medium Risk</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 space-y-3">
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-900 mb-2">Risk Factors</h4>
+                                        <ul class="space-y-1">
+                                            <li class="text-sm text-gray-600 flex items-start space-x-2">
+                                                <span class="text-red-400 mt-1 text-xs">⚠</span>
+                                                <span>Absolute claims detected</span>
+                                            </li>
+                                            <li class="text-sm text-gray-600 flex items-start space-x-2">
+                                                <span class="text-red-400 mt-1 text-xs">⚠</span>
+                                                <span>Limited economic justification</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Key Findings -->
+                            <div class="border-t pt-6">
+                                <h3 class="text-md font-medium text-gray-900 mb-4">Key Findings</h3>
+                                <div class="space-y-3">
+                                    <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                        <div class="text-sm font-medium text-green-800">Strong Brand Positioning</div>
+                                        <div class="text-sm text-green-600">Clear value proposition identified</div>
+                                    </div>
+                                    <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div class="text-sm font-medium text-yellow-800">Legal Compliance Review</div>
+                                        <div class="text-sm text-yellow-600">Consider privacy policy updates</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Pane: Message Map -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 font-medium text-gray-900">
+                            <h2 class="text-lg font-medium">Message Map</h2>
+                        </div>
+                        <div class="p-4 overflow-y-auto space-y-4">
+                            <!-- Core Message -->
+                            <div class="bg-blue-100 border border-blue-300 rounded-lg p-3 text-blue-900 relative">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-xs font-medium uppercase tracking-wide opacity-75">Core</span>
+                                </div>
+                                <div>Revolutionary product launch</div>
+                            </div>
+
+                            <!-- Supporting Messages -->
+                            <div class="ml-6 space-y-2">
+                                <div class="bg-green-100 border border-green-300 rounded-lg p-3 text-green-900 relative">
+                                    <div class="absolute w-px h-4 bg-gray-300 left-1/2 -translate-x-1/2 top-0" style="top: -1rem;"></div>
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-xs font-medium uppercase tracking-wide opacity-75">Supporting</span>
+                                    </div>
+                                    <div>Breakthrough technology</div>
+                                </div>
+
+                                <div class="bg-green-100 border border-green-300 rounded-lg p-3 text-green-900 relative">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-xs font-medium uppercase tracking-wide opacity-75">Supporting</span>
+                                    </div>
+                                    <div>Guaranteed results</div>
+                                </div>
+                            </div>
+
+                            <!-- Proof Elements -->
+                            <div class="ml-12 space-y-2">
+                                <div class="bg-purple-100 border border-purple-300 rounded-lg p-3 text-purple-900">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-xs font-medium uppercase tracking-wide opacity-75">Proof</span>
+                                    </div>
+                                    <div>Scientific research backing</div>
+                                </div>
+
+                                <div class="bg-purple-100 border border-purple-300 rounded-lg p-3 text-purple-900">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-xs font-medium uppercase tracking-wide opacity-75">Proof</span>
+                                    </div>
+                                    <div>Customer testimonials</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="p-4 border-t border-gray-200 bg-gray-50">
+                            <div class="flex flex-wrap gap-4 text-xs">
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-3 h-3 rounded bg-blue-100 border border-blue-300"></div>
+                                    <span>Core Message</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
+                                    <span>Supporting Point</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <div class="w-3 h-3 rounded bg-purple-100 border border-purple-300"></div>
+                                    <span>Proof Element</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
