@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "stratmaster-cove"
 version = "0.1.0"
 description = "Deterministic Chain-of-Verification utilities for StratMaster"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
   "pydantic>=2.11.9",

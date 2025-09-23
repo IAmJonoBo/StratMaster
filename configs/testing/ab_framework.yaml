@@ -1,0 +1,292 @@
+# A/B Testing Framework for Constitutional Rules
+# Phase 2 Implementation - Systematic testing of constitutional rule variations
+
+# Framework configuration
+framework:
+  enabled: true
+  version: "1.0.0"
+  
+  # Experiment management
+  experiment_engine: "stratmaster-ab-testing"
+  statistical_engine: "bayesian"
+  significance_threshold: 0.95
+  minimum_sample_size: 1000
+  
+  # Traffic allocation
+  traffic_allocation:
+    method: "hash_based"  # Ensures consistent user experience
+    hash_key: "user_id"   # Could also use session_id or tenant_id
+    default_allocation: 0.8  # 80% control, 20% experiment by default
+
+# Experiment types
+experiment_types:
+  # Constitutional rule threshold testing
+  - name: "threshold_optimization"
+    description: "Test different violation detection thresholds"
+    parameters:
+      - name: "critical_threshold"
+        type: "float"
+        range: [0.90, 0.99]
+        step: 0.01
+        
+      - name: "high_threshold" 
+        type: "float"
+        range: [0.80, 0.95]
+        step: 0.01
+        
+    success_metrics:
+      primary: "constitutional_compliance_rate"
+      secondary: ["user_satisfaction", "debate_resolution_time", "false_positive_rate"]
+      
+  # ML model comparison
+  - name: "model_comparison"
+    description: "Compare different constitutional ML models"
+    parameters:
+      - name: "primary_detector_model"
+        type: "categorical"
+        values: ["bert-base", "bert-large", "roberta-base", "constitutional-bert-v2"]
+        
+    success_metrics:
+      primary: "violation_detection_accuracy"
+      secondary: ["inference_latency", "model_confidence", "expert_agreement_rate"]
+      
+  # Principle prioritization
+  - name: "principle_weighting"
+    description: "Test different weights for constitutional principles"
+    parameters:
+      - name: "truth_accuracy_weight"
+        type: "float"
+        range: [0.8, 1.2]
+        step: 0.1
+        
+      - name: "privacy_weight"
+        type: "float" 
+        range: [0.8, 1.2]
+        step: 0.1
+        
+    success_metrics:
+      primary: "overall_constitutional_score"
+      secondary: ["principle_balance", "stakeholder_acceptance"]
+
+# Active experiments
+experiments:
+  # Experiment 1: Threshold optimization for enterprise tenants
+  - id: "threshold_opt_enterprise_001"
+    name: "Enterprise Threshold Optimization Q4"
+    type: "threshold_optimization"
+    status: "running"
+    
+    # Target population
+    target_population:
+      tenant_tiers: ["enterprise"]
+      min_monthly_debates: 50
+      exclude_tenants: ["test_tenant_1", "demo_tenant"]
+      
+    # Experiment variants
+    variants:
+      control:
+        name: "Current Thresholds"
+        allocation: 0.7
+        parameters:
+          critical_threshold: 0.95
+          high_threshold: 0.85
+          medium_threshold: 0.75
+          
+      treatment_a:
+        name: "Higher Precision"
+        allocation: 0.15
+        parameters:
+          critical_threshold: 0.98
+          high_threshold: 0.90
+          medium_threshold: 0.80
+          
+      treatment_b:
+        name: "Balanced Approach"
+        allocation: 0.15
+        parameters:
+          critical_threshold: 0.93
+          high_threshold: 0.83
+          medium_threshold: 0.73
+          
+    # Duration and stopping conditions
+    duration:
+      planned_duration: "4w"
+      minimum_duration: "2w"
+      early_stopping:
+        enabled: true
+        conditions:
+          - metric: "critical_violation_miss_rate"
+            threshold: 0.02
+            direction: "greater_than"
+            
+    # Success criteria
+    success_criteria:
+      primary_metric: "constitutional_compliance_rate"
+      improvement_threshold: 0.05
+      statistical_significance: 0.95
+      
+  # Experiment 2: ML model comparison
+  - id: "model_comp_002"
+    name: "Constitutional ML Model Performance"
+    type: "model_comparison"
+    status: "planned"
+    
+    target_population:
+      all_tenants: true
+      sample_rate: 0.3  # Only 30% of traffic for model comparison
+      
+    variants:
+      control:
+        name: "Current BERT Base"
+        allocation: 0.5
+        parameters:
+          primary_detector_model: "bert-base"
+          
+      treatment:
+        name: "Constitutional BERT v2"
+        allocation: 0.5
+        parameters:
+          primary_detector_model: "constitutional-bert-v2"
+          
+    duration:
+      planned_duration: "6w"
+      minimum_duration: "3w"
+
+# Metrics collection and analysis
+metrics:
+  # Real-time metrics
+  real_time:
+    collection_interval: "1m"
+    metrics:
+      # Constitutional compliance metrics
+      - name: "constitutional_compliance_rate"
+        description: "Percentage of debates without constitutional violations"
+        calculation: "debates_without_violations / total_debates"
+        
+      - name: "violation_detection_accuracy"
+        description: "Accuracy of violation detection vs expert review"
+        calculation: "correctly_identified_violations / total_expert_reviewed"
+        
+      - name: "false_positive_rate"
+        description: "Rate of incorrectly flagged violations"
+        calculation: "false_positives / (false_positives + true_negatives)"
+        
+      # User experience metrics
+      - name: "debate_resolution_time"
+        description: "Average time to resolve constitutional debates"
+        unit: "minutes"
+        
+      - name: "user_satisfaction"
+        description: "User satisfaction score from feedback"
+        range: [1, 5]
+        
+      - name: "expert_agreement_rate"
+        description: "Rate of agreement between AI and expert reviewers"
+        calculation: "agreed_decisions / total_expert_reviews"
+        
+  # Statistical analysis
+  statistical_analysis:
+    method: "bayesian"
+    
+    # Bayesian configuration
+    bayesian:
+      prior_distribution: "beta"
+      credible_interval: 0.95
+      monte_carlo_samples: 10000
+      
+    # Frequentist backup
+    frequentist:
+      test_type: "two_sample_t_test"
+      multiple_testing_correction: "bonferroni"
+      
+# Experiment lifecycle management
+lifecycle:
+  # Planning phase
+  planning:
+    required_approvals: ["constitutional_expert", "data_scientist", "product_manager"]
+    power_analysis_required: true
+    ethics_review_required: true
+    
+  # Execution phase
+  execution:
+    automated_monitoring: true
+    daily_reports: true
+    anomaly_detection: true
+    
+    # Safety guardrails
+    safety_guardrails:
+      - metric: "critical_violation_miss_rate"
+        threshold: 0.01
+        action: "stop_experiment"
+        
+      - metric: "user_complaint_rate"
+        threshold: 0.05
+        action: "flag_for_review"
+        
+      - metric: "system_error_rate"
+        threshold: 0.02
+        action: "pause_experiment"
+        
+  # Analysis phase
+  analysis:
+    automated_analysis: true
+    report_generation: true
+    recommendation_engine: true
+    
+    # Analysis components
+    components:
+      - "statistical_significance_test"
+      - "practical_significance_assessment"
+      - "confidence_interval_calculation"
+      - "effect_size_estimation"
+      - "subgroup_analysis"
+      - "regression_discontinuity_check"
+
+# Integration with constitutional system
+integration:
+  # Configuration updates
+  config_updates:
+    automated_rollout: true
+    gradual_rollout: true
+    rollback_capability: true
+    
+  # Monitoring integration
+  monitoring:
+    grafana_dashboards: true
+    alert_integration: true
+    slack_notifications: true
+    
+  # Audit trail
+  audit:
+    experiment_logging: "comprehensive"
+    decision_tracking: true
+    compliance_verification: true
+
+# Governance and ethics
+governance:
+  # Ethical guidelines
+  ethics:
+    human_oversight_required: true
+    bias_monitoring: true
+    fairness_assessments: true
+    transparent_reporting: true
+    
+  # Approval workflow
+  approval_workflow:
+    - stage: "proposal"
+      approvers: ["constitutional_expert"]
+      
+    - stage: "design_review"
+      approvers: ["data_scientist", "product_manager"]
+      
+    - stage: "ethics_review" 
+      approvers: ["ethics_committee"]
+      
+    - stage: "final_approval"
+      approvers: ["head_of_product", "cto"]
+      
+  # Review schedule
+  review_schedule:
+    weekly_reviews: true
+    monthly_deep_dive: true
+    quarterly_strategy_review: true

@@ -1,0 +1,53 @@
+# Prometheus configuration for StratMaster telemetry
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files: []
+
+scrape_configs:
+  # StratMaster API metrics
+  - job_name: 'stratmaster-api'
+    static_configs:
+      - targets: ['api:8080']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # MCP servers metrics  
+  - job_name: 'research-mcp'
+    static_configs:
+      - targets: ['research-mcp:8081']
+    scrape_interval: 30s
+    
+  - job_name: 'knowledge-mcp'
+    static_configs:
+      - targets: ['knowledge-mcp:8082']
+    scrape_interval: 30s
+    
+  - job_name: 'router-mcp'
+    static_configs:
+      - targets: ['router-mcp:8083']
+    scrape_interval: 30s
+
+  # Infrastructure metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

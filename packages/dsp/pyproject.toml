@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "stratmaster-dsp"
 version = "0.1.0"
 description = "DSPy program stubs for StratMaster"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
   "pydantic>=2.11.9",

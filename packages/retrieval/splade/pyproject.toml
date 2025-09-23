@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "retrieval-splade"
 version = "0.1.0"
 description = "SPLADE expansion and indexing utilities"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = ["pydantic>=2.11.0", "typer>=0.12.5", "PyYAML>=6.0"]
 

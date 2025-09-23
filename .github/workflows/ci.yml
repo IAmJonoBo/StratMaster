@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.13"]
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -26,8 +26,8 @@ jobs:
       - name: Install core packages for tests
         run: |
           pip install -e packages/api -e packages/mcp-servers/research-mcp
-      - name: Install retrieval/reranker test extras (3.13 only)
-        if: matrix.python-version == '3.13'
+      - name: Install retrieval/reranker test extras (3.12 only)
+        if: matrix.python-version == '3.12'
         run: |
           pip install -e packages/retrieval/splade[test-cli] \
                       -e packages/retrieval/colbert[test-cli] \

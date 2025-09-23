@@ -41,11 +41,46 @@
 
 ## Quick Start
 
-**Prerequisites**:
+### 🎯 For Non-Power-Users (Recommended)
 
-- Python 3.13+
-- Docker Desktop (for full stack)
-- Optional: uv or pipx
+The easiest way to get started with StratMaster:
+
+```bash
+# One-command setup with user-friendly script
+./setup.sh
+
+# Start the API server
+./start.sh
+
+# Run tests
+./test.sh
+```
+
+Access your local StratMaster at **http://127.0.0.1:8080** 🎉
+
+### 🔧 For Developers
+
+**Prerequisites**: Python 3.11+ and Docker Desktop (optional)
+
+```bash
+# 1. Bootstrap development environment
+make bootstrap
+
+# 2. Run API tests
+make test
+
+# 3. Start API server
+make api.run
+
+# 4. Start full stack with Phase 2 features
+make dev.phase2
+```
+
+**Available Services** (after `make dev.phase2`):
+- **API**: http://127.0.0.1:8080 ([Docs](http://127.0.0.1:8080/docs))
+- **Grafana**: http://127.0.0.1:3001 (admin/admin) 
+- **Prometheus**: http://127.0.0.1:9090
+- **Langfuse**: http://127.0.0.1:3000
 
 ### Run the full stack (dev)
 

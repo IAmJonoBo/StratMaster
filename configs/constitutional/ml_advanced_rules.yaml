@@ -1,0 +1,178 @@
+# Advanced Constitutional Rules with ML-based Violation Detection
+# Phase 2 Implementation - ML-powered constitutional compliance
+
+ml_detection:
+  enabled: true
+  model_config:
+    # Primary violation detection model
+    primary_detector:
+      model_name: "constitutional-bert-v2"
+      version: "1.2.0"
+      threshold: 0.85
+      confidence_calibration: true
+      
+    # Severity classification model  
+    severity_classifier:
+      model_name: "severity-classifier-v1"
+      version: "1.0.0"
+      classes: ["critical", "high", "medium", "low", "info"]
+      
+    # Context-aware embedding model
+    context_embedder:
+      model_name: "all-MiniLM-L6-v2"
+      dimension: 384
+      similarity_threshold: 0.75
+
+  # Training configuration
+  training:
+    enabled: true
+    schedule: "0 2 * * 0"  # Weekly at 2 AM Sunday
+    validation_split: 0.2
+    min_samples_per_principle: 100
+    active_learning:
+      enabled: true
+      uncertainty_threshold: 0.6
+      human_review_queue_size: 50
+
+# Advanced constitutional principles
+principles:
+  # Truth and Accuracy
+  - id: "truth_accuracy"
+    name: "Truth and Accuracy"
+    priority: 1
+    ml_features:
+      - "fact_consistency_score"
+      - "source_credibility_rating"
+      - "claim_verification_confidence"
+      - "evidence_alignment_score"
+    rules:
+      - pattern: "unsubstantiated_claim"
+        severity: "high"
+        ml_threshold: 0.8
+        description: "Claims without sufficient evidence"
+        
+      - pattern: "contradictory_evidence"
+        severity: "critical"
+        ml_threshold: 0.9
+        description: "Evidence that contradicts established facts"
+        
+  # Bias and Fairness
+  - id: "bias_fairness"
+    name: "Bias and Fairness"
+    priority: 2
+    ml_features:
+      - "demographic_bias_score"
+      - "representation_fairness_score"
+      - "inclusive_language_score"
+      - "perspective_diversity_score"
+    rules:
+      - pattern: "demographic_bias"
+        severity: "high"
+        ml_threshold: 0.75
+        description: "Biased representation of demographic groups"
+        
+      - pattern: "exclusionary_language"
+        severity: "medium"
+        ml_threshold: 0.7
+        description: "Language that excludes certain groups"
+
+  # Privacy and Consent
+  - id: "privacy_consent"
+    name: "Privacy and Consent"
+    priority: 1
+    ml_features:
+      - "pii_detection_score"
+      - "consent_verification_score"
+      - "data_sensitivity_score"
+    rules:
+      - pattern: "unauthorized_pii"
+        severity: "critical"
+        ml_threshold: 0.95
+        description: "Personal information without consent"
+        
+      - pattern: "sensitive_data_exposure"
+        severity: "high"
+        ml_threshold: 0.85
+        description: "Exposure of sensitive information"
+
+  # Transparency and Explainability
+  - id: "transparency"
+    name: "Transparency and Explainability"
+    priority: 2
+    ml_features:
+      - "explanation_clarity_score"
+      - "methodology_transparency_score"
+      - "assumption_disclosure_score"
+    rules:
+      - pattern: "opaque_reasoning"
+        severity: "medium"
+        ml_threshold: 0.7
+        description: "Reasoning process not clearly explained"
+        
+      - pattern: "hidden_assumptions"
+        severity: "medium"
+        ml_threshold: 0.75
+        description: "Key assumptions not disclosed"
+
+# Violation detection pipeline
+detection_pipeline:
+  stages:
+    - name: "preprocessing"
+      enabled: true
+      steps:
+        - "text_normalization"
+        - "entity_extraction"
+        - "context_enrichment"
+        
+    - name: "ml_detection"
+      enabled: true
+      parallel: true
+      steps:
+        - "violation_classification"
+        - "severity_assessment"
+        - "confidence_scoring"
+        
+    - name: "rule_validation"
+      enabled: true
+      steps:
+        - "pattern_matching"
+        - "threshold_validation" 
+        - "context_verification"
+        
+    - name: "post_processing"
+      enabled: true
+      steps:
+        - "result_aggregation"
+        - "confidence_calibration"
+        - "explanation_generation"
+
+# Feedback and learning system
+feedback_system:
+  enabled: true
+  
+  # Human feedback collection
+  human_feedback:
+    enabled: true
+    feedback_types: ["correct", "incorrect", "partial", "unclear"]
+    review_queue_priority: ["critical", "high", "uncertain"]
+    
+  # Automated feedback from outcomes
+  automated_feedback:
+    enabled: true
+    success_metrics:
+      - "debate_resolution_success"
+      - "recommendation_acceptance_rate" 
+      - "user_satisfaction_score"
+      
+  # Model retraining triggers
+  retraining_triggers:
+    - condition: "accuracy_drop"
+      threshold: 0.05
+      window: "7d"
+      
+    - condition: "new_violation_patterns"
+      min_samples: 20
+      confidence: 0.9
+      
+    - condition: "domain_drift"
+      kl_divergence_threshold: 0.1

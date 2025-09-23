@@ -2,7 +2,7 @@
 name = "expertise-mcp"
 version = "0.1.0"
 description = "MCP server for expert discipline evaluation"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 readme = "README.md"
 
