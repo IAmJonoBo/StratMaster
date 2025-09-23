@@ -1,0 +1,480 @@
+# Advanced Analytics Configuration for StratMaster
+# Custom metrics, dashboards, and business intelligence
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-config
+  namespace: stratmaster-analytics
+data:
+  # Grafana dashboard configurations
+  executive-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "StratMaster Executive Dashboard",
+        "tags": ["stratmaster", "executive", "kpi"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Strategy Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(stratmaster_strategy_success_total[5m]) * 100",
+                "legendFormat": "Success Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {"mode": "thresholds"},
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 70},
+                    {"color": "green", "value": 85}
+                  ]
+                },
+                "unit": "percent"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Constitutional Compliance Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "(1 - rate(stratmaster_constitutional_violations_total[5m])) * 100",
+                "legendFormat": "Compliance Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {"mode": "thresholds"},
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 95},
+                    {"color": "green", "value": 99}
+                  ]
+                },
+                "unit": "percent"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Strategy Generation Time",
+            "type": "graph", 
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(stratmaster_strategy_generation_duration_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(stratmaster_strategy_generation_duration_bucket[5m]))",
+                "legendFormat": "Median"
+              }
+            ],
+            "yAxes": [
+              {"label": "Duration (seconds)", "min": 0}
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "User Activity by Role",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum by (role) (rate(stratmaster_user_actions_total[1h]))",
+                "legendFormat": "{{role}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 5,
+            "title": "Revenue Impact Tracking",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(stratmaster_revenue_impact_total)",
+                "legendFormat": "Total Revenue Impact"
+              },
+              {
+                "expr": "rate(stratmaster_revenue_impact_total[24h]) * 86400",
+                "legendFormat": "Daily Revenue Impact"
+              }
+            ],
+            "yAxes": [
+              {"label": "Revenue ($)", "min": 0}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ],
+        "time": {"from": "now-24h", "to": "now"},
+        "refresh": "30s"
+      }
+    }
+
+  # Business Intelligence dashboard
+  bi-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "StratMaster Business Intelligence",
+        "tags": ["stratmaster", "bi", "analytics"],
+        "panels": [
+          {
+            "id": 1,
+            "title": "Strategy Performance by Category",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "sum by (category, outcome) (stratmaster_strategy_outcomes_total)",
+                "legendFormat": "{{category}} - {{outcome}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Research Quality Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "avg(stratmaster_research_quality_score)",
+                "legendFormat": "Average Quality Score"
+              },
+              {
+                "expr": "histogram_quantile(0.95, stratmaster_research_quality_score_bucket)",
+                "legendFormat": "95th Percentile"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 3,
+            "title": "Expert Agreement Rates",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(stratmaster_expert_agreements_total[1h]) / rate(stratmaster_expert_reviews_total[1h])",
+                "legendFormat": "Agreement Rate"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Model Performance Drift",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "stratmaster_model_accuracy",
+                "legendFormat": "{{model_name}} Accuracy"
+              },
+              {
+                "expr": "stratmaster_model_drift_score",
+                "legendFormat": "{{model_name}} Drift Score"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ]
+      }
+    }
+
+  # Real-time operations dashboard
+  operations-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "StratMaster Operations",
+        "tags": ["stratmaster", "operations", "monitoring"],
+        "panels": [
+          {
+            "id": 1,
+            "title": "System Health Score",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "stratmaster_system_health_score",
+                "legendFormat": "Health Score"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 70},
+                    {"color": "green", "value": 90}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Active Users",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "count(count by (user_id) (rate(stratmaster_user_actions_total[5m]) > 0))",
+                "legendFormat": "Active Users"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Request Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(stratmaster_http_requests_total[5m]))",
+                "legendFormat": "Requests/sec"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(stratmaster_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(stratmaster_http_requests_total[5m])) * 100",
+                "legendFormat": "Error Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {"mode": "thresholds"},
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+          }
+        ],
+        "refresh": "5s"
+      }
+    }
+
+  # Custom metrics collection configuration
+  metrics-config.yml: |
+    # Custom business metrics for StratMaster analytics
+    custom_metrics:
+      # Strategy metrics
+      - name: stratmaster_strategy_success_total
+        type: counter
+        description: "Total number of successful strategy implementations"
+        labels: ["tenant_id", "category", "user_id"]
+        
+      - name: stratmaster_strategy_generation_duration
+        type: histogram
+        description: "Time taken to generate strategies"
+        labels: ["tenant_id", "complexity"]
+        buckets: [1, 5, 10, 30, 60, 300, 600]
+        
+      - name: stratmaster_strategy_outcomes_total
+        type: counter
+        description: "Strategy outcomes by category"
+        labels: ["category", "outcome", "tenant_id"]
+      
+      # Constitutional compliance metrics
+      - name: stratmaster_constitutional_violations_total
+        type: counter
+        description: "Total constitutional violations detected"
+        labels: ["violation_type", "severity", "tenant_id"]
+        
+      - name: stratmaster_constitutional_compliance_score
+        type: gauge
+        description: "Current constitutional compliance score"
+        labels: ["tenant_id", "category"]
+      
+      # Research quality metrics
+      - name: stratmaster_research_quality_score
+        type: histogram
+        description: "Research quality assessment scores"
+        labels: ["tenant_id", "research_type"]
+        buckets: [0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 1.0]
+        
+      - name: stratmaster_source_credibility_score
+        type: gauge
+        description: "Source credibility scores"
+        labels: ["source_type", "domain"]
+      
+      # Expert system metrics  
+      - name: stratmaster_expert_reviews_total
+        type: counter
+        description: "Total expert reviews conducted"
+        labels: ["expert_type", "review_type", "tenant_id"]
+        
+      - name: stratmaster_expert_agreements_total
+        type: counter
+        description: "Expert agreements on recommendations"
+        labels: ["expert_type", "agreement_type", "tenant_id"]
+        
+      - name: stratmaster_expert_response_time
+        type: histogram
+        description: "Expert response time for reviews"
+        labels: ["expert_type"]
+        buckets: [300, 1800, 3600, 14400, 86400]
+      
+      # User engagement metrics
+      - name: stratmaster_user_actions_total
+        type: counter
+        description: "Total user actions in the system"
+        labels: ["user_id", "role", "action_type", "tenant_id"]
+        
+      - name: stratmaster_user_session_duration
+        type: histogram
+        description: "User session duration"
+        labels: ["role", "tenant_id"]
+        buckets: [60, 300, 900, 1800, 3600, 7200]
+        
+      - name: stratmaster_user_satisfaction_score
+        type: gauge
+        description: "User satisfaction ratings"
+        labels: ["tenant_id", "feature"]
+      
+      # Revenue and business impact metrics
+      - name: stratmaster_revenue_impact_total
+        type: counter
+        description: "Total revenue impact from strategies"
+        labels: ["tenant_id", "impact_type"]
+        
+      - name: stratmaster_cost_savings_total
+        type: counter
+        description: "Total cost savings achieved"
+        labels: ["tenant_id", "savings_type"]
+        
+      - name: stratmaster_roi_score
+        type: gauge
+        description: "Return on investment scores"
+        labels: ["tenant_id", "time_period"]
+      
+      # System health metrics
+      - name: stratmaster_system_health_score
+        type: gauge
+        description: "Overall system health score"
+        labels: ["component"]
+        
+      - name: stratmaster_model_accuracy
+        type: gauge
+        description: "ML model accuracy scores"
+        labels: ["model_name", "model_version"]
+        
+      - name: stratmaster_model_drift_score
+        type: gauge
+        description: "Model drift detection scores"
+        labels: ["model_name", "drift_type"]
+      
+      # Performance metrics
+      - name: stratmaster_http_requests_total
+        type: counter
+        description: "Total HTTP requests"
+        labels: ["method", "endpoint", "status", "tenant_id"]
+        
+      - name: stratmaster_http_request_duration
+        type: histogram
+        description: "HTTP request duration"
+        labels: ["method", "endpoint", "tenant_id"]
+        buckets: [0.01, 0.05, 0.1, 0.5, 1.0, 2.5, 5.0, 10.0]
+
+  # Alert rules for business metrics
+  alert-rules.yml: |
+    groups:
+      - name: stratmaster_business_alerts
+        rules:
+          - alert: StrategySuccessRateLow
+            expr: rate(stratmaster_strategy_success_total[1h]) < 0.7
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Strategy success rate is below 70%"
+              description: "The strategy success rate has been below 70% for 15 minutes"
+              
+          - alert: ConstitutionalViolationsHigh
+            expr: rate(stratmaster_constitutional_violations_total[1h]) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High rate of constitutional violations"
+              description: "Constitutional violations are occurring at a rate > 5% for 5 minutes"
+              
+          - alert: ExpertResponseTimeSlow
+            expr: histogram_quantile(0.95, rate(stratmaster_expert_response_time_bucket[1h])) > 3600
+            for: 30m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Expert response time is slow"
+              description: "95th percentile expert response time > 1 hour for 30 minutes"
+              
+          - alert: UserSatisfactionLow
+            expr: avg(stratmaster_user_satisfaction_score) < 3.5
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              summary: "User satisfaction is low"
+              description: "Average user satisfaction score < 3.5 for 1 hour"
+              
+          - alert: ModelDriftDetected
+            expr: stratmaster_model_drift_score > 0.3
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Model drift detected"
+              description: "Model drift score > 0.3 detected for {{ $labels.model_name }}"
+              
+          - alert: SystemHealthLow
+            expr: stratmaster_system_health_score < 80
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "System health score is low"
+              description: "System health score < 80 for 5 minutes"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: analytics-credentials
+  namespace: stratmaster-analytics
+type: Opaque
+stringData:
+  # Grafana admin credentials
+  grafana_admin_user: "admin"
+  grafana_admin_password: "change-me-in-production"
+  
+  # Database credentials for analytics
+  analytics_db_user: "analytics"
+  analytics_db_password: "change-me-in-production"
+  analytics_db_host: "postgresql.stratmaster-analytics.svc.cluster.local"
+  
+  # External analytics service credentials
+  mixpanel_token: ""
+  google_analytics_key: ""
+  amplitude_api_key: ""

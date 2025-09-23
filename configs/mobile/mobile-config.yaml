@@ -1,0 +1,418 @@
+# Mobile Application Configuration for StratMaster
+# Stakeholder approval workflows and mobile-optimized APIs
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mobile-app-config
+  namespace: stratmaster-mobile
+data:
+  # Mobile app configuration
+  app-config.json: |
+    {
+      "app": {
+        "name": "StratMaster",
+        "version": "1.0.0",
+        "bundle_id": "com.stratmaster.app",
+        "display_name": "StratMaster",
+        "description": "AI-powered brand strategy platform with stakeholder approvals",
+        "author": "StratMaster Team",
+        "homepage": "https://stratmaster.ai"
+      },
+      "api": {
+        "base_url": "https://api.stratmaster.ai",
+        "staging_url": "https://staging-api.stratmaster.ai",
+        "development_url": "http://localhost:8080",
+        "timeout": 30000,
+        "retry_attempts": 3,
+        "cache_duration": 300000
+      },
+      "authentication": {
+        "oauth_client_id": "stratmaster-mobile",
+        "oauth_scopes": ["openid", "profile", "email", "offline_access"],
+        "oauth_redirect_uri": "stratmaster://auth/callback",
+        "biometric_enabled": true,
+        "session_timeout": 3600000,
+        "refresh_threshold": 300000
+      },
+      "features": {
+        "approval_workflows": true,
+        "offline_mode": true,
+        "push_notifications": true,
+        "real_time_sync": true,
+        "document_preview": true,
+        "signature_capture": true,
+        "multi_tenant_support": true,
+        "dark_mode": true
+      },
+      "notifications": {
+        "firebase_config": {
+          "project_id": "stratmaster-mobile",
+          "sender_id": "123456789",
+          "storage_bucket": "stratmaster-mobile.appspot.com"
+        },
+        "categories": {
+          "approval_required": {
+            "priority": "high",
+            "sound": "default",
+            "vibration": true,
+            "badge": true
+          },
+          "strategy_update": {
+            "priority": "normal", 
+            "sound": "subtle",
+            "vibration": false,
+            "badge": true
+          },
+          "deadline_reminder": {
+            "priority": "high",
+            "sound": "urgent",
+            "vibration": true,
+            "badge": true
+          }
+        }
+      },
+      "ui": {
+        "theme": {
+          "primary_color": "#1E40AF",
+          "secondary_color": "#059669",
+          "accent_color": "#DC2626",
+          "background_color": "#F9FAFB",
+          "surface_color": "#FFFFFF",
+          "text_primary": "#111827",
+          "text_secondary": "#6B7280"
+        },
+        "typography": {
+          "font_family": "Inter",
+          "base_size": 16,
+          "scale_factor": 1.2
+        },
+        "layout": {
+          "max_width": 768,
+          "padding": 16,
+          "border_radius": 8
+        }
+      },
+      "offline": {
+        "cache_size": 50,
+        "sync_interval": 300000,
+        "conflict_resolution": "server_wins",
+        "cached_endpoints": [
+          "/api/approvals/pending",
+          "/api/strategies/recent", 
+          "/api/user/profile",
+          "/api/notifications/unread"
+        ]
+      }
+    }
+
+  # Approval workflow configuration
+  approval-workflows.json: |
+    {
+      "workflows": {
+        "strategy_approval": {
+          "name": "Strategy Approval",
+          "description": "Approval workflow for new strategies",
+          "stages": [
+            {
+              "id": "initial_review",
+              "name": "Initial Review",
+              "description": "Initial stakeholder review",
+              "required_roles": ["manager", "domain_expert"],
+              "minimum_approvals": 1,
+              "timeout_hours": 24,
+              "auto_escalate": true
+            },
+            {
+              "id": "constitutional_review",
+              "name": "Constitutional Review", 
+              "description": "Constitutional compliance review",
+              "required_roles": ["constitutional_expert"],
+              "minimum_approvals": 1,
+              "timeout_hours": 12,
+              "auto_escalate": true,
+              "blocking": true
+            },
+            {
+              "id": "executive_approval",
+              "name": "Executive Approval",
+              "description": "Final executive approval",
+              "required_roles": ["admin", "executive"],
+              "minimum_approvals": 1,
+              "timeout_hours": 48,
+              "auto_escalate": false
+            }
+          ],
+          "escalation_rules": [
+            {
+              "condition": "timeout",
+              "action": "notify_manager",
+              "delay_hours": 2
+            },
+            {
+              "condition": "rejection",
+              "action": "return_to_author",
+              "notify_roles": ["author"]
+            }
+          ]
+        },
+        "budget_approval": {
+          "name": "Budget Approval",
+          "description": "Approval workflow for budget allocations",
+          "stages": [
+            {
+              "id": "finance_review",
+              "name": "Finance Review",
+              "description": "Financial impact assessment",
+              "required_roles": ["finance_manager"],
+              "minimum_approvals": 1,
+              "timeout_hours": 8
+            },
+            {
+              "id": "executive_approval",
+              "name": "Executive Approval", 
+              "description": "Executive budget approval",
+              "required_roles": ["admin", "cfo"],
+              "minimum_approvals": 1,
+              "timeout_hours": 24,
+              "conditions": {
+                "amount_threshold": 10000
+              }
+            }
+          ]
+        },
+        "constitutional_amendment": {
+          "name": "Constitutional Amendment",
+          "description": "Approval workflow for constitutional rule changes",
+          "stages": [
+            {
+              "id": "expert_review",
+              "name": "Expert Review",
+              "description": "Constitutional expert review",
+              "required_roles": ["constitutional_expert"],
+              "minimum_approvals": 2,
+              "timeout_hours": 48,
+              "consensus_required": true
+            },
+            {
+              "id": "stakeholder_review",
+              "name": "Stakeholder Review",
+              "description": "Stakeholder impact review",
+              "required_roles": ["manager", "domain_expert"],
+              "minimum_approvals": 3,
+              "timeout_hours": 72
+            },
+            {
+              "id": "admin_approval",
+              "name": "Admin Approval",
+              "description": "Administrative approval for implementation",
+              "required_roles": ["admin"],
+              "minimum_approvals": 1,
+              "timeout_hours": 24,
+              "blocking": true
+            }
+          ]
+        }
+      },
+      "notification_templates": {
+        "approval_required": {
+          "title": "Approval Required",
+          "body": "{{workflow_name}} requires your approval",
+          "action_text": "Review Now",
+          "deep_link": "stratmaster://approval/{{approval_id}}"
+        },
+        "approval_approved": {
+          "title": "Approval Completed",
+          "body": "Your {{workflow_name}} has been approved",
+          "action_text": "View Details",
+          "deep_link": "stratmaster://strategy/{{strategy_id}}"
+        },
+        "approval_rejected": {
+          "title": "Approval Rejected",
+          "body": "Your {{workflow_name}} has been rejected: {{rejection_reason}}",
+          "action_text": "Revise",
+          "deep_link": "stratmaster://strategy/{{strategy_id}}/edit"
+        },
+        "deadline_reminder": {
+          "title": "Approval Deadline Approaching",
+          "body": "{{workflow_name}} approval due in {{hours_remaining}} hours",
+          "action_text": "Approve Now",
+          "deep_link": "stratmaster://approval/{{approval_id}}"
+        }
+      }
+    }
+
+  # Mobile API endpoints configuration
+  mobile-api-config.json: |
+    {
+      "endpoints": {
+        "authentication": {
+          "login": "POST /api/mobile/auth/login",
+          "refresh": "POST /api/mobile/auth/refresh", 
+          "logout": "POST /api/mobile/auth/logout",
+          "biometric_setup": "POST /api/mobile/auth/biometric"
+        },
+        "approvals": {
+          "pending": "GET /api/mobile/approvals/pending",
+          "detail": "GET /api/mobile/approvals/{id}",
+          "approve": "POST /api/mobile/approvals/{id}/approve",
+          "reject": "POST /api/mobile/approvals/{id}/reject",
+          "comment": "POST /api/mobile/approvals/{id}/comment",
+          "history": "GET /api/mobile/approvals/history"
+        },
+        "strategies": {
+          "recent": "GET /api/mobile/strategies/recent",
+          "detail": "GET /api/mobile/strategies/{id}",
+          "summary": "GET /api/mobile/strategies/{id}/summary",
+          "attachments": "GET /api/mobile/strategies/{id}/attachments"
+        },
+        "notifications": {
+          "list": "GET /api/mobile/notifications",
+          "mark_read": "PUT /api/mobile/notifications/{id}/read",
+          "preferences": "GET /api/mobile/notifications/preferences",
+          "update_preferences": "PUT /api/mobile/notifications/preferences",
+          "register_device": "POST /api/mobile/notifications/device"
+        },
+        "user": {
+          "profile": "GET /api/mobile/user/profile",
+          "update_profile": "PUT /api/mobile/user/profile",
+          "preferences": "GET /api/mobile/user/preferences",
+          "update_preferences": "PUT /api/mobile/user/preferences"
+        },
+        "sync": {
+          "status": "GET /api/mobile/sync/status",
+          "full_sync": "POST /api/mobile/sync/full",
+          "incremental": "POST /api/mobile/sync/incremental"
+        }
+      },
+      "response_formats": {
+        "approval_item": {
+          "id": "string",
+          "workflow_name": "string",
+          "title": "string",
+          "description": "string",
+          "status": "string",
+          "priority": "string",
+          "created_at": "string",
+          "due_date": "string",
+          "author": {
+            "id": "string",
+            "name": "string",
+            "avatar_url": "string"
+          },
+          "current_stage": {
+            "id": "string", 
+            "name": "string",
+            "description": "string"
+          },
+          "approvers_required": "number",
+          "approvers_completed": "number",
+          "attachments_count": "number",
+          "comments_count": "number"
+        },
+        "strategy_summary": {
+          "id": "string",
+          "title": "string",
+          "category": "string",
+          "status": "string",
+          "confidence_score": "number",
+          "constitutional_compliance": "number", 
+          "created_at": "string",
+          "updated_at": "string",
+          "author": {
+            "id": "string",
+            "name": "string"
+          },
+          "key_insights": ["string"],
+          "next_actions": ["string"]
+        }
+      },
+      "error_codes": {
+        "AUTH_REQUIRED": 401,
+        "INSUFFICIENT_PERMISSIONS": 403,
+        "APPROVAL_NOT_FOUND": 404,
+        "APPROVAL_ALREADY_PROCESSED": 409,
+        "INVALID_WORKFLOW_STATE": 422,
+        "RATE_LIMIT_EXCEEDED": 429,
+        "SERVER_ERROR": 500
+      }
+    }
+
+  # Push notification configuration
+  notification-config.json: |
+    {
+      "firebase": {
+        "project_id": "stratmaster-mobile",
+        "private_key_id": "${FIREBASE_PRIVATE_KEY_ID}",
+        "client_email": "firebase-adminsdk@stratmaster-mobile.iam.gserviceaccount.com",
+        "client_id": "${FIREBASE_CLIENT_ID}",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token"
+      },
+      "apns": {
+        "key_id": "${APNS_KEY_ID}",
+        "team_id": "${APNS_TEAM_ID}",
+        "bundle_id": "com.stratmaster.app",
+        "environment": "production"
+      },
+      "templates": {
+        "approval_required": {
+          "title": "{{workflow_name}} - Approval Required",
+          "body": "{{title}} requires your approval",
+          "data": {
+            "approval_id": "{{approval_id}}",
+            "workflow_id": "{{workflow_id}}",
+            "deep_link": "stratmaster://approval/{{approval_id}}"
+          },
+          "android": {
+            "priority": "high",
+            "notification": {
+              "channel_id": "approvals",
+              "color": "#1E40AF",
+              "icon": "ic_approval"
+            }
+          },
+          "apns": {
+            "headers": {
+              "apns-priority": "10"
+            },
+            "payload": {
+              "aps": {
+                "alert": {
+                  "title": "{{workflow_name}} - Approval Required",
+                  "body": "{{title}} requires your approval"
+                },
+                "sound": "default",
+                "badge": 1,
+                "category": "APPROVAL_REQUIRED"
+              }
+            }
+          }
+        }
+      }
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mobile-app-secrets
+  namespace: stratmaster-mobile
+type: Opaque
+stringData:
+  # Firebase configuration
+  FIREBASE_PRIVATE_KEY: ""
+  FIREBASE_PRIVATE_KEY_ID: ""
+  FIREBASE_CLIENT_ID: ""
+  FIREBASE_CLIENT_X509_CERT_URL: ""
+  
+  # Apple Push Notifications
+  APNS_KEY_ID: ""
+  APNS_TEAM_ID: ""
+  APNS_PRIVATE_KEY: ""
+  
+  # OAuth credentials
+  OAUTH_CLIENT_SECRET: "mobile-client-secret-change-in-production"
+  
+  # Signing keys for mobile JWT tokens
+  MOBILE_JWT_SECRET: "mobile-jwt-secret-change-in-production"
