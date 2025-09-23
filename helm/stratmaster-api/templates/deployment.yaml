@@ -1,29 +1,151 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: stratmaster-api
+  name: {{ include "stratmaster-api.fullname" . }}
+  labels:
+    {{- include "stratmaster-api.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
 spec:
-  replicas: 1
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount.api | default 1 }}
+  {{- end }}
   selector:
     matchLabels:
-      app: stratmaster-api
+      {{- include "stratmaster-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
-        app: stratmaster-api
+        {{- include "stratmaster-api.selectorLabels" . | nindent 8 }}
+        version: {{ .Values.image.tag | quote }}
     spec:
-      automountServiceAccountToken: false
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "stratmaster-api.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.security.serviceAccount.automountServiceAccountToken | default false }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: api
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry | default "ghcr.io/iamjonobo" }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 8080
-          args: ["uvicorn", "stratmaster_api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: {{ .Values.global.environment | quote }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "stratmaster-api.fullname" . }}-db
+                  key: url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "stratmaster-api.fullname" . }}-redis
+                  key: url
+            {{- if .Values.monitoring.enabled }}
+            - name: PROMETHEUS_ENABLED
+              value: "true"
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "stratmaster-api.fullname" . }}-config
+          args: 
+            - "uvicorn"
+            - "stratmaster_api.app:create_app"
+            - "--factory"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8080"
+            {{- if eq .Values.global.environment "development" }}
+            - "--reload"
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
           resources:
+            {{- if .Values.resources.api }}
+            {{- toYaml .Values.resources.api | nindent 12 }}
+            {{- else }}
             requests:
               cpu: 100m
               memory: 128Mi
               ephemeral-storage: 256Mi
             limits:
-              memory: 256Mi
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 1Gi
+            {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            {{- if .Values.security.tls.enabled }}
+            - name: tls-certs
+              mountPath: /app/certs
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ include "stratmaster-api.fullname" . }}-config
+        {{- if .Values.security.tls.enabled }}
+        - name: tls-certs
+          secret:
+            secretName: {{ include "stratmaster-api.fullname" . }}-tls
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

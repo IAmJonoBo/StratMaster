@@ -1,11 +1,168 @@
 ---
 image:
+  registry: ghcr.io/iamjonobo
   repository: stratmaster-api
   tag: "0.1.1"
   pullPolicy: IfNotPresent
+  pullSecrets: []
 
+# Global configuration
+global:
+  environment: development
+  domain: localhost
+  monitoring:
+    enabled: false
+    prometheus: false
+    grafana: false
+  security:
+    podSecurityStandards: false
+    networkPolicies: false
+
+# Replica configuration
+replicaCount:
+  api: 1
+  researchMcp: 1
+  knowledgeMcp: 1
+  routerMcp: 1
+  evalsMcp: 1
+  compressionMcp: 1
+
+# Service configuration
 service:
   type: ClusterIP
   port: 80
+  targetPort: 8080
 
-resources: {}
+# Resource configuration
+resources:
+  api:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      ephemeral-storage: 1Gi
+
+# Auto-scaling configuration
+autoscaling:
+  enabled: false
+  api:
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+# Security configuration
+security:
+  tls:
+    enabled: false
+    certificateManager: false
+    issuer: ""
+  networkPolicies:
+    enabled: false
+  podSecurityPolicy:
+    enabled: false
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
+    name: ""
+
+# Service account
+serviceAccount:
+  create: true
+  automountServiceAccountToken: false
+  name: ""
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+# Environment-specific configuration
+environment:
+  name: development
+  domain: localhost
+  database:
+    ssl: false
+  monitoring:
+    level: info
+  cache:
+    ttl: 3600
+    maxSize: 1000
+
+# Monitoring configuration
+monitoring:
+  enabled: false
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+
+# Constitutional AI configuration
+constitutional:
+  ml:
+    enabled: true
+  rules:
+    path: "/app/config/constitutional"
+
+# Telemetry configuration  
+telemetry:
+  enabled: true
+  langfuse:
+    enabled: false
+    publicKey: ""
+    host: ""
+
+# Rate limiting configuration
+rateLimiting:
+  requests: 1000
+  window: 3600
+
+# CORS configuration
+cors:
+  origins: "*"
+  methods: "GET,POST,PUT,DELETE,OPTIONS"
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Database configuration (for dependencies)
+postgresql:
+  enabled: false
+
+# Vector database configuration
+qdrant:
+  enabled: false
+
+# Redis configuration
+redis:
+  enabled: false

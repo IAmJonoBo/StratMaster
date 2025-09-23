@@ -1,0 +1,136 @@
+# Staging values for StratMaster Helm charts  
+# This file provides a production-like environment for testing
+
+global:
+  environment: staging
+  monitoring:
+    enabled: true
+    prometheus: true
+    grafana: true
+  security:
+    podSecurityStandards: true
+    networkPolicies: false  # Disabled for easier testing
+
+# Reduced but realistic configuration
+replicaCount:
+  api: 2
+  researchMcp: 1
+  knowledgeMcp: 1
+  routerMcp: 1
+  evalsMcp: 1
+  compressionMcp: 1
+
+# Staging resource allocation
+resources:
+  api:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+      ephemeral-storage: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+      ephemeral-storage: "1Gi"
+  
+  mcpServices:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+      ephemeral-storage: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+      ephemeral-storage: "512Mi"
+
+  postgres:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+# Database configuration
+postgresql:
+  enabled: true
+  architecture: standalone
+  auth:
+    existingSecret: postgres-credentials
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+      storageClass: standard
+
+# Vector database
+qdrant:
+  enabled: true
+  cluster:
+    enabled: false
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: standard
+
+# Security (relaxed for staging)
+security:
+  tls:
+    enabled: true
+    certificateManager: true
+    issuer: letsencrypt-staging
+  networkPolicies:
+    enabled: false
+  podSecurityPolicy:
+    enabled: false
+
+# Auto-scaling (limited)
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 80
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  hosts:
+    - host: staging-api.stratmaster.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          service: stratmaster-api
+  tls:
+    - secretName: stratmaster-staging-tls
+      hosts:
+        - staging-api.stratmaster.ai
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    retention: 7d
+  grafana:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 5Gi
+
+# Environment configuration
+environment:
+  name: staging
+  domain: staging.stratmaster.ai
+  database:
+    ssl: false
+  monitoring:
+    level: debug
+
+# Image configuration
+image:
+  registry: ghcr.io/iamjonobo
+  pullPolicy: Always  # Always pull latest in staging
+  tag: staging

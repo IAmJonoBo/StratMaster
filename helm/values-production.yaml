@@ -1,0 +1,292 @@
+# Production values for StratMaster Helm charts
+# This file overrides default values for production deployment
+
+global:
+  environment: production
+  monitoring:
+    enabled: true
+    prometheus: true
+    grafana: true
+  security:
+    podSecurityStandards: true
+    networkPolicies: true
+  
+# High availability configuration
+replicaCount:
+  api: 3
+  researchMcp: 2
+  knowledgeMcp: 2
+  routerMcp: 2
+  evalsMcp: 2
+  compressionMcp: 2
+
+# Production resource allocation
+resources:
+  api:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+      ephemeral-storage: "1Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+      ephemeral-storage: "2Gi"
+  
+  mcpServices:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+      ephemeral-storage: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+      ephemeral-storage: "1Gi"
+
+  postgres:
+    requests:
+      cpu: "4"
+      memory: "8Gi"
+      ephemeral-storage: "2Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+      ephemeral-storage: "4Gi"
+
+# Database configuration with clustering
+postgresql:
+  enabled: true
+  architecture: replication
+  auth:
+    existingSecret: postgres-credentials
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: fast-ssd
+    resources:
+      requests:
+        cpu: "4"
+        memory: "8Gi"
+      limits:
+        cpu: "8"
+        memory: "16Gi"
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: fast-ssd
+
+# Vector database clustering
+qdrant:
+  enabled: true
+  cluster:
+    enabled: true
+    replicas: 3
+  persistence:
+    enabled: true
+    size: 200Gi
+    storageClass: fast-ssd
+  resources:
+    requests:
+      cpu: "2"
+      memory: "8Gi"
+    limits:
+      cpu: "4"
+      memory: "16Gi"
+
+# Search engine clustering
+opensearch:
+  enabled: true
+  cluster:
+    enabled: true
+    replicas: 3
+  persistence:
+    enabled: true
+    size: 200Gi
+    storageClass: fast-ssd
+  resources:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+# Graph database clustering
+nebulaGraph:
+  enabled: true
+  metad:
+    replicas: 3
+  storaged:
+    replicas: 3
+  graphd:
+    replicas: 2
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: fast-ssd
+
+# Production security
+security:
+  tls:
+    enabled: true
+    certificateManager: true
+    issuer: letsencrypt-prod
+  networkPolicies:
+    enabled: true
+    denyAll: true
+    allowedNamespaces: ["kube-system", "monitoring", "ingress"]
+  podSecurityPolicy:
+    enabled: true
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
+  rbac:
+    create: true
+
+# Auto-scaling
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  mcpServices:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 75
+
+# Load balancing and ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+  hosts:
+    - host: api.stratmaster.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          service: stratmaster-api
+    - host: research.stratmaster.ai
+      paths:
+        - path: /
+          pathType: Prefix
+          service: research-mcp
+  tls:
+    - secretName: stratmaster-tls
+      hosts:
+        - api.stratmaster.ai
+        - research.stratmaster.ai
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    retention: 30d
+    resources:
+      requests:
+        cpu: "1"
+        memory: "4Gi"
+      limits:
+        cpu: "2"
+        memory: "8Gi"
+  grafana:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+  alertmanager:
+    enabled: true
+    config:
+      slack:
+        api_url: "${SLACK_API_URL}"
+        channel: "#stratmaster-alerts"
+      pagerduty:
+        routing_key: "${PAGERDUTY_ROUTING_KEY}"
+
+# Logging
+logging:
+  enabled: true
+  elasticsearch:
+    enabled: true
+    replicas: 3
+  logstash:
+    enabled: true
+    replicas: 2
+  filebeat:
+    enabled: true
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # Keep 30 days of backups
+  s3:
+    bucket: stratmaster-backups-prod
+    region: us-east-1
+    endpoint: s3.amazonaws.com
+
+# Disaster recovery
+disasterRecovery:
+  enabled: true
+  crossRegionReplication: true
+  rto: 15  # minutes
+  rpo: 5   # minutes
+
+# Image configuration
+image:
+  registry: ghcr.io/iamjonobo
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: ghcr-secret
+
+# Environment-specific configurations
+environment:
+  name: production
+  domain: stratmaster.ai
+  database:
+    ssl: true
+    sslMode: require
+  redis:
+    cluster: true
+    ssl: true
+  monitoring:
+    level: info
+  cache:
+    ttl: 3600
+    maxSize: 10000
+
+# Compliance and governance
+compliance:
+  gdpr: true
+  soc2: true
+  iso27001: true
+  dataRetention: 2555  # days (7 years)
+  auditLogging: true
+
+# Performance tuning
+performance:
+  jvm:
+    heapSize: "4G"
+  database:
+    connectionPool: 50
+    maxConnections: 200
+  cache:
+    redis:
+      maxMemory: "2GB"
+      evictionPolicy: "allkeys-lru"
