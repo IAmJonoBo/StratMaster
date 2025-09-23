@@ -9,17 +9,17 @@ description = "StratMaster FastAPI service"
 requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
-  "fastapi>=0.117.5",
-  "uvicorn[standard]>=0.36.2",
-  "pydantic>=2.11.12",
-  "httpx>=0.28.5",
+  "fastapi>=0.117.1",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic>=2.5.0",
+  "httpx>=0.25.0",
   "PyYAML>=6.0.2",
-  "langgraph>=0.6.11",
-  "redis>=5.2.5",
-  "prometheus-client>=0.21.8",
-  "opentelemetry-api>=1.29.1",
-  "opentelemetry-sdk>=1.29.1",
-  "opentelemetry-exporter-prometheus>=1.12.0rc1",
+  "langgraph>=0.2.0",
+  "redis>=5.0.0",
+  "prometheus-client>=0.20.0",
+  "opentelemetry-api>=1.27.0",
+  "opentelemetry-sdk>=1.27.0",
+  "opentelemetry-exporter-prometheus>=1.12.0",
 ]
 
 [tool.ruff]
