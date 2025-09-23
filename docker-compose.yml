@@ -102,6 +102,21 @@ services:
           action: sync
           target: /app
 
+  expertise-mcp:
+    build: ./packages/mcp-servers/expertise-mcp
+    ports:
+      - "8086:8080"  # Use port 8086 externally to avoid conflicts
+    environment:
+      PYTHONUNBUFFERED: "1"
+      EXPERTISE_MCP_LOG_LEVEL: "info"
+    volumes:
+      - ./configs:/app/configs:ro  # Mount configs directory for doctrines
+    develop:
+      watch:
+        - path: ./packages/mcp-servers/expertise-mcp
+          action: sync
+          target: /app
+
   postgres:
     image: postgres:17
     environment:

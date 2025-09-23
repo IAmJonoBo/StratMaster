@@ -1,0 +1,36 @@
+[project]
+name = "expertise-mcp"
+version = "0.1.0"
+description = "MCP server for expert discipline evaluation"
+requires-python = ">=3.13"
+authors = [{ name = "StratMaster" }]
+readme = "README.md"
+
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2.6",
+    "pyyaml>=6",
+    "orjson>=3",
+    "fastjsonschema>=2",
+    "opentelemetry-sdk>=1.26.0",
+    "opentelemetry-exporter-otlp>=1.26.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.28"]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pyright]
+typeCheckingMode = "basic"
+
+[tool.ruff]
+line-length = 100

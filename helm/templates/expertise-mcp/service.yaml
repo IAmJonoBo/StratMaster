@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "stratmaster-api.fullname" . }}-expertise-mcp
+  labels:
+    {{- include "stratmaster-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: expertise-mcp
+spec:
+  type: {{ .Values.expertiseMcp.service.type }}
+  ports:
+    - port: {{ .Values.expertiseMcp.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "stratmaster-api.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: expertise-mcp
