@@ -10,12 +10,12 @@ This document inventories the current StratMaster monorepo and highlights the fr
 
 **Gaps**
 - No unified ingestion pipeline that handles OCR-heavy formats (scanned PDFs, images) with quality scoring.
-- Provenance pack (hash, parser, licence, crawl metadata) is not persisted uniformly.
+- Provenance pack (hash, parser, license, crawl metadata) is not persisted uniformly.
 - Clarification workflow for low-confidence parses is absent.
 
 **OSS-First Remediation**
 - Introduce a modular ingestion orchestrator that calls Unstructured, Apache Tika, pdfplumber, docTR/Tesseract, Camelot/tabula-py, and Polars.
-- Attach provenance + hygiene policies (hashing, licence, redaction) before storage using DuckDB/Polars transformations.
+- Attach provenance + hygiene policies (hashing, license, redaction) before storage using DuckDB/Polars transformations.
 - Add a “Confidence & Clarify” service that generates follow-up questions when confidence < 0.7, exposed via `POST /ingestion/clarify`.
 
 **Acceptance Criteria**
