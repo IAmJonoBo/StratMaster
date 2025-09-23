@@ -242,7 +242,7 @@ Two provenance blocks for key choices
 
 Design system (Shoelace + Open Props)
 	•	Data: CDN-first web components library; tokens via CDN; examples and docs show framework-agnostic use.  ￼
-	•	Methods: Compared CDN-friendly OSS systems for 2025: footprint, theming ease, accessibility, framework-agnosticism.
+	•	Methods: Compared CDN-friendly OSS systems for 2025: footprint, theming ease, accessibility, framework agnosticism.
 	•	Key results: Fast theming, minimal JS, works in Next.js and static fallbacks; reduces custom UI work.
 	•	Uncertainty: Team familiarity; component gaps vs React-only stacks.
 	•	Safer alternative: Keep existing Next.js UI + shadcn/radix; add Open Props for tokens only (no runtime web components).
