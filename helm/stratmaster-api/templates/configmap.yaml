@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "stratmaster-api.fullname" . }}-config
+  labels:
+    {{- include "stratmaster-api.labels" . | nindent 4 }}
+data:
+  # Application configuration
+  LOG_LEVEL: {{ .Values.environment.monitoring.level | default "info" | quote }}
+  ENVIRONMENT: {{ .Values.global.environment | quote }}
+  
+  # Database configuration
+  DB_SSL_ENABLED: {{ .Values.environment.database.ssl | default false | quote }}
+  {{- if .Values.environment.database.sslMode }}
+  DB_SSL_MODE: {{ .Values.environment.database.sslMode | quote }}
+  {{- end }}
+  
+  # Cache configuration
+  CACHE_TTL: {{ .Values.environment.cache.ttl | default 3600 | quote }}
+  CACHE_MAX_SIZE: {{ .Values.environment.cache.maxSize | default 1000 | quote }}
+  
+  # Monitoring configuration
+  {{- if .Values.monitoring.enabled }}
+  PROMETHEUS_ENABLED: "true"
+  METRICS_PORT: "9090"
+  {{- else }}
+  PROMETHEUS_ENABLED: "false"
+  {{- end }}
+  
+  # Constitutional AI configuration
+  CONSTITUTIONAL_RULES_PATH: "/app/config/constitutional"
+  CONSTITUTIONAL_ML_ENABLED: {{ .Values.constitutional.ml.enabled | default true | quote }}
+  
+  # Telemetry configuration
+  TELEMETRY_ENABLED: {{ .Values.telemetry.enabled | default true | quote }}
+  {{- if .Values.telemetry.langfuse.enabled }}
+  LANGFUSE_PUBLIC_KEY: {{ .Values.telemetry.langfuse.publicKey | quote }}
+  LANGFUSE_HOST: {{ .Values.telemetry.langfuse.host | quote }}
+  {{- end }}
+  
+  # Security configuration
+  {{- if .Values.security.tls.enabled }}
+  TLS_ENABLED: "true"
+  TLS_CERT_PATH: "/app/certs/tls.crt"
+  TLS_KEY_PATH: "/app/certs/tls.key"
+  {{- else }}
+  TLS_ENABLED: "false"
+  {{- end }}
+  
+  # Rate limiting
+  RATE_LIMIT_REQUESTS: {{ .Values.rateLimiting.requests | default 1000 | quote }}
+  RATE_LIMIT_WINDOW: {{ .Values.rateLimiting.window | default 3600 | quote }}
+  
+  # CORS configuration
+  CORS_ORIGINS: {{ .Values.cors.origins | default "*" | quote }}
+  CORS_METHODS: {{ .Values.cors.methods | default "GET,POST,PUT,DELETE,OPTIONS" | quote }}
+  
+  # Constitutional rules (embedded as YAML)
+  constitutional_rules.yaml: |
+    title: "Production Constitutional Rules"
+    id: "constitutions/production"
+    version: "1.0.0"
+    principles:
+      - id: sourcing
+        rule: |
+          Always cite at least two sources with URLs or knowledge base IDs.
+          Verify source credibility and recency.
+      - id: safety
+        rule: |
+          Refuse instructions that violate legal, ethical, or security policy.
+          Report potential security threats.
+      - id: accuracy
+        rule: |
+          Fact-check all claims against multiple authoritative sources.
+          Flag uncertain or contested information.
+      - id: transparency
+        rule: |
+          Clearly indicate AI-generated content and confidence levels.
+          Provide reasoning chain for complex decisions.
+    review:
+      - metric: "Provenance completeness"
+        guidance: "Ensure every claim is tied to a verified source"
+      - metric: "Safety compliance"
+        guidance: "Verify no harmful or dangerous content"
+      - metric: "Accuracy verification"
+        guidance: "Cross-reference facts with authoritative sources"

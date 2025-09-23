@@ -1,0 +1,225 @@
+# Enterprise SSO Integration Configuration for StratMaster
+# Enhanced Keycloak configuration with SAML/OIDC provider support
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-enterprise-sso-config
+  namespace: stratmaster-sso
+data:
+  # Realm configuration with enterprise features
+  stratmaster-enterprise-realm.json: |
+    {
+      "realm": "stratmaster-enterprise",
+      "enabled": true,
+      "displayName": "StratMaster Enterprise",
+      "displayNameHtml": "<strong>StratMaster</strong> Enterprise Platform",
+      "loginTheme": "stratmaster",
+      "accountTheme": "stratmaster", 
+      "adminTheme": "keycloak",
+      "emailTheme": "stratmaster",
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "registrationEmailAsUsername": true,
+      "rememberMe": true,
+      "verifyEmail": true,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": true,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": true,
+      "permanentLockout": false,
+      "maxFailureWaitSeconds": 900,
+      "minimumQuickLoginWaitSeconds": 60,
+      "waitIncrementSeconds": 60,
+      "quickLoginCheckMilliSeconds": 1000,
+      "maxDeltaTimeSeconds": 43200,
+      "failureFactor": 30,
+      "defaultRoles": ["user"],
+      
+      "roles": {
+        "realm": [
+          {
+            "name": "admin",
+            "description": "Full administrative access",
+            "composite": false
+          },
+          {
+            "name": "manager", 
+            "description": "Team and project management access",
+            "composite": false
+          },
+          {
+            "name": "analyst",
+            "description": "Research and analysis access", 
+            "composite": false
+          },
+          {
+            "name": "viewer",
+            "description": "Read-only access to strategies and reports",
+            "composite": false
+          },
+          {
+            "name": "constitutional_expert",
+            "description": "Constitutional review and approval access",
+            "composite": false
+          },
+          {
+            "name": "domain_expert",
+            "description": "Domain-specific expertise and review access",
+            "composite": false
+          }
+        ]
+      },
+      
+      "groups": [
+        {
+          "name": "Administrators",
+          "path": "/Administrators",
+          "realmRoles": ["admin"]
+        },
+        {
+          "name": "Strategy Managers",
+          "path": "/Strategy Managers", 
+          "realmRoles": ["manager"]
+        },
+        {
+          "name": "Research Analysts",
+          "path": "/Research Analysts",
+          "realmRoles": ["analyst"]
+        },
+        {
+          "name": "Constitutional Experts",
+          "path": "/Constitutional Experts",
+          "realmRoles": ["constitutional_expert"]
+        },
+        {
+          "name": "Domain Experts",
+          "path": "/Domain Experts",
+          "realmRoles": ["domain_expert"] 
+        },
+        {
+          "name": "Stakeholders",
+          "path": "/Stakeholders",
+          "realmRoles": ["viewer"]
+        }
+      ],
+      
+      "clients": [
+        {
+          "clientId": "stratmaster-api",
+          "name": "StratMaster API",
+          "description": "Main API client for StratMaster platform",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "stratmaster-api-secret-change-in-production",
+          "redirectUris": [
+            "https://api.stratmaster.ai/auth/callback",
+            "https://staging-api.stratmaster.ai/auth/callback",
+            "http://localhost:8080/auth/callback"
+          ],
+          "webOrigins": [
+            "https://stratmaster.ai",
+            "https://app.stratmaster.ai", 
+            "https://staging.stratmaster.ai",
+            "http://localhost:3000"
+          ],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "directAccessGrantsEnabled": true,
+          "serviceAccountsEnabled": true,
+          "authorizationServicesEnabled": true,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "fullScopeAllowed": false,
+          "protocolMappers": [
+            {
+              "name": "roles",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-realm-role-mapper",
+              "consentRequired": false,
+              "config": {
+                "claim.name": "roles",
+                "jsonType.label": "String",
+                "multivalued": "true",
+                "userinfo.token.claim": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "true"
+              }
+            },
+            {
+              "name": "groups",
+              "protocol": "openid-connect", 
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "claim.name": "groups",
+                "full.path": "false",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            },
+            {
+              "name": "tenant",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-attribute-mapper", 
+              "consentRequired": false,
+              "config": {
+                "claim.name": "tenant_id",
+                "user.attribute": "tenant_id",
+                "jsonType.label": "String",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        },
+        {
+          "clientId": "stratmaster-mobile",
+          "name": "StratMaster Mobile App",
+          "description": "Mobile application client",
+          "enabled": true,
+          "publicClient": true,
+          "directAccessGrantsEnabled": false,
+          "standardFlowEnabled": true,
+          "protocol": "openid-connect",
+          "redirectUris": [
+            "stratmaster://auth/callback",
+            "com.stratmaster.app://auth/callback"
+          ]
+        }
+      ]
+    }
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sso-provider-credentials
+  namespace: stratmaster-sso
+type: Opaque
+stringData:
+  # Azure AD SAML/OIDC
+  AZURE_TENANT_ID: ""
+  AZURE_SAML_CERT: ""
+  AZURE_OIDC_CLIENT_ID: ""
+  AZURE_OIDC_CLIENT_SECRET: ""
+  
+  # Google Workspace OIDC
+  GOOGLE_OIDC_CLIENT_ID: ""
+  GOOGLE_OIDC_CLIENT_SECRET: ""
+  GOOGLE_WORKSPACE_DOMAIN: ""
+  
+  # Okta SAML/OIDC
+  OKTA_DOMAIN: ""
+  OKTA_SAML_CERT: ""
+  OKTA_SAML_SSO_URL: ""
+  OKTA_SAML_SLO_URL: ""
+  OKTA_OIDC_CLIENT_ID: ""
+  OKTA_OIDC_CLIENT_SECRET: ""
+  
+  # Keycloak master admin credentials
+  KEYCLOAK_ADMIN: "admin"
+  KEYCLOAK_ADMIN_PASSWORD: "change-me-in-production"

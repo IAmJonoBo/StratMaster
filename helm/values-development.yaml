@@ -1,0 +1,95 @@
+# Development values for StratMaster Helm charts
+# Minimal configuration for local development
+
+global:
+  environment: development
+  monitoring:
+    enabled: true
+    prometheus: false  # Disabled by default for resource constraints
+    grafana: false
+
+# Single replica for development
+replicaCount:
+  api: 1
+  researchMcp: 1
+  knowledgeMcp: 1
+  routerMcp: 1
+  evalsMcp: 1
+  compressionMcp: 1
+
+# Development resource allocation (minimal)
+resources:
+  api:
+    requests:
+      cpu: "100m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m" 
+      memory: "1Gi"
+
+  mcpServices:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "200m"
+      memory: "512Mi"
+
+# Database configuration (lightweight)
+postgresql:
+  enabled: true
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: false  # Use emptyDir for development
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+
+# Vector database (lightweight)
+qdrant:
+  enabled: true
+  cluster:
+    enabled: false
+  persistence:
+    enabled: false
+
+# Security (minimal for development)
+security:
+  tls:
+    enabled: false
+  networkPolicies:
+    enabled: false
+  podSecurityPolicy:
+    enabled: false
+
+# No auto-scaling in development
+autoscaling:
+  enabled: false
+
+# Simple ingress or none
+ingress:
+  enabled: false
+
+# Minimal monitoring
+monitoring:
+  enabled: false
+
+# Environment configuration
+environment:
+  name: development
+  domain: localhost
+  database:
+    ssl: false
+  monitoring:
+    level: debug
+
+# Image configuration
+image:
+  registry: localhost:5000  # Local registry
+  pullPolicy: IfNotPresent
+  tag: dev

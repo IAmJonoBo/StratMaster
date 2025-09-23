@@ -1,0 +1,308 @@
+# Advanced ML Model Training Pipeline for Constitutional Compliance
+# This configuration defines the infrastructure for training, validating, and deploying
+# ML models for constitutional compliance detection and enforcement.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-training-config
+  namespace: stratmaster-ml
+data:
+  # MLflow Configuration
+  mlflow.yml: |
+    mlflow:
+      tracking_uri: http://mlflow-server:5000
+      experiment_name: constitutional-compliance
+      artifact_store: s3://stratmaster-ml-artifacts
+      model_registry_uri: http://mlflow-server:5000
+    
+    # Model Training Configuration
+    training:
+      base_model: "bert-base-uncased"
+      max_epochs: 50
+      batch_size: 16
+      learning_rate: 2e-5
+      warmup_steps: 1000
+      weight_decay: 0.01
+      gradient_accumulation_steps: 4
+      
+      # Early stopping configuration
+      early_stopping:
+        patience: 5
+        min_delta: 0.001
+        monitor: val_f1_score
+        mode: max
+      
+      # Data configuration
+      data:
+        train_split: 0.8
+        val_split: 0.1
+        test_split: 0.1
+        max_sequence_length: 512
+        stride: 128
+      
+      # Constitutional categories
+      categories:
+        - safety_violations
+        - factual_inaccuracy  
+        - source_credibility
+        - bias_detection
+        - harmful_content
+        - privacy_violations
+        - legal_compliance
+        
+    # Model Evaluation Configuration
+    evaluation:
+      metrics:
+        - accuracy
+        - precision
+        - recall
+        - f1_score
+        - auc_roc
+        - confusion_matrix
+      
+      thresholds:
+        safety_violations: 0.9
+        factual_inaccuracy: 0.8
+        source_credibility: 0.85
+        bias_detection: 0.7
+        harmful_content: 0.95
+        privacy_violations: 0.9
+        legal_compliance: 0.85
+      
+    # Model Deployment Configuration
+    deployment:
+      model_server: "triton"
+      gpu_enabled: true
+      max_batch_size: 32
+      model_version_policy: "latest"
+      
+      # A/B testing configuration
+      ab_testing:
+        enabled: true
+        traffic_split: 0.1  # 10% to new model
+        success_criteria:
+          min_accuracy: 0.85
+          min_f1_score: 0.8
+          max_latency_ms: 500
+      
+    # Retraining Configuration
+    retraining:
+      enabled: true
+      schedule: "0 2 * * 0"  # Weekly at 2 AM Sunday
+      triggers:
+        - performance_degradation: 0.05  # 5% drop in F1 score
+        - data_drift: 0.1  # 10% drift in input distribution
+        - feedback_threshold: 100  # 100 new feedback samples
+      
+      # Active learning configuration
+      active_learning:
+        enabled: true
+        uncertainty_threshold: 0.7
+        diversity_sampling: true
+        feedback_integration: true
+
+  # Training Pipeline Configuration
+  pipeline.yml: |
+    # Kubeflow Pipeline Configuration
+    pipeline:
+      name: constitutional-ml-training
+      version: "1.0.0"
+      description: "Constitutional compliance ML model training pipeline"
+      
+      # Pipeline steps
+      steps:
+        - name: data_ingestion
+          image: stratmaster/ml-data-ingestion:latest
+          resources:
+            requests:
+              cpu: 2
+              memory: 4Gi
+            limits:
+              cpu: 4
+              memory: 8Gi
+          
+        - name: data_preprocessing
+          image: stratmaster/ml-preprocessing:latest
+          resources:
+            requests:
+              cpu: 4
+              memory: 8Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: 8
+              memory: 16Gi
+              nvidia.com/gpu: 1
+              
+        - name: model_training
+          image: stratmaster/ml-training:latest
+          resources:
+            requests:
+              cpu: 8
+              memory: 16Gi
+              nvidia.com/gpu: 2
+            limits:
+              cpu: 16
+              memory: 32Gi
+              nvidia.com/gpu: 2
+              
+        - name: model_evaluation
+          image: stratmaster/ml-evaluation:latest
+          resources:
+            requests:
+              cpu: 4
+              memory: 8Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: 8
+              memory: 16Gi
+              nvidia.com/gpu: 1
+              
+        - name: model_validation
+          image: stratmaster/ml-validation:latest
+          resources:
+            requests:
+              cpu: 2
+              memory: 4Gi
+            limits:
+              cpu: 4
+              memory: 8Gi
+              
+        - name: model_deployment
+          image: stratmaster/ml-deployment:latest
+          resources:
+            requests:
+              cpu: 2
+              memory: 4Gi
+            limits:
+              cpu: 4
+              memory: 8Gi
+      
+      # Storage configuration
+      storage:
+        - name: training-data
+          size: 100Gi
+          storageClass: fast-ssd
+        - name: model-artifacts
+          size: 50Gi
+          storageClass: standard
+        - name: evaluation-results
+          size: 10Gi
+          storageClass: standard
+
+  # Data Management Configuration
+  data.yml: |
+    # Data sources and management
+    data_sources:
+      # Constitutional training data
+      constitutional_corpus:
+        type: s3
+        bucket: stratmaster-constitutional-data
+        prefix: training/
+        format: jsonl
+        schema:
+          text: string
+          label: string
+          category: string
+          confidence: float
+          source: string
+          timestamp: datetime
+      
+      # Feedback data from production
+      feedback_data:
+        type: redis_stream
+        stream: constitutional_feedback
+        consumer_group: ml_training
+        schema:
+          input_text: string
+          prediction: string
+          correct_label: string
+          user_feedback: string
+          confidence_score: float
+          model_version: string
+          timestamp: datetime
+      
+      # Expert annotations
+      expert_annotations:
+        type: postgresql
+        table: expert_annotations
+        connection: mlflow_db
+        schema:
+          text_id: string
+          expert_id: string
+          category: string
+          severity: integer
+          explanation: string
+          created_at: datetime
+    
+    # Data quality checks
+    data_quality:
+      checks:
+        - name: completeness_check
+          description: "Ensure all required fields are present"
+          threshold: 0.95
+          
+        - name: consistency_check
+          description: "Verify label consistency across similar texts"
+          threshold: 0.9
+          
+        - name: freshness_check
+          description: "Ensure data is not older than threshold"
+          max_age_days: 30
+          
+        - name: bias_check
+          description: "Check for demographic and topical bias"
+          bias_threshold: 0.1
+    
+    # Data preprocessing pipeline
+    preprocessing:
+      steps:
+        - name: text_cleaning
+          enabled: true
+          options:
+            remove_special_chars: true
+            normalize_whitespace: true
+            handle_encoding: true
+            
+        - name: tokenization
+          enabled: true
+          tokenizer: "bert-base-uncased"
+          options:
+            max_length: 512
+            truncation: true
+            padding: true
+            
+        - name: label_encoding
+          enabled: true
+          encoding: "multi_hot"
+          
+        - name: augmentation
+          enabled: true
+          techniques:
+            - synonym_replacement: 0.1
+            - back_translation: 0.05
+            - paraphrasing: 0.1
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ml-credentials
+  namespace: stratmaster-ml
+type: Opaque
+stringData:
+  # MLflow credentials
+  mlflow_user: "admin"
+  mlflow_password: "change-me-in-production"
+  
+  # S3 credentials for artifact storage
+  aws_access_key_id: ""
+  aws_secret_access_key: ""
+  aws_region: "us-east-1"
+  
+  # Database credentials
+  postgres_user: "mlflow"
+  postgres_password: "change-me-in-production"
+  postgres_host: "postgresql.stratmaster-ml.svc.cluster.local"
+  postgres_port: "5432"
+  postgres_db: "mlflow"
