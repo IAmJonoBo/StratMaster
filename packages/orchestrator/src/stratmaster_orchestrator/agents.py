@@ -100,7 +100,9 @@ class StrategistNode:
     def __call__(self, state: StrategyState) -> StrategyState:
         working = state.copy()
         pad = ensure_agent_scratchpad(working, "strategist")
-        metrics, invocation = self.tools.run_evaluations("rag-safety")
+        metrics, invocation = self.tools.run_evaluations(
+            "rag-safety", thresholds=self.evaluation_gate.minimums
+        )
         pad.notes.append("Evaluated retrieval and reasoning metrics")
         pad.tool_calls.append(invocation)
         for name, value in metrics.items():
