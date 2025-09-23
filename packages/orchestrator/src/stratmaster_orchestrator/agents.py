@@ -72,7 +72,7 @@ class SynthesiserNode:
         # attach for downstream visibility in case the type is not from stratmaster_cove
         working.scratchpad.setdefault("synthesiser", pad)
         vf = cast(float, getattr(verification, "verified_fraction", 0.0))
-        status = cast(str, getattr(verification, "status", "skipped"))
+        status = getattr(verification, "status", "skipped")
         working.record_metric("cove_verified_fraction", vf)
         if status != "verified":
             working.mark_failure("verification_below_threshold")
