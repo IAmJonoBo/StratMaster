@@ -11,8 +11,8 @@ Run these commands first to get an overview of system health:
 ```bash
 # Local Development
 make health-check
-curl http://localhost:8080/healthz
-curl http://localhost:8081/info
+curl http://127.0.0.1:8080/healthz
+curl http://127.0.0.1:8081/info
 
 # Kubernetes
 kubectl get pods,svc,ingress -n stratmaster-prod
@@ -33,7 +33,7 @@ docker stats --no-stream
 echo "=== StratMaster Health Check ==="
 
 # Check API Gateway
-if curl -s -f http://localhost:8080/healthz > /dev/null; then
+if curl -s -f http://127.0.0.1:8080/healthz > /dev/null; then
     echo "✅ API Gateway: Healthy"
 else
     echo "❌ API Gateway: Unhealthy"
@@ -41,7 +41,7 @@ fi
 
 # Check MCP Servers
 for port in 8081 8082 8083 8084 8085; do
-    service_name=$(curl -s http://localhost:$port/info 2>/dev/null | jq -r '.name // "unknown"')
+  service_name=$(curl -s http://127.0.0.1:$port/info 2>/dev/null | jq -r '.name // "unknown"')
     if [ "$service_name" != "unknown" ]; then
         echo "✅ MCP Server ($service_name): Healthy"
     else
@@ -53,7 +53,7 @@ done
 services=("postgres:5432" "qdrant:6333" "opensearch:9200" "minio:9000")
 for service in "${services[@]}"; do
     IFS=':' read -r name port <<< "$service"
-    if nc -z localhost $port 2>/dev/null; then
+  if nc -z 127.0.0.1 $port 2>/dev/null; then
         echo "✅ $name: Connected"
     else
         echo "❌ $name: Connection failed"
@@ -129,7 +129,7 @@ PYTHONNOUSERSITE=1 make bootstrap
 
 ```bash
 # Error
-requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8080): Max retries exceeded
 ```
 
 **Cause**: API server not running or wrong port
@@ -383,13 +383,13 @@ kubectl exec -it postgres-0 -- psql -U stratmaster -c "ANALYZE; VACUUM;"
 
 ```bash
 # Check Qdrant cluster status
-curl http://localhost:6333/cluster
+curl http://127.0.0.1:6333/cluster
 
 # Check collection info
-curl http://localhost:6333/collections/tenant_demo_research
+curl http://127.0.0.1:6333/collections/tenant_demo_research
 
 # Test search directly
-curl -X POST http://localhost:6333/collections/tenant_demo_research/points/search \
+curl -X POST http://127.0.0.1:6333/collections/tenant_demo_research/points/search \
   -H "Content-Type: application/json" \
   -d '{"vector": [0.1, 0.2, 0.3], "limit": 5}'
 ```
@@ -400,7 +400,7 @@ curl -X POST http://localhost:6333/collections/tenant_demo_research/points/searc
 
 ```bash
 # Create collection
-curl -X PUT http://localhost:6333/collections/tenant_demo_research \
+curl -X PUT http://127.0.0.1:6333/collections/tenant_demo_research \
   -H "Content-Type: application/json" \
   -d '{"vectors": {"size": 1024, "distance": "Cosine"}}'
 ```
@@ -409,7 +409,7 @@ curl -X PUT http://localhost:6333/collections/tenant_demo_research \
 
 ```bash
 # Check point count
-curl http://localhost:6333/collections/tenant_demo_research | jq '.result.points_count'
+curl http://127.0.0.1:6333/collections/tenant_demo_research | jq '.result.points_count'
 
 # Index sample data
 python scripts/seed_demo_data.py
@@ -419,11 +419,11 @@ python scripts/seed_demo_data.py
 
 ```bash
 # Check vector config
-curl http://localhost:6333/collections/tenant_demo_research | jq '.result.config.params.vectors'
+curl http://127.0.0.1:6333/collections/tenant_demo_research | jq '.result.config.params.vectors'
 
 # Recreate collection with correct dimensions
-curl -X DELETE http://localhost:6333/collections/tenant_demo_research
-curl -X PUT http://localhost:6333/collections/tenant_demo_research \
+curl -X DELETE http://127.0.0.1:6333/collections/tenant_demo_research
+curl -X PUT http://127.0.0.1:6333/collections/tenant_demo_research \
   -H "Content-Type: application/json" \
   -d '{"vectors": {"size": 768, "distance": "Cosine"}}'  # Correct size
 ```
@@ -436,16 +436,16 @@ curl -X PUT http://localhost:6333/collections/tenant_demo_research \
 
 ```bash
 # Check Keycloak status
-curl http://localhost:8089/auth/realms/stratmaster/.well-known/openid_configuration
+curl http://127.0.0.1:8089/auth/realms/stratmaster/.well-known/openid_configuration
 
 # Test token generation
-curl -X POST http://localhost:8089/auth/realms/stratmaster/protocol/openid-connect/token \
+curl -X POST http://127.0.0.1:8089/auth/realms/stratmaster/protocol/openid-connect/token \
   -d "grant_type=client_credentials" \
   -d "client_id=stratmaster-api" \
   -d "client_secret=your-secret"
 
 # Verify token
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/healthz
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8080/healthz
 ```
 
 **Solutions**:
@@ -464,7 +464,7 @@ kubectl port-forward svc/keycloak 8089:8080 -n stratmaster-prod
 
 ```bash
 # Check client configuration in Keycloak admin console
-# http://localhost:8089/auth/admin/
+# http://127.0.0.1:8089/auth/admin/
 
 # Update client secret
 kubectl create secret generic keycloak-client-secret \
@@ -524,7 +524,7 @@ print(f'Memory: {process.memory_info().rss / 1024 / 1024:.2f}MB')
 kubectl top pods -n stratmaster-prod --sort-by=cpu
 
 # Check API response times
-curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/healthz
+curl -w "@curl-format.txt" -o /dev/null -s http://127.0.0.1:8080/healthz
 
 # Profile API endpoints
 pip install py-spy
@@ -636,7 +636,7 @@ curl -H "Host: stratmaster.company.com" http://$(kubectl get nodes -o jsonpath='
 
 ```bash
 # Check Prometheus targets
-curl http://localhost:9090/api/v1/targets
+curl http://127.0.0.1:9090/api/v1/targets
 
 # Check service monitor
 kubectl get servicemonitor -n monitoring
