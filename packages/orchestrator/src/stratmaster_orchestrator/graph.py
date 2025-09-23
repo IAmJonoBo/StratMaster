@@ -5,16 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from stratmaster_api.models import DebateTrace, GraphArtifacts, RecommendationOutcome, WorkflowMetadata
+from langgraph.graph import END, START, StateGraph
+from stratmaster_api.models import DebateTrace, GraphArtifacts, WorkflowMetadata
 
 from .agents import build_nodes
 from .checkpoints import InMemoryCheckpointStore
 from .prompts import load_prompts
 from .state import OrchestrationResult, StrategyState
 from .tools import EvaluationGate, ToolRegistry
-
-from langgraph.graph import END, START, StateGraph
-
 
 DEFAULT_EVALUATION_MINIMUMS = {
     "cove_verified_fraction": 0.8,
@@ -23,7 +21,9 @@ DEFAULT_EVALUATION_MINIMUMS = {
 }
 
 
-def _coerce_state(raw: StrategyState | dict[str, Any], seed: StrategyState) -> StrategyState:
+def _coerce_state(
+    raw: StrategyState | dict[str, Any], seed: StrategyState
+) -> StrategyState:
     if isinstance(raw, StrategyState):
         return raw
     if isinstance(raw, dict):
@@ -45,7 +45,9 @@ def _ensure_defaults(state: StrategyState) -> StrategyState:
             narrative_chunks=[],
         )
     if state.workflow is None:
-        state.workflow = WorkflowMetadata(workflow_id="wf-synthetic", tenant_id=state.tenant_id)
+        state.workflow = WorkflowMetadata(
+            workflow_id="wf-synthetic", tenant_id=state.tenant_id
+        )
     return state
 
 
@@ -91,7 +93,9 @@ def build_strategy_graph(
         final_state = _coerce_state(raw_state, initial_state)
         final_state = _ensure_defaults(final_state)
         tool_registry = ToolRegistry(final_state.tenant_id, final_state.query)
-        outcome = tool_registry.compose_recommendation(final_state, final_state.workflow)
+        outcome = tool_registry.compose_recommendation(
+            final_state, final_state.workflow
+        )
         return OrchestrationResult(outcome=outcome, state=final_state)
 
     return _run
