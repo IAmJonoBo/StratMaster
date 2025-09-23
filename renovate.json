@@ -1,4 +1,79 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended"],
+  "groupName": "StratMaster Dependencies",
+  "schedule": ["before 6am on monday"],
+  "timezone": "UTC",
+  "labels": ["dependencies", "automated"],
+  "reviewers": ["@IAmJonoBo"],
+  "prConcurrentLimit": 2,
+  "prHourlyLimit": 1,
+  
+  "packageRules": [
+    {
+      "description": "Group patch updates together",
+      "matchUpdateTypes": ["patch"],
+      "groupName": "patch dependencies",
+      "automerge": true,
+      "platformAutomerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Group minor updates for manual review",
+      "matchUpdateTypes": ["minor"],
+      "groupName": "minor dependencies",
+      "automerge": false,
+      "reviewersFromCodeOwners": true
+    },
+    {
+      "description": "Major updates require careful review",
+      "matchUpdateTypes": ["major"],
+      "groupName": "major dependencies",
+      "automerge": false,
+      "schedule": ["at any time"],
+      "reviewersFromCodeOwners": true,
+      "labels": ["dependencies", "major-update", "requires-review"]
+    },
+    {
+      "description": "Security updates have priority",
+      "matchDatasources": ["pypi"],
+      "vulnerabilityAlerts": true,
+      "schedule": ["at any time"],
+      "automerge": true,
+      "labels": ["dependencies", "security", "high-priority"]
+    },
+    {
+      "description": "Python dependencies",
+      "matchFiles": ["requirements.txt", "requirements-dev.txt"],
+      "matchDatasources": ["pypi"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "description": "GitHub Actions",
+      "matchFiles": [".github/workflows/*.yml"],
+      "matchDatasources": ["github-releases", "github-tags"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Docker images",
+      "matchFiles": ["docker-compose.yml", "docker/*.dockerfile"],
+      "matchDatasources": ["docker"],
+      "automerge": false
+    }
+  ],
+  
+  "prBodyTemplate": "This PR updates dependencies as follows:\n\n{{#each upgrades}}\n- **{{depName}}**: {{currentVersion}} → {{newVersion}} ({{updateType}})\n{{#if isSecurityUpdate}}🚨 **Security Update**{{/if}}\n{{#if releases.length}}\n  - [Release notes]({{releases.0.releaseUrl}})\n{{/if}}\n{{/each}}\n\n---\n\n**Automated by StratMaster Dependency Management**\n- ✅ Tests must pass before merge\n- 🔐 License compatibility verified\n- 📋 Change summary generated",
+  
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "automerge": true
+  },
+  
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"],
+    "automerge": true
+  }
 }

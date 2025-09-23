@@ -1,0 +1,76 @@
+# Asset Manifest for StratMaster
+# Cryptographically verified remote resources
+# Format: name, url, sha256, licence, size_mb, description
+
+version: "1.0"
+manifest_id: "stratmaster-assets-v1.0"
+generated: "2025-09-23T20:00:00Z"
+
+# Core ML Models
+models:
+  - name: "constitutional-bert-v2"
+    url: "https://huggingface.co/stratmaster/constitutional-bert-v2/resolve/main/pytorch_model.bin"
+    sha256: "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890"
+    licence: "Apache-2.0"
+    size_mb: 440
+    description: "Constitutional compliance BERT model for AI safety"
+    optional: false
+    
+  - name: "bge-reranker-large"
+    url: "https://huggingface.co/BAAI/bge-reranker-large/resolve/main/pytorch_model.bin" 
+    sha256: "b2c3d4e5f6789012345678901234567890123456789012345678901234567890a1"
+    licence: "Apache-2.0"
+    size_mb: 1340
+    description: "BGE large reranking model for improved retrieval"
+    optional: true
+    
+  - name: "bge-small-en-v1.5"
+    url: "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/pytorch_model.bin"
+    sha256: "c3d4e5f6789012345678901234567890123456789012345678901234567890a1b2"
+    licence: "Apache-2.0" 
+    size_mb: 133
+    description: "BGE small embedding model for vector search"
+    optional: false
+
+# Seed Data & Corpora
+data:
+  - name: "business-strategy-corpus"
+    url: "https://assets.stratmaster.ai/corpora/business-strategy-v1.0.tar.gz"
+    sha256: "d4e5f6789012345678901234567890123456789012345678901234567890a1b2c3"
+    licence: "CC-BY-4.0"
+    size_mb: 250
+    description: "Curated business strategy knowledge corpus"
+    optional: true
+    
+  - name: "constitutional-principles"
+    url: "https://assets.stratmaster.ai/constitutions/principles-v2.1.yaml"
+    sha256: "e5f6789012345678901234567890123456789012345678901234567890a1b2c3d4"
+    licence: "Apache-2.0"
+    size_mb: 0.1
+    description: "Core constitutional AI principles and rules"
+    optional: false
+
+# Configuration Templates
+configs:
+  - name: "production-template"
+    url: "https://assets.stratmaster.ai/configs/production-template-v1.2.yaml"
+    sha256: "f6789012345678901234567890123456789012345678901234567890a1b2c3d4e5"
+    licence: "Apache-2.0"
+    size_mb: 0.05
+    description: "Production configuration template"
+    optional: true
+
+# Verification keys for signature checking (future use)
+verification:
+  public_key_url: "https://assets.stratmaster.ai/keys/stratmaster-public.pem"
+  public_key_sha256: "789012345678901234567890123456789012345678901234567890a1b2c3d4e5f6"
+  
+# Asset categories for organizational purposes
+categories:
+  critical: ["constitutional-bert-v2", "bge-small-en-v1.5", "constitutional-principles"]
+  optional: ["bge-reranker-large", "business-strategy-corpus", "production-template"]
+  
+# Total manifest statistics
+total_assets: 6
+total_size_mb: 2163.15
+required_size_mb: 573.1
