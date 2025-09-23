@@ -27,21 +27,21 @@ jobs:
       - name: Install core packages for tests
         run: |
           pip install -e packages/api -e packages/mcp-servers/research-mcp
-      - name: Install retrieval/reranker test extras (3.12 only)
+      - name: Install retrieval/reranker test extras for Python 3.12
         if: matrix.python-version == '3.12'
         run: |
           pip install -e packages/retrieval/splade[test-cli] \
                       -e packages/retrieval/colbert[test-cli] \
                       -e packages/rerankers/bge[test-cli]
-      - name: Run pytest (if present)
+      - name: Run pytest if present
         run: |
           pip install pytest
           pytest -q
-      - name: Helm lint (stratmaster-api)
+      - name: Helm lint for stratmaster-api
         run: |
           helm lint helm/stratmaster-api
           helm template helm/stratmaster-api > /dev/null
-      - name: Helm lint (research-mcp)
+      - name: Helm lint for research-mcp
         run: |
           helm lint helm/research-mcp
           helm template helm/research-mcp > /dev/null
