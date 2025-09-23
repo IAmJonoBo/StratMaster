@@ -53,6 +53,10 @@ def run_checks_for_discipline(
         findings, scores, recommendations = _check_accessibility(strategy, doctrine)
     elif discipline == "brand_science":
         findings, scores, recommendations = _check_brand_science(full_text, doctrine)
+    elif discipline == "economics":
+        findings, scores, recommendations = _check_economics(full_text, doctrine)
+    elif discipline == "legal":
+        findings, scores, recommendations = _check_legal(full_text, doctrine)
     else:
         # Generic check for unknown disciplines
         findings, scores, recommendations = _check_generic(discipline, full_text, doctrine)
@@ -214,16 +218,159 @@ def _check_brand_science(text: str, doctrine: dict[str, Any]) -> tuple[list[dict
     scores = {"overall": 0.7}
     recommendations = []
     
-    # Basic brand consistency check
-    if "brand" not in text.lower():
+    # Check for brand positioning elements
+    brand_elements = doctrine.get("brand_elements", [
+        "positioning", "differentiation", "value proposition", "brand promise",
+        "brand personality", "target audience", "competitive advantage"
+    ])
+    
+    missing_elements = []
+    for element in brand_elements:
+        if element.lower() not in text.lower():
+            missing_elements.append(element)
+    
+    if missing_elements:
+        # Penalize score based on missing elements
+        penalty = min(0.5, len(missing_elements) * 0.1)
+        scores["overall"] -= penalty
+        
         finding = {
-            "id": "brand_no_mention",
-            "severity": "info",
-            "title": "No explicit brand consideration",
-            "description": "Strategy doesn't explicitly mention brand elements"
+            "id": "brand_missing_elements",
+            "severity": "warning" if len(missing_elements) > 3 else "info",
+            "title": "Missing brand science elements",
+            "description": f"Strategy lacks key brand elements: {', '.join(missing_elements[:3])}{'...' if len(missing_elements) > 3 else ''}"
         }
         findings.append(finding)
-        recommendations.append("Consider explicit brand positioning and consistency")
+        recommendations.append("Include core brand positioning and differentiation elements")
+    
+    # Check for brand consistency indicators
+    consistency_keywords = doctrine.get("consistency_keywords", [
+        "consistent", "unified", "cohesive", "aligned", "integrated"
+    ])
+    
+    if not any(kw.lower() in text.lower() for kw in consistency_keywords):
+        finding = {
+            "id": "brand_consistency_missing",
+            "severity": "info",
+            "title": "No brand consistency consideration",
+            "description": "Strategy doesn't address brand consistency across touchpoints"
+        }
+        findings.append(finding)
+        recommendations.append("Address brand consistency across all customer touchpoints")
+    
+    return findings, scores, recommendations
+
+
+def _check_economics(text: str, doctrine: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, float], list[str]]:
+    """Check economic viability and business model aspects."""
+    findings = []
+    scores = {"overall": 0.8}
+    recommendations = []
+    
+    # Check for key economic concepts
+    economic_concepts = doctrine.get("economic_concepts", [
+        "roi", "return on investment", "cost", "revenue", "profit", "budget",
+        "pricing", "value", "market size", "competition", "demand", "supply"
+    ])
+    
+    missing_concepts = []
+    for concept in economic_concepts:
+        if concept.lower() not in text.lower():
+            missing_concepts.append(concept)
+    
+    if len(missing_concepts) > len(economic_concepts) * 0.7:  # If more than 70% missing
+        scores["overall"] -= 0.3
+        finding = {
+            "id": "econ_insufficient_analysis",
+            "severity": "warning",
+            "title": "Insufficient economic analysis",
+            "description": "Strategy lacks key economic considerations like ROI, costs, or market dynamics"
+        }
+        findings.append(finding)
+        recommendations.append("Include economic feasibility analysis with costs, ROI, and market considerations")
+    
+    # Check for business model elements
+    business_model_elements = doctrine.get("business_model_elements", [
+        "revenue model", "value proposition", "cost structure", "target market",
+        "channels", "customer segments", "competitive advantage"
+    ])
+    
+    model_elements_present = sum(1 for element in business_model_elements if element.lower() in text.lower())
+    if model_elements_present < len(business_model_elements) * 0.4:  # Less than 40% present
+        scores["overall"] -= 0.2
+        finding = {
+            "id": "econ_weak_business_model",
+            "severity": "info",
+            "title": "Weak business model definition",
+            "description": "Strategy should better define the underlying business model"
+        }
+        findings.append(finding)
+        recommendations.append("Strengthen business model definition with clear value proposition and revenue streams")
+    
+    return findings, scores, recommendations
+
+
+def _check_legal(text: str, doctrine: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, float], list[str]]:
+    """Check legal compliance and risk factors."""
+    findings = []
+    scores = {"overall": 0.9}  # Start high, deduct for issues
+    recommendations = []
+    
+    # Check for compliance considerations
+    compliance_keywords = doctrine.get("compliance_keywords", [
+        "gdpr", "privacy", "data protection", "terms", "conditions", "disclaimer",
+        "compliance", "regulatory", "legal", "copyright", "trademark"
+    ])
+    
+    compliance_mentions = sum(1 for kw in compliance_keywords if kw.lower() in text.lower())
+    if compliance_mentions == 0:
+        scores["overall"] -= 0.3
+        finding = {
+            "id": "legal_no_compliance",
+            "severity": "warning",
+            "title": "No legal compliance consideration",
+            "description": "Strategy doesn't address legal compliance, privacy, or regulatory requirements"
+        }
+        findings.append(finding)
+        recommendations.append("Consider legal compliance requirements including privacy, data protection, and industry regulations")
+    
+    # Check for risky language patterns
+    risky_phrases = doctrine.get("risky_phrases", [
+        "guaranteed", "risk-free", "100% effective", "never fails", "always works",
+        "miracle", "instant", "overnight success", "no effort required"
+    ])
+    
+    risks_found = []
+    for phrase in risky_phrases:
+        if phrase.lower() in text.lower():
+            risks_found.append(phrase)
+    
+    if risks_found:
+        scores["overall"] -= min(0.4, len(risks_found) * 0.1)
+        finding = {
+            "id": "legal_risky_claims",
+            "severity": "error",
+            "title": "Potentially problematic claims",
+            "description": f"Strategy contains risky language that may lead to legal issues: {', '.join(risks_found[:3])}"
+        }
+        findings.append(finding)
+        recommendations.append("Remove or qualify absolute claims to avoid potential legal liability")
+    
+    # Check for intellectual property considerations
+    ip_keywords = doctrine.get("ip_keywords", [
+        "copyright", "trademark", "patent", "intellectual property", "licensing",
+        "fair use", "attribution", "original content"
+    ])
+    
+    if not any(kw.lower() in text.lower() for kw in ip_keywords):
+        finding = {
+            "id": "legal_no_ip_consideration",
+            "severity": "info",
+            "title": "No intellectual property consideration",
+            "description": "Strategy doesn't address intellectual property rights or licensing"
+        }
+        findings.append(finding)
+        recommendations.append("Consider intellectual property rights for content, imagery, and branding elements")
     
     return findings, scores, recommendations
 

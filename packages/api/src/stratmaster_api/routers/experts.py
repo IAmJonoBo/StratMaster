@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from stratmaster_api.models.experts.memo import DisciplineMemo
 from stratmaster_api.models.experts.vote import CouncilVote
+from stratmaster_api.clients.mcp_client import get_mcp_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/experts", tags=["experts"])
 class EvaluateBody(BaseModel):
     """Request body for expert evaluation."""
     strategy: dict[str, Any]
-    disciplines: list[str] = ["psychology", "design", "communication", "brand_science", "economics"]
+    disciplines: list[str] = ["psychology", "design", "communication", "brand_science", "economics", "legal"]
 
 
 class VoteBody(BaseModel):
@@ -29,22 +30,11 @@ class VoteBody(BaseModel):
     memos: list[DisciplineMemo]
 
 
-async def get_mcp_client():
-    """Get MCP client for expertise server.
-    
-    TODO: Implement actual MCP client connection.
-    For now, this is a placeholder that would connect to the expertise-mcp server.
-    """
-    # This would normally return an MCP client instance
-    # that can communicate with the expertise-mcp server via stdio or HTTP
-    raise HTTPException(
-        status_code=501, 
-        detail="MCP client not yet implemented - connect to expertise-mcp server"
-    )
+# Remove the old placeholder - using the imported function instead
 
 
 @router.post("/evaluate", response_model=list[DisciplineMemo])
-async def evaluate(body: EvaluateBody, mcp=Depends(get_mcp_client)) -> list[DisciplineMemo]:
+async def evaluate(body: EvaluateBody) -> list[DisciplineMemo]:
     """Evaluate a strategy across expert disciplines.
     
     Args:
@@ -57,7 +47,8 @@ async def evaluate(body: EvaluateBody, mcp=Depends(get_mcp_client)) -> list[Disc
     logger.info(f"Evaluating strategy across {len(body.disciplines)} disciplines")
     
     try:
-        # Call the MCP server
+        # Get MCP client and call the server
+        mcp = await get_mcp_client()
         result = await mcp.call("expert.evaluate", body.model_dump())
         
         # Convert result to DisciplineMemo objects
@@ -72,7 +63,7 @@ async def evaluate(body: EvaluateBody, mcp=Depends(get_mcp_client)) -> list[Disc
 
 
 @router.post("/vote", response_model=CouncilVote)
-async def vote(body: VoteBody, mcp=Depends(get_mcp_client)) -> CouncilVote:
+async def vote(body: VoteBody) -> CouncilVote:
     """Aggregate memos into a weighted council vote.
     
     Args:
@@ -85,7 +76,8 @@ async def vote(body: VoteBody, mcp=Depends(get_mcp_client)) -> CouncilVote:
     logger.info(f"Aggregating vote for strategy {body.strategy_id}")
     
     try:
-        # Call the MCP server
+        # Get MCP client and call the server
+        mcp = await get_mcp_client()
         result = await mcp.call("expert.vote", body.model_dump())
         
         # Convert result to CouncilVote object
