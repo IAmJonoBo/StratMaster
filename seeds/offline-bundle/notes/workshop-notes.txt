@@ -1,0 +1,4 @@
+Kick-off workshop takeaways:
+- Stakeholders require offline demo with quantised models and privacy-preserving analytics.
+- Emphasise governance updates: allow list (Mixtral 8x7B, Llama3 8B, Nous-Hermes2 7B, Phi-3 Medium).
+- Clarification workflow must surface within 60 seconds when OCR confidence < 0.7.

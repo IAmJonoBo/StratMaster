@@ -1,0 +1,21 @@
+{
+  "segments": [
+    {
+      "name": "Premium Innovators",
+      "share": 0.32,
+      "position": "High trust, high differentiation",
+      "moves": ["Accelerated AI-assisted workshops", "Personalised loyalty pilots"]
+    },
+    {
+      "name": "Value Maximizers",
+      "share": 0.28,
+      "position": "Cost leadership",
+      "moves": ["Broad match campaigns", "Bundled retention offers"]
+    }
+  ],
+  "signals": {
+    "searxng_queries": 412,
+    "patent_filings": 18,
+    "analyst_reports": 7
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "version": "2024.11.0-pre",
+  "artifacts": [
+    {
+      "path": "docs/brand-brief.md",
+      "sha256": "deb89d3b63ea85c25f5de03e0142d65b631d44755b0056f582e55d246983145f",
+      "size_bytes": 553,
+      "mime": "text/markdown",
+      "license": "CC-BY-4.0",
+      "description": "Executive overview of offline launch goals"
+    },
+    {
+      "path": "data/research-metrics.csv",
+      "sha256": "ae26e56f148723e287e022a117ae63b7f26e563af5f3ffe7c1764110cb044dcf",
+      "size_bytes": 132,
+      "mime": "text/csv",
+      "license": "CC-BY-4.0",
+      "description": "Key KPI baselines and targets"
+    },
+    {
+      "path": "data/competitive-landscape.json",
+      "sha256": "f91662a4998f4da2d4225ed6d5f409ef6edede14224fee1c5c32413a962387ff",
+      "size_bytes": 503,
+      "mime": "application/json",
+      "license": "CC-BY-4.0",
+      "description": "Structured competitive intelligence snapshot"
+    },
+    {
+      "path": "notes/workshop-notes.txt",
+      "sha256": "56cab473f4272d702ce959305d0041c435e7edb52880735fb440f3480e705d79",
+      "size_bytes": 304,
+      "mime": "text/plain",
+      "license": "CC-BY-4.0",
+      "description": "Facilitation notes for expert workshop"
+    }
+  ],
+  "checksum": "98e2144090ca865d172549f1baee5d329c583a282872b7c8ee17470fb37a5d1b"
+}
