@@ -3,7 +3,7 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.25.0
+  version: 1.27.8
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
@@ -18,23 +18,23 @@ runtimes:
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   enabled:
-    - renovate@41.118.1
-    - osv-scanner@2.2.2
-    - actionlint@1.7.7
-    - bandit@1.8.6
-    - black@25.9.0
-    - checkov@3.2.471
+    - renovate@42.48.5
+    - osv-scanner@2.4.1
+    - actionlint@1.7.8
+    - bandit@1.8.12
+    - black@25.12.0
+    - checkov@3.2.574
     - git-diff-check
-    - isort@6.0.1
-    - markdownlint@0.45.0
-    - mypy@1.18.2
-    - prettier@3.6.2
-    - ruff@0.13.1
-    - shellcheck@0.11.0
-    - shfmt@3.6.0
-    - taplo@0.10.0
-    - trufflehog@3.90.8
-    - yamllint@1.37.1
+    - isort@6.0.2
+    - markdownlint@0.46.0
+    - mypy@1.18.11
+    - prettier@3.6.8
+    - ruff@0.13.6
+    - shellcheck@0.11.1
+    - shfmt@3.10.0
+    - taplo@0.10.1
+    - trufflehog@3.92.8
+    - yamllint@1.39.0
   ignore:
     - linters: [prettier, yamllint]
       paths:

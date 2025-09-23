@@ -1,0 +1,223 @@
+# Multi-tenant Constitutional Configuration
+# Phase 2 Implementation - Tenant-specific constitutional rules and customization
+
+# Global defaults
+global_defaults:
+  version: "2.0.0"
+  constitutional_framework: "stratmaster-v2"
+  enforcement_level: "strict"
+  
+  # Default constitutional principles applied to all tenants
+  base_principles:
+    - "truth_accuracy"
+    - "privacy_consent" 
+    - "transparency"
+    - "bias_fairness"
+    
+  # Default violation thresholds
+  default_thresholds:
+    critical: 0.95
+    high: 0.85
+    medium: 0.75
+    low: 0.65
+    info: 0.5
+
+# Tenant-specific configurations
+tenants:
+  # Enterprise tenant example
+  - tenant_id: "enterprise-corp"
+    name: "Enterprise Corporation"
+    tier: "enterprise"
+    
+    # Custom constitutional principles
+    principles:
+      enabled: 
+        - "truth_accuracy"
+        - "privacy_consent"
+        - "transparency" 
+        - "bias_fairness"
+        - "regulatory_compliance"  # Custom principle
+        - "brand_safety"           # Custom principle
+        
+      disabled:
+        - "experimental_features"
+        
+    # Custom violation thresholds
+    thresholds:
+      critical: 0.98  # Higher threshold for enterprise
+      high: 0.90
+      medium: 0.80
+      low: 0.70
+      info: 0.6
+      
+    # Industry-specific rules
+    industry_rules:
+      sector: "financial_services"
+      regulations: ["gdpr", "ccpa", "sox", "pci_dss"]
+      additional_checks:
+        - "financial_advice_disclaimer"
+        - "investment_risk_disclosure"
+        - "data_residency_compliance"
+        
+    # Custom ML models
+    ml_models:
+      primary_detector: "constitutional-bert-financial-v1"
+      severity_classifier: "severity-classifier-financial-v1"
+      domain_adapter: "financial-domain-adapter-v1"
+      
+    # Notification preferences
+    notifications:
+      channels: ["email", "slack", "webhook"]
+      severity_filter: "medium"  # Only medium and above
+      escalation:
+        - level: "critical"
+          notify_after: "1m"
+          recipients: ["security-team@enterprise-corp.com"]
+        - level: "high" 
+          notify_after: "5m"
+          recipients: ["compliance-team@enterprise-corp.com"]
+
+  # Startup tenant example
+  - tenant_id: "startup-co"
+    name: "Startup Company"
+    tier: "growth"
+    
+    principles:
+      enabled:
+        - "truth_accuracy"
+        - "privacy_consent"
+        - "transparency"
+        - "innovation_friendly"  # Custom principle for startups
+        
+    # More lenient thresholds for startup agility
+    thresholds:
+      critical: 0.90
+      high: 0.80
+      medium: 0.70
+      low: 0.60
+      info: 0.5
+      
+    # Startup-friendly configuration
+    features:
+      experimental_features: true
+      rapid_iteration_mode: true
+      relaxed_documentation_requirements: true
+      
+    notifications:
+      channels: ["slack"]
+      severity_filter: "high"
+      
+  # Academic tenant example  
+  - tenant_id: "research-university"
+    name: "Research University"
+    tier: "academic"
+    
+    principles:
+      enabled:
+        - "truth_accuracy"        # Critical for research
+        - "transparency"          # Essential for academic integrity
+        - "research_ethics"       # Custom academic principle
+        - "open_access"           # Custom academic principle
+        
+    thresholds:
+      critical: 0.95
+      high: 0.85
+      medium: 0.75
+      low: 0.65
+      info: 0.5
+      
+    # Academic-specific features
+    academic_features:
+      citation_verification: true
+      peer_review_integration: true
+      ethics_board_notifications: true
+      
+    notifications:
+      channels: ["email"]
+      recipients: ["ethics-board@university.edu"]
+
+# Tenant configuration management
+management:
+  # Configuration inheritance
+  inheritance:
+    enabled: true
+    hierarchy: ["global_defaults", "tier_defaults", "tenant_specific"]
+    override_policy: "explicit_only"  # Only explicitly set values override
+    
+  # Configuration validation
+  validation:
+    enabled: true
+    schema_version: "2.0.0"
+    required_principles: ["truth_accuracy", "privacy_consent"]
+    
+  # Dynamic configuration updates
+  dynamic_updates:
+    enabled: true
+    propagation_delay: "30s"
+    rollback_on_error: true
+    change_tracking: true
+    
+  # Tenant provisioning
+  provisioning:
+    template_based: true
+    default_template: "standard_tenant"
+    custom_templates: 
+      - "enterprise_template"
+      - "startup_template" 
+      - "academic_template"
+    
+    # Auto-provisioning rules
+    auto_provisioning:
+      enabled: true
+      rules:
+        - condition: "user_count > 100"
+          action: "upgrade_to_enterprise_tier"
+        - condition: "domain endswith '.edu'"
+          action: "apply_academic_template"
+
+# Tier-specific defaults
+tier_defaults:
+  enterprise:
+    enforcement_level: "strict"
+    audit_logging: "comprehensive"
+    sla_response_time: "5m"
+    dedicated_support: true
+    
+  growth:
+    enforcement_level: "balanced"
+    audit_logging: "standard"
+    sla_response_time: "15m"
+    dedicated_support: false
+    
+  academic:
+    enforcement_level: "research_focused"
+    audit_logging: "ethics_compliance"
+    sla_response_time: "30m"
+    dedicated_support: "office_hours"
+    
+  free:
+    enforcement_level: "basic"
+    audit_logging: "minimal"
+    sla_response_time: "24h"
+    dedicated_support: false
+
+# Configuration APIs
+api_endpoints:
+  base_url: "/api/v1/constitutional/config"
+  
+  endpoints:
+    - path: "/tenants/{tenant_id}/config"
+      methods: ["GET", "PUT", "PATCH"]
+      description: "Manage tenant-specific constitutional configuration"
+      
+    - path: "/tenants/{tenant_id}/principles"
+      methods: ["GET", "POST", "DELETE"]
+      description: "Manage tenant-specific constitutional principles"
+      
+    - path: "/tenants/{tenant_id}/thresholds"
+      methods: ["GET", "PUT"]
+      description: "Manage tenant-specific violation thresholds"
+      
+    - path: "/tenants/{tenant_id}/validate"
+      methods: ["POST"]
+      description: "Validate tenant configuration before applying"

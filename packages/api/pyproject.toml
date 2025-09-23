@@ -6,16 +6,20 @@ build-backend = "setuptools.build_meta"
 name = "stratmaster-api"
 version = "0.1.0"
 description = "StratMaster FastAPI service"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
-  "fastapi>=0.117.1",
-  "uvicorn[standard]>=0.36.0",
-  "pydantic>=2.11.9",
-  "httpx>=0.28.1",
-  "PyYAML>=6.0",
-  "langgraph>=0.6.7",
-  "redis>=5.0.0",
+  "fastapi>=0.117.5",
+  "uvicorn[standard]>=0.36.2",
+  "pydantic>=2.11.12",
+  "httpx>=0.28.5",
+  "PyYAML>=6.0.2",
+  "langgraph>=0.6.11",
+  "redis>=5.2.5",
+  "prometheus-client>=0.21.8",
+  "opentelemetry-api>=1.29.1",
+  "opentelemetry-sdk>=1.29.1",
+  "opentelemetry-exporter-prometheus>=1.12.0rc1",
 ]
 
 [tool.ruff]

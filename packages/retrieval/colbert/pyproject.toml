@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "retrieval-colbert"
 version = "0.1.0"
 description = "ColBERT retrieval tooling"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = ["pydantic>=2.11.0", "typer>=0.12.5", "PyYAML>=6.0"]
 

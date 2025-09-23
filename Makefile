@@ -1,5 +1,6 @@
 .PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
-        index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up
+        index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
+        phase2.up phase2.down phase2.full phase2.status telemetry.up collaboration.up ml.up dev.phase2 setup health-check
 
 dev.up:
 	docker compose up -d
@@ -98,3 +99,76 @@ lock-upgrade:
 	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
+
+# Phase 2 Implementation - Production telemetry and monitoring
+.PHONY: phase2.up phase2.down phase2.status telemetry.up collaboration.up ml.up
+
+# Start Phase 2 services (monitoring, telemetry)
+phase2.up:
+	@echo "🚀 Starting Phase 2 services (monitoring, telemetry)"
+	docker compose up -d prometheus grafana
+	@echo "✅ Grafana available at: http://localhost:3001 (admin/admin)"
+	@echo "✅ Prometheus available at: http://localhost:9090"
+
+# Start full Phase 2 stack including collaboration and ML
+phase2.full:
+	@echo "🚀 Starting full Phase 2 stack"
+	docker compose --profile collaboration --profile ml up -d
+	@echo "✅ Real-time collaboration available at: ws://localhost:8084/ws"
+	@echo "✅ Constitutional ML API available at: http://localhost:8085"
+
+# Stop Phase 2 services
+phase2.down:
+	@echo "🛑 Stopping Phase 2 services"
+	docker compose stop prometheus grafana constitutional-bert collaboration-ws
+
+# Check Phase 2 service status
+phase2.status:
+	@echo "📊 Phase 2 Service Status"
+	@echo "========================"
+	@docker compose ps prometheus grafana constitutional-bert collaboration-ws 2>/dev/null || echo "No Phase 2 services running"
+
+# Start only telemetry services
+telemetry.up:
+	@echo "📊 Starting telemetry services"
+	docker compose up -d prometheus grafana
+
+# Start only collaboration services  
+collaboration.up:
+	@echo "🤝 Starting collaboration services"
+	docker compose --profile collaboration up -d collaboration-ws
+
+# Start only ML services
+ml.up:
+	@echo "🧠 Starting ML services"
+	docker compose --profile ml up -d constitutional-bert
+
+# Development helpers for Phase 2
+dev.phase2: dev.up phase2.up
+	@echo "🎉 Full development environment with Phase 2 features ready!"
+	@echo ""
+	@echo "Available services:"
+	@echo "  - API: http://localhost:8080"
+	@echo "  - API Docs: http://localhost:8080/docs"  
+	@echo "  - Grafana: http://localhost:3001 (admin/admin)"
+	@echo "  - Prometheus: http://localhost:9090"
+	@echo "  - Langfuse: http://localhost:3000"
+	@echo ""
+
+# Easy setup command for non-power-users
+setup: 
+	@echo "🚀 Setting up StratMaster for local development"
+	@echo "This will run the user-friendly setup script..."
+	./setup.sh
+
+# Health check for all services
+health-check:
+	@echo "🏥 Checking service health..."
+	@echo "API Health:"
+	@curl -f http://localhost:8080/healthz 2>/dev/null || echo "  ❌ API not responding"
+	@echo ""
+	@echo "Grafana Health:"
+	@curl -f http://localhost:3001/api/health 2>/dev/null || echo "  ❌ Grafana not responding" 
+	@echo ""
+	@echo "Prometheus Health:"
+	@curl -f http://localhost:9090/-/healthy 2>/dev/null || echo "  ❌ Prometheus not responding"

@@ -13,11 +13,23 @@ services:
       LANGFUSE_SERVER_URL: http://langfuse:3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       REDIS_URL: redis://redis:6379/0
+      # Phase 2 telemetry configuration
+      GRAFANA_URL: http://grafana:3000
+      PROMETHEUS_URL: http://prometheus:9090
+      # Development configuration
+      STRATMASTER_LOG_LEVEL: INFO
+      STRATMASTER_RELOAD: "true"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     develop:
       watch:
         - path: ./packages/api
@@ -274,6 +286,64 @@ services:
     profiles: [workers]
     command: sleep infinity
 
+  # Phase 2 Implementation - Production Telemetry Dashboard
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"  # Avoid conflict with Langfuse
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./configs/telemetry/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./configs/telemetry/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./configs/telemetry/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # Constitutional ML Services
+  constitutional-bert:
+    image: huggingface/transformers-pytorch-gpu:latest
+    profiles: [ml]  # Optional ML services
+    environment:
+      TRANSFORMERS_CACHE: /cache
+      MODEL_NAME: constitutional-bert-v2
+    volumes:
+      - ml_models_cache:/cache
+    ports:
+      - "8085:8000"
+
+  # Real-time Collaboration WebSocket Service
+  collaboration-ws:
+    build: ./packages/collaboration
+    profiles: [collaboration]  # Optional collaboration features
+    ports:
+      - "8084:8084"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      REDIS_URL: redis://redis:6379/1
+      WEBSOCKET_PORT: 8084
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   qdrant_data:
@@ -282,3 +352,6 @@ volumes:
   research_cache:
   nebula_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
+  ml_models_cache:

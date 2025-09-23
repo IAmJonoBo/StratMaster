@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "stratmaster-orchestrator"
 version = "0.1.0"
 description = "LangGraph-based orchestration utilities for StratMaster"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
   "pydantic>=2.11.9",
