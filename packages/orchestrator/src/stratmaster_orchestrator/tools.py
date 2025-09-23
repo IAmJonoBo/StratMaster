@@ -480,7 +480,9 @@ class ToolRegistry:
                 response_payload = self._evals_client.run(
                     self.tenant_id, suite, thresholds=serialised_thresholds
                 )
-            except Exception:
+            except (RuntimeError, ValueError) as e:
+                import logging
+                logging.warning(f"Eval client error in run_evaluations: {e}")
                 response_payload = None
             else:
                 metrics_payload = response_payload.get("metrics", {})
