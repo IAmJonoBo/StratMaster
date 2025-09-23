@@ -90,7 +90,8 @@ def vote(strategy_id: str, weights: dict[str, float], memos: list[DisciplineMemo
         s = float(m.scores.get("overall", 0.0))
         w = float(weights.get(m.discipline, 0.0))
         votes.append(DisciplineVote(id=f"vote:{m.discipline}", discipline=m.discipline, score=s))
-        total += s * w; ws += w
+        total += s * w
+        ws += w
     return CouncilVote(id=f"vote:{strategy_id}", strategy_id=strategy_id, votes=votes,
                        weighted_score=(total/ws if ws>0 else 0.0), weights=weights)
 
