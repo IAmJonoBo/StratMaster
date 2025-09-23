@@ -12,6 +12,7 @@ from .models import (
     ProvenanceResource,
 )
 from .service import ResearchService
+from .tracing import MCPTracingManager
 
 
 def _build_service() -> tuple[AppConfig, ResearchService]:
@@ -23,6 +24,7 @@ def _build_service() -> tuple[AppConfig, ResearchService]:
 def create_app() -> FastAPI:
     config, service = _build_service()
     app = FastAPI(title="Research MCP", version="0.3.0")
+    tracer = MCPTracingManager("research")
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
@@ -42,19 +44,27 @@ def create_app() -> FastAPI:
 
     @tools_router.post("/metasearch", response_model=MetasearchResponse)
     async def metasearch(payload: MetasearchRequest) -> MetasearchResponse:
-        try:
-            return service.metasearch(payload)
-        except ValueError as exc:  # pragma: no cover - defensive
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        with tracer.trace_tool_call("metasearch", {
+            "query": payload.query[:100],  # Truncate for tracing
+            "max_results": payload.max_results
+        }):
+            try:
+                return service.metasearch(payload)
+            except ValueError as exc:  # pragma: no cover - defensive
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @tools_router.post("/crawl", response_model=CrawlResponse)
     async def crawl(payload: CrawlRequest) -> CrawlResponse:
-        try:
-            return service.crawl(payload)
-        except PermissionError as exc:
-            raise HTTPException(status_code=403, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        with tracer.trace_tool_call("crawl", {
+            "url": payload.url,
+            "max_pages": payload.max_pages
+        }):
+            try:
+                return service.crawl(payload)
+            except PermissionError as exc:
+                raise HTTPException(status_code=403, detail=str(exc)) from exc
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     app.include_router(tools_router)
 
