@@ -361,7 +361,7 @@ class ToolRegistry:
                     summaries = cast(Iterable[Mapping[str, Any]], raw_summaries)
                 else:
                     summaries = []
-            except Exception as e:  # Broadly catch to ensure offline fallback
+            except (KeyError, AttributeError, TypeError, ConnectionError, TimeoutError) as e:
                 import logging
 
                 logging.warning(
