@@ -80,6 +80,7 @@ class StrategyState:
             scratchpad=dict(self.scratchpad),
             pending_tasks=list(self.pending_tasks),
             completed_tasks=list(self.completed_tasks),
+            failure_reasons=list(self.failure_reasons),
         )
 
     def record_metric(self, name: str, value: float) -> None:

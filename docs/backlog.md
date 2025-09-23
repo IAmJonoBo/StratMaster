@@ -85,10 +85,11 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 
 ### SP3-301 — LangGraph agent graph & shared state
 
-- Status: ⏳ **Not started** — The LangGraph orchestration still leans on the
-  synthetic `ToolRegistry`, which fabricates sources, retrieval scores, metrics,
-  and decision briefs in-process instead of brokering real MCP calls, so the
-  graph never talks to external services.【F:packages/orchestrator/src/stratmaster_orchestrator/tools.py†L50-L245】【F:packages/orchestrator/src/stratmaster_orchestrator/graph.py†L52-L95】
+- Status: 🚧 **In progress** — The tool mediation layer now prefers real MCP
+  clients when available, brokering metasearch, hybrid retrieval, graph
+  summaries, and eval runs over HTTP while retaining deterministic fallbacks for
+  offline execution. Fresh tests cover the MCP-backed flows so the LangGraph
+  nodes exercise live clients instead of only synthetic stubs.【F:packages/orchestrator/src/stratmaster_orchestrator/tools.py†L74-L336】【F:packages/orchestrator/tests/test_tools.py†L1-L129】
   The API orchestrator also keeps the `_GraphPipeline` wrapper around a
   `_SequentialPipeline` fallback, so the legacy sequential path remains wired
   in rather than committing to LangGraph-only execution.【F:packages/api/src/stratmaster_api/services.py†L242-L334】
