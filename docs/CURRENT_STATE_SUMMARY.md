@@ -64,7 +64,7 @@ StratMaster is a comprehensive, production-ready AI-powered Brand Strategy platf
 - **Enterprise**: SSO Integration, ML Training, Mobile API
 
 ### Mobile Application
-- **React Native 0.72.6**: Modern mobile framework
+- **React Native (latest)**: Modern mobile framework
 - **Updated Dependencies**: Latest Metro, TypeScript, ESLint tooling
 - **Biometric Auth**: Fingerprint/Face ID support
 - **Push Notifications**: Firebase messaging integration
