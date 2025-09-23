@@ -16,6 +16,12 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: ["pydantic>=2.7.0"]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: ["-c", ".security.cfg", "-r", "."]
+        exclude: ^(tests/|.*_test\.py$)
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.41.0
     hooks:
@@ -29,3 +35,9 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]
+      - id: pip-audit
+        name: Python dependency vulnerability scan
+        entry: bash -c 'pip-audit --desc --format json --output pip-audit-report.json || true'
+        language: system
+        pass_filenames: false
+        stages: [manual]

@@ -1,6 +1,10 @@
 .PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
-        phase2.up phase2.down phase2.full phase2.status telemetry.up collaboration.up ml.up dev.phase2 setup health-check
+        phase2.up phase2.down phase2.full phase2.status telemetry.up collaboration.up ml.up dev.phase2 setup health-check \
+        assets.plan assets.pull assets.verify assets.required deps.check deps.plan deps.upgrade deps.upgrade.safe \
+        security.scan security.install security.baseline security.check \
+        accessibility.scan accessibility.fix accessibility.test \
+        test.advanced test.property test.contract test.load test.integration
 
 dev.up:
 	docker compose up -d
@@ -172,3 +176,129 @@ health-check:
 	@echo ""
 	@echo "Prometheus Health:"
 	@curl -f http://localhost:9090/-/healthy 2>/dev/null || echo "  ❌ Prometheus not responding"
+
+# Asset Management System - Cryptographically verified downloads
+assets.plan:
+	@echo "📋 Planning asset downloads..."
+	python scripts/assets_pull.py plan
+
+assets.pull:
+	@echo "📥 Downloading all assets..."
+	python scripts/assets_pull.py pull --all
+
+assets.required:
+	@echo "📦 Downloading required assets only..."
+	python scripts/assets_pull.py pull --required-only
+
+assets.verify:
+	@echo "🔍 Verifying downloaded assets..."
+	python scripts/assets_pull.py verify
+
+# Asset management dry run for testing
+assets.plan.dry:
+	@echo "🔍 Dry run: Asset download plan"
+	python scripts/assets_pull.py --dry-run plan
+
+assets.pull.dry:
+	@echo "🔍 Dry run: Asset download simulation"  
+	python scripts/assets_pull.py --dry-run pull --all
+
+# Safe Dependency Upgrade System
+deps.check:
+	@echo "🔍 Checking for dependency updates..."
+	python scripts/dependency_upgrade.py check
+
+deps.plan:
+	@echo "📋 Planning dependency upgrades..."
+	python scripts/dependency_upgrade.py plan --scope python
+
+deps.upgrade.safe:
+	@echo "🚀 Applying safe patch updates..."
+	python scripts/dependency_upgrade.py upgrade --type patch
+
+deps.upgrade:
+	@echo "⚠️  Applying minor updates (requires manual review)..."
+	python scripts/dependency_upgrade.py upgrade --type minor
+
+# Dependency upgrade dry runs
+deps.check.dry:
+	@echo "🔍 Dry run: Dependency check"
+	python scripts/dependency_upgrade.py --dry-run check
+
+deps.upgrade.dry:
+	@echo "🔍 Dry run: Dependency upgrade simulation"
+	python scripts/dependency_upgrade.py --dry-run upgrade --type patch
+
+# Security scanning and vulnerability assessment  
+security.scan:
+	@echo "🔒 Running comprehensive security scan..."
+	@echo "Python Security (bandit):"
+	@bandit -c .security.cfg -r packages/ || echo "  ⚠️  Bandit not installed: pip install bandit"
+	@echo ""
+	@echo "Dependency Vulnerabilities (pip-audit):"
+	@pip-audit --desc || echo "  ⚠️  pip-audit not installed: pip install pip-audit"
+
+security.install:
+	@echo "🔒 Installing security scanning tools..."
+	.venv/bin/python -m pip install bandit pip-audit safety detect-secrets
+
+security.baseline:
+	@echo "🔒 Creating security baseline..."
+	@detect-secrets scan --baseline .secrets.baseline || echo "  ⚠️  detect-secrets not installed"
+
+security.check:
+	@echo "🔒 Quick security check..."
+	@bandit -c .security.cfg -r packages/ -f json -o bandit-report.json || echo "  ⚠️  Bandit scan issues found"
+	@echo "Security scan complete. Check bandit-report.json for details."
+
+# Accessibility Enhancement System - WCAG 2.1 AA compliance
+accessibility.scan:
+	@echo "♿ Running accessibility audit..."
+	.venv/bin/python scripts/accessibility_audit.py scan
+
+accessibility.fix:
+	@echo "🔧 Applying accessibility fixes..."
+	.venv/bin/python scripts/accessibility_audit.py fix
+
+accessibility.test:
+	@echo "⌨️  Testing keyboard navigation..."
+	.venv/bin/python scripts/accessibility_audit.py test-keyboard
+
+# Accessibility dry runs
+accessibility.scan.dry:
+	@echo "🔍 Dry run: Accessibility scan"
+	.venv/bin/python scripts/accessibility_audit.py --dry-run scan
+
+accessibility.fix.dry:
+	@echo "🔍 Dry run: Accessibility fixes"
+	.venv/bin/python scripts/accessibility_audit.py --dry-run fix
+
+# Advanced Testing Suite - Frontier-grade testing capabilities
+test.advanced:
+	@echo "🧪 Running advanced test suite..."
+	.venv/bin/python scripts/advanced_testing.py all
+
+test.property:
+	@echo "🧪 Running property-based tests..."
+	.venv/bin/python scripts/advanced_testing.py property-tests
+
+test.contract:
+	@echo "📋 Running API contract tests..."
+	.venv/bin/python scripts/advanced_testing.py contract-tests
+
+test.load:
+	@echo "⚡ Running load tests..."
+	.venv/bin/python scripts/advanced_testing.py load-test --duration 30
+
+test.integration:
+	@echo "🔗 Running integration tests..."
+	.venv/bin/python scripts/advanced_testing.py integration-tests
+
+# Advanced testing dry runs
+test.advanced.dry:
+	@echo "🔍 Dry run: Advanced testing suite"
+	.venv/bin/python scripts/advanced_testing.py --dry-run all
+
+test.load.dry:
+	@echo "🔍 Dry run: Load testing"
+	.venv/bin/python scripts/advanced_testing.py --dry-run load-test

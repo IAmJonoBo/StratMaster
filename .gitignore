@@ -80,6 +80,28 @@ constitutional_cache/
 # Health check results
 health_check_*.log
 
+# Asset Management System
+assets/
+.assetlock
+.dependency_backups/
+
+# Security Reports
+bandit-report*.json
+pip-audit-report*.json
+safety-report*.json
+.secrets.baseline
+
+# Dependency Management
+dependency_check.log
+upgrade_plan.log
+upgrade_result.log
+
+# Advanced Testing Reports
+advanced-test-report.json
+accessibility-audit-report.json
+property-test-results.json
+load-test-results.json
+
 # Misc
 *.swp
 *.swo
