@@ -15,6 +15,14 @@ from uuid import uuid4
 
 import httpx
 
+from stratmaster_ingestion import (
+    ClarificationInput,
+    ClarificationService as IngestionClarificationService,
+    DocumentPayload as IngestionPayload,
+    IngestionCoordinator,
+    ParseResult as IngestionParseResult,
+)
+
 from .models import (
     CEP,
     JTBD,
@@ -296,11 +304,20 @@ class OrchestratorService:
         knowledge_client: KnowledgeMCPClient | None = None,
         router_client: RouterMCPClient | None = None,
         evals_client: EvalsMCPClient | None = None,
+        ingestion_service: IngestionCoordinator | None = None,
+        clarification_service: IngestionClarificationService | None = None,
     ) -> None:
         self.research_client = research_client or ResearchMCPClient()
         self.knowledge_client = knowledge_client or KnowledgeMCPClient()
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
+        self.ingestion_service = ingestion_service or IngestionCoordinator()
+        self.clarification_service = (
+            clarification_service
+            or IngestionClarificationService(
+                threshold=self.ingestion_service.config.threshold
+            )
+        )
         self._pipeline: Pipeline = self._build_pipeline()
         # Build strategy graph if orchestrator package is available; otherwise None.
         # Note: We intentionally avoid importing stratmaster_orchestrator at module import
@@ -327,6 +344,32 @@ class OrchestratorService:
                     "Strategy graph setup failed; falling back to local pipeline",
                     exc_info=exc,
                 )
+
+    def ingest_document(self, payload: IngestionPayload) -> IngestionParseResult:
+        return self.ingestion_service.ingest(payload)
+
+    def generate_clarifications(
+        self,
+        *,
+        document_id: str,
+        chunks: Iterable[dict[str, object]],
+        threshold: float | None = None,
+    ) -> list[dict[str, object]]:
+        inputs = [
+            ClarificationInput(
+                chunk_id=str(item.get("id", "")),
+                confidence=float(item.get("confidence", 0.0)),
+                text=str(item.get("text", "")),
+                kind=str(item.get("kind", "text")),
+            )
+            for item in chunks
+        ]
+        plan = self.clarification_service.from_inputs(
+            document_id=document_id,
+            inputs=inputs,
+            threshold=threshold,
+        )
+        return [prompt.model_dump() for prompt in plan.prompts]
 
     def _build_pipeline(self) -> Pipeline:
         # Lazy-import LangGraph to avoid hard dependency and import-order lint issues

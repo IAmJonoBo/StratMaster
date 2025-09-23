@@ -1,0 +1,5 @@
+metric,baseline,delta,target
+awareness_index,52,8,60
+consideration_score,41,11,55
+conversion_rate,3.2,0.8,4.0
+loyalty_intent,38,9,50
