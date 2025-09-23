@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import yaml  # type: ignore[import-untyped]
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from pydantic import ValidationError
 
 from .models import RecommendationOutcome
@@ -33,6 +33,8 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
+from .dependencies import require_idempotency_key
+from .routers import ingestion as ingestion_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -42,7 +44,6 @@ from .schemas import (
 from .services import orchestrator_stub
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
-IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9_-]{8,128}$")
 
 # Broad YAML data shape for config endpoints
 YAMLData = dict[str, Any] | list[Any] | str | int | float | bool | None
@@ -131,16 +132,6 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 }
 
 
-def require_idempotency_key(
-    key: str | None = Header(None, alias="Idempotency-Key"),
-) -> str:
-    if key is None:
-        raise HTTPException(status_code=400, detail="Idempotency-Key header required")
-    if not IDEMPOTENCY_PATTERN.fullmatch(key):
-        raise HTTPException(status_code=400, detail="invalid Idempotency-Key format")
-    return key
-
-
 def create_app() -> FastAPI:
     app = FastAPI(title="StratMaster API", version="0.2.0")
 
@@ -150,6 +141,8 @@ def create_app() -> FastAPI:
 
     register_debug_config_endpoint(app)
     register_model_schema_endpoints(app)
+
+    app.include_router(ingestion_router.router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 

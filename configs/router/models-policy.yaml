@@ -5,40 +5,64 @@ tenants:
       reasoning:
         primary:
           provider: local
-          model: mixtral-8x22b-instruct
+          model: mixtral-8x7b-instruct
+          metadata:
+            license: apache-2.0
+            source: https://mistral.ai/news/mixtral-of-experts/
         fallbacks:
-          - provider: openai
-            model: gpt-large-reasoning
+          - provider: local
+            model: llama3-8b-instruct
+            metadata:
+              license: apache-2.0
+              source: https://ai.meta.com/llama/
         parameters:
           max_output_tokens: 4096
           temperature_max: 0.8
       summarisation:
         primary:
           provider: local
-          model: qwen2.5-14b-instruct
+          model: llama3-8b-instruct
+          metadata:
+            license: apache-2.0
+            source: https://ai.meta.com/llama/
         fallbacks:
-          - provider: openai
-            model: gpt-large-reasoning
+          - provider: local
+            model: phi3-medium-instruct
+            metadata:
+              license: mit
+              source: https://azure.microsoft.com/en-us/products/phi-3
         parameters:
           max_output_tokens: 2048
           temperature_max: 0.7
       embedding:
         primary:
-          provider: openai
-          model: text-embedding-3-large
+          provider: local
+          model: phi3-medium-embedding
+          metadata:
+            license: mit
+            source: https://azure.microsoft.com/en-us/products/phi-3
         fallbacks:
           - provider: local
-            model: qwen2.5-14b-instruct
+            model: nous-hermes2-embed
+            metadata:
+              license: apache-2.0
+              source: https://huggingface.co/NousResearch/Nous-Hermes-2-Mistral-7B-DPO
         parameters:
           max_batch: 128
           allow_raw_documents: false
       rerank:
         primary:
           provider: local
-          model: bge-reranker-large
+          model: nous-hermes2-reranker
+          metadata:
+            license: apache-2.0
+            source: https://huggingface.co/NousResearch/Nous-Hermes-2-Mistral-7B-DPO
         fallbacks:
-          - provider: openai
-            model: text-embedding-3-large
+          - provider: local
+            model: phi3-medium-instruct
+            metadata:
+              license: mit
+              source: https://azure.microsoft.com/en-us/products/phi-3
         parameters:
           max_candidates: 200
           score_threshold: 0.15
@@ -46,9 +70,24 @@ tenants:
       local:
         default: true
         models:
-          - mixtral-8x22b-instruct
-          - qwen2.5-14b-instruct
-          - bge-reranker-large
+          - id: mixtral-8x7b-instruct
+            license: apache-2.0
+            usage: reasoning
+          - id: llama3-8b-instruct
+            license: apache-2.0
+            usage: reasoning
+          - id: phi3-medium-instruct
+            license: mit
+            usage: summarisation
+          - id: phi3-medium-embedding
+            license: mit
+            usage: embedding
+          - id: nous-hermes2-reranker
+            license: apache-2.0
+            usage: rerank
+          - id: nous-hermes2-embed
+            license: apache-2.0
+            usage: embedding
       openai:
         enabled: false
         models:
@@ -69,6 +108,15 @@ tenants:
       guardrails:
         temperature_max_global: 0.85
         max_context_tokens: 32000
+    governance:
+      allow_list:
+        - mixtral-8x7b-instruct
+        - llama3-8b-instruct
+        - nous-hermes2-reranker
+        - nous-hermes2-embed
+        - phi3-medium-instruct
+        - phi3-medium-embedding
+      require_license_metadata: true
 structured_outputs:
   enabled: true
   backend: outlines

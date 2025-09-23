@@ -15,6 +15,24 @@ from uuid import uuid4
 
 import httpx
 
+try:
+    from stratmaster_ingestion import (
+        ClarificationInput,
+        ClarificationService as IngestionClarificationService,
+        DocumentPayload as IngestionPayload,
+        IngestionCoordinator,
+        ParseResult as IngestionParseResult,
+    )
+    INGESTION_AVAILABLE = True
+except ImportError:
+    # Graceful fallback when ingestion package is not available
+    INGESTION_AVAILABLE = False
+    ClarificationInput = None
+    IngestionClarificationService = None
+    IngestionPayload = None
+    IngestionCoordinator = None
+    IngestionParseResult = None
+
 from .models import (
     CEP,
     JTBD,
@@ -296,11 +314,26 @@ class OrchestratorService:
         knowledge_client: KnowledgeMCPClient | None = None,
         router_client: RouterMCPClient | None = None,
         evals_client: EvalsMCPClient | None = None,
+        ingestion_service: IngestionCoordinator | None = None,
+        clarification_service: IngestionClarificationService | None = None,
     ) -> None:
         self.research_client = research_client or ResearchMCPClient()
         self.knowledge_client = knowledge_client or KnowledgeMCPClient()
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
+        
+        # Initialize ingestion services if available
+        if INGESTION_AVAILABLE:
+            self.ingestion_service = ingestion_service or IngestionCoordinator()
+            self.clarification_service = (
+                clarification_service
+                or IngestionClarificationService(
+                    threshold=self.ingestion_service.config.threshold
+                )
+            )
+        else:
+            self.ingestion_service = None
+            self.clarification_service = None
         self._pipeline: Pipeline = self._build_pipeline()
         # Build strategy graph if orchestrator package is available; otherwise None.
         # Note: We intentionally avoid importing stratmaster_orchestrator at module import
@@ -360,6 +393,37 @@ class OrchestratorService:
             )
             return fallback
         return _GraphPipeline(compiled, fallback)
+
+    def ingest_document(self, payload: IngestionPayload) -> IngestionParseResult:
+        if not INGESTION_AVAILABLE or not self.ingestion_service:
+            raise RuntimeError("Ingestion service not available")
+        return self.ingestion_service.ingest(payload)
+
+    def generate_clarifications(
+        self,
+        *,
+        document_id: str,
+        chunks: Iterable[dict[str, object]],
+        threshold: float | None = None,
+    ) -> list[dict[str, object]]:
+        if not INGESTION_AVAILABLE or not self.clarification_service:
+            raise RuntimeError("Clarification service not available")
+            
+        inputs = [
+            ClarificationInput(
+                chunk_id=str(item.get("id", "")),
+                confidence=float(item.get("confidence", 0.0)),
+                text=str(item.get("text", "")),
+                kind=str(item.get("kind", "text")),
+            )
+            for item in chunks
+        ]
+        plan = self.clarification_service.from_inputs(
+            document_id=document_id,
+            inputs=inputs,
+            threshold=threshold,
+        )
+        return [prompt.model_dump() for prompt in plan.prompts]
 
     # ------------------------------------------------------------------
     # Research planning/execution
