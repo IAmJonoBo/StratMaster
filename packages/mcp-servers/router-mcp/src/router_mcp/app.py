@@ -11,6 +11,8 @@ from .models import (
     InfoResponse,
     RerankRequest,
     RerankResponse,
+    AgentRouteRequest,
+    AgentRouteResponse,
 )
 from .service import RouterService
 
@@ -53,6 +55,11 @@ def create_app() -> FastAPI:
     @tools.post("/rerank", response_model=RerankResponse)
     async def rerank(payload: RerankRequest) -> RerankResponse:
         return service.rerank(payload)
+
+    @tools.post("/route", response_model=AgentRouteResponse)
+    async def route_agents(payload: AgentRouteRequest) -> AgentRouteResponse:
+        """Route query to appropriate specialist agents - Sprint 1."""
+        return service.route_agents(payload)
 
     app.include_router(tools)
 

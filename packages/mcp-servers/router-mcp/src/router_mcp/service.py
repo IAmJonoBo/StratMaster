@@ -19,6 +19,8 @@ from .models import (
     RerankRequest,
     RerankResponse,
     RerankResult,
+    AgentRouteRequest,
+    AgentRouteResponse,
 )
 from .providers import ProviderAdapter
 
@@ -309,3 +311,29 @@ class RouterService:
                     ) from exc
                 return text
             return fallback
+
+    def route_agents(self, payload: AgentRouteRequest) -> AgentRouteResponse:
+        """Route request to appropriate agents - Sprint 1 implementation."""
+        from ....agents.router_graph import AgentRouter, RouterInput
+        
+        # Create router instance
+        router = AgentRouter()
+        
+        # Build router input
+        router_input = RouterInput(
+            query=payload.query,
+            tenant_id=payload.tenant_id,
+            metadata=payload.metadata,
+            policy_flags=payload.policy_flags
+        )
+        
+        # Route to agents
+        result = router.route(router_input)
+        
+        return AgentRouteResponse(
+            selected_agents=[agent.value for agent in result.selected_agents],
+            rationale=result.rationale,
+            confidence=result.confidence,
+            routing_metadata=result.routing_metadata,
+            tenant_id=payload.tenant_id
+        )
