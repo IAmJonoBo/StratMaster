@@ -1,4 +1,4 @@
 fastapi~=0.117.1
-uvicorn[standard]~=0.36.0
+uvicorn[standard]~=0.37.0
 pydantic~=2.11.9
 langgraph~=0.6.7
