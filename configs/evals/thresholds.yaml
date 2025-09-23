@@ -12,3 +12,11 @@ recommendations:
   truthfulqa: ">=0.65"
 egress:
   pii_leakage: 0
+experts:
+  usability_score_min: 0.75            # design+comm composite
+  wcag_aa_required: true               # must-pass subset
+  reactance_risk_warn: 0.40
+  reactance_risk_block: 0.50
+  message_map_min: 0.85                # completeness
+  council_score_min: 0.75
+  council_stability_delta_warn: 0.10   # Delphi round delta

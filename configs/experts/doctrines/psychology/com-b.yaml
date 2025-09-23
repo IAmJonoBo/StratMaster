@@ -1,0 +1,36 @@
+# COM-B Model for Behavior Change
+# Based on Susan Michie's Behaviour Change Wheel framework
+# Assesses Capability, Opportunity, and Motivation factors
+
+title: "COM-B Behavior Change Model"
+id: "psychology/com-b"
+discipline: "psychology" 
+type: "rubric"
+rules:
+  - id: "psychological-capability"
+    severity: "warn"
+    desc: "Does the target audience have the knowledge and psychological skills needed to engage in the behavior? Consider cognitive load, comprehension, decision-making ability."
+    
+  - id: "physical-capability"
+    severity: "warn"
+    desc: "Does the target audience have the physical capacity, skills, and stamina needed? Consider accessibility, motor skills, sensory requirements."
+    
+  - id: "physical-opportunity"
+    severity: "warn"
+    desc: "Is the physical environment conducive to the behavior? Consider time, location, resources, accessibility of tools or services."
+    
+  - id: "social-opportunity"
+    severity: "warn"
+    desc: "Do social factors support the behavior? Consider cultural norms, social pressure, modeling by others, interpersonal influences."
+    
+  - id: "reflective-motivation"
+    severity: "warn"
+    desc: "Do conscious plans, evaluations, and decisions support the behavior? Consider intentions, goals, conscious decision-making processes."
+    
+  - id: "automatic-motivation"
+    severity: "warn"
+    desc: "Do automatic processes support the behavior? Consider habits, emotional responses, impulses, reflex reactions, automatic cognitive biases."
+
+references:
+  - "Michie, S., van Stralen, M. M., & West, R. (2011). The behaviour change wheel: a new method for characterising and designing behaviour change interventions. Implementation science, 6(1), 1-11."
+  - "https://www.behaviourchangewheel.com/"

@@ -253,6 +253,16 @@ This backlog turns the blueprint roadmap into actionable slices. IDs are referen
 - PR slices: house rules authoring, alignment review, integration tests.
 - Acceptance: Constitution set stored under `prompts/constitutions`, referenced by agents.
 
+### SEC-202 — Expert Council implementation
+
+- Status: ✅ **Complete** — Expert Council models, doctrines, weights, and evaluation thresholds implemented. Pydantic v2 models provide schema generation and validation for expert profiles, discipline memos, votes, message maps, and persuasion risk assessments. Configuration files include NN/g heuristics, WCAG 2.1 AA guidelines, COM-B and EAST frameworks, and psychological reactance detection rules.【F:packages/api/src/stratmaster_api/models/experts/†L1-L775】【F:configs/experts/weights.yaml†L1-L20】【F:configs/experts/doctrines/†L1-L50】【F:configs/evals/thresholds.yaml†L15-L21】【F:prompts/experts/†L1-L50】
+- Issue stub: `issue/sec-202-expert-council`
+- PR slices: 
+  1. `pr/sec-202a-models-schemas` — Pydantic v2 models with JSON schema generation for all Expert Council entities.
+  2. `pr/sec-202b-doctrines-config` — Discipline-specific rubrics and checklists (NN/g, WCAG, COM-B, EAST, message mapping).
+  3. `pr/sec-202c-evaluation-gates` — Threshold configuration and Delphi process instructions for council convergence.
+- Acceptance: Expert Council models exported under `packages/api/models/experts`; schemas served via API; doctrines validate and load in tests; evaluation thresholds integrated with existing gate system.
+
 ## Compression & Tooling
 
 ### COMP-501 — LLMLingua parameter tuning

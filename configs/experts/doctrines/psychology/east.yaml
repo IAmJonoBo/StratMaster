@@ -1,0 +1,44 @@
+# EAST Framework for Behavioral Insights
+# Based on the UK Behavioural Insights Team framework
+# Assesses if interventions are Easy, Attractive, Social, and Timely
+
+title: "EAST Behavioral Framework"
+id: "psychology/east"
+discipline: "psychology"
+type: "rubric"
+rules:
+  - id: "easy-simple"
+    severity: "warn"
+    desc: "Is the desired behavior as simple as possible? Reduce friction, minimize steps, simplify choices, use defaults effectively."
+    
+  - id: "easy-accessible"
+    severity: "warn"
+    desc: "Is the behavior accessible when and where it's needed? Consider availability, physical/digital access, timing constraints."
+    
+  - id: "attractive-attention"
+    severity: "info"
+    desc: "Does the intervention attract attention? Use design, color, positioning, personalization to stand out from competing stimuli."
+    
+  - id: "attractive-incentives"
+    severity: "info"
+    desc: "Are there appropriate incentives? Consider financial, social, personal benefits; loss aversion; immediate vs. delayed rewards."
+    
+  - id: "social-norms"
+    severity: "warn"
+    desc: "Does the intervention leverage social norms? Show what most people do, use social proof, highlight descriptive and injunctive norms."
+    
+  - id: "social-networks"
+    severity: "info"
+    desc: "Does it work through social networks? Use peer influence, social commitment, network effects, trusted messengers."
+    
+  - id: "timely-when"
+    severity: "warn"
+    desc: "Is the timing right? Target moments when people are most receptive, use implementation intentions, consider when attention is focused."
+    
+  - id: "timely-prompts"
+    severity: "info"
+    desc: "Are prompts well-timed? Use just-in-time reminders, leverage natural decision points, avoid cognitive overload times."
+
+references:
+  - "Behavioural Insights Team. (2014). EAST: Four simple ways to apply behavioural insights."
+  - "https://www.bi.team/publications/east-four-simple-ways-to-apply-behavioural-insights/"
