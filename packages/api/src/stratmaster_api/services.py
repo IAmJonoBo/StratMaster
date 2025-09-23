@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 """Orchestration helpers backing the public API surfaces."""
 
 from __future__ import annotations
@@ -12,10 +13,6 @@ from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import httpx
-"""
-Note: Do not import stratmaster_orchestrator at module import time. We load it
-optionally at runtime to avoid a hard dependency during API-only operation.
-"""
 
 from .models import (
     CEP,
@@ -47,6 +44,9 @@ from .models import (
     SourceType,
     WorkflowMetadata,
 )
+
+# Note: Do not import stratmaster_orchestrator at module import time. We load it
+# optionally at runtime to avoid a hard dependency during API-only operation.
 
 logger = logging.getLogger(__name__)
 
@@ -301,7 +301,9 @@ class OrchestratorService:
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
         self._pipeline: Pipeline = self._build_pipeline()
-        # Build strategy graph if orchestrator package is available; otherwise None
+        # Build strategy graph if orchestrator package is available; otherwise None.
+        # Note: We intentionally avoid importing stratmaster_orchestrator at module import
+        # time to keep the API server independent when the orchestrator is unavailable.
         self._strategy_graph = None
         try:
             if importlib.util.find_spec("stratmaster_orchestrator") is not None:

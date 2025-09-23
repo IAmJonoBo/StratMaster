@@ -10,7 +10,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-
 from stratmaster_api.models import (
     Assumption,
     Claim,
@@ -18,7 +17,6 @@ from stratmaster_api.models import (
     DecisionBrief,
     GraphArtifacts,
     RecommendationOutcome,
-    RecommendationStatus,
     RetrievalRecord,
     WorkflowMetadata,
 )
@@ -59,6 +57,45 @@ class StrategyState:
     scratchpad: dict[str, AgentScratchpad] = field(default_factory=dict)
     pending_tasks: list[str] = field(default_factory=list)
     completed_tasks: list[str] = field(default_factory=list)
+    # Optional failure tracking used by RecommenderNode
+    failure_reasons: list[str] = field(default_factory=list)
+
+    # Utility helpers used by agent nodes
+    def copy(self) -> StrategyState:
+        """Shallow copy suitable for step-wise mutation.
+
+        Collections are shallow-copied to avoid accidental shared references across nodes.
+        """
+        return StrategyState(
+            tenant_id=self.tenant_id,
+            query=self.query,
+            claims=list(self.claims),
+            assumptions=list(self.assumptions),
+            retrieval=list(self.retrieval),
+            artefacts=self.artefacts,
+            debate=self.debate,
+            decision_brief=self.decision_brief,
+            workflow=self.workflow,
+            metrics=dict(self.metrics),
+            scratchpad=dict(self.scratchpad),
+            pending_tasks=list(self.pending_tasks),
+            completed_tasks=list(self.completed_tasks),
+        )
+
+    def record_metric(self, name: str, value: float) -> None:
+        self.metrics[name] = value
+
+    def mark_failure(self, reason: str) -> None:
+        if reason not in self.failure_reasons:
+            self.failure_reasons.append(reason)
+
+    # Back-compat alias used by some nodes/tests
+    def mark_failed(self, reason: str) -> None:
+        self.mark_failure(reason)
+
+    def mark_complete(self) -> None:
+        # Marker method used by RecommenderNode; no-op for now but kept for compatibility
+        pass
 
 
 @dataclass

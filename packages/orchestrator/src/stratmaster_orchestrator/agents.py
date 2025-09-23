@@ -31,7 +31,11 @@ class ResearcherNode:
         working.artefacts = self.tools.graph_artifacts(working.claims)
         working.completed_tasks.append("research")
         working.pending_tasks.extend(
-            [task for task in ("synthesis", "debate") if task not in working.pending_tasks]
+            [
+                task
+                for task in ("synthesis", "debate")
+                if task not in working.pending_tasks
+            ]
         )
         self.checkpoints.save("researcher", working)
         return working
@@ -169,7 +173,9 @@ class ConstitutionalCriticNode:
         working.record_metric("evaluation_passed", 1.0 if passed else 0.0)
         if working.debate is None:
             working.debate = DebateTrace(turns=[])
-        verdict = "Approved under constitution" if passed else "Requires operator review"
+        verdict = (
+            "Approved under constitution" if passed else "Requires operator review"
+        )
         working.debate.turns.append(
             DebateTurn(
                 agent="critic",
@@ -199,9 +205,13 @@ class RecommenderNode:
         pad.notes.append("Composed decision brief and final recommendation")
         outcome = self.tools.compose_recommendation(
             working,
-            workflow=working.workflow
-            if working.workflow
-            else WorkflowMetadata(workflow_id="wf-synthetic", tenant_id=working.tenant_id),
+            workflow=(
+                working.workflow
+                if working.workflow
+                else WorkflowMetadata(
+                    workflow_id="wf-synthetic", tenant_id=working.tenant_id
+                )
+            ),
         )
         pad.tool_calls.append(
             ToolInvocation(

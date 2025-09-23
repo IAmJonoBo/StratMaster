@@ -186,7 +186,7 @@ def create_app() -> FastAPI:
         _: str = Depends(require_idempotency_key),
     ) -> GraphSummariseResponse:
         result = orchestrator_stub.summarise_graph(
-            tenant_id=payload.tenant_id,
+            _tenant_id=payload.tenant_id,
             focus=payload.focus,
             limit=payload.limit,
         )
@@ -202,9 +202,9 @@ def create_app() -> FastAPI:
         _: str = Depends(require_idempotency_key),
     ) -> DebateRunResponse:
         result = orchestrator_stub.run_debate(
-            tenant_id=payload.tenant_id,
-            hypothesis_id=payload.hypothesis_id,
-            claim_ids=payload.claim_ids,
+            _tenant_id=payload.tenant_id,
+            _hypothesis_id=payload.hypothesis_id,
+            _claim_ids=payload.claim_ids,
             max_turns=payload.max_turns,
         )
         return DebateRunResponse(**result)
@@ -347,7 +347,7 @@ def _load_model_schemas() -> dict[str, Any]:
     schemas: dict[str, Any] = {}
     for json_file in sorted(schemas_path.glob("*.json")):
         # Skip hidden files or macOS resource fork files
-        if json_file.name.startswith('._') or json_file.name.startswith('.'):
+        if json_file.name.startswith("._") or json_file.name.startswith("."):
             continue
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
