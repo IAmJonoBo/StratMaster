@@ -37,18 +37,17 @@ from .state import StrategyState, ToolInvocation
 class ResearchClient(Protocol):
     """Minimal protocol covering the Research MCP client surface we need."""
 
-    def metasearch(self, query: str, limit: int) -> Mapping[str, Any]:
-        ...
+    def metasearch(self, query: str, limit: int) -> Mapping[str, Any]: ...
 
 
 class KnowledgeClient(Protocol):
     """Minimal protocol covering the Knowledge MCP client surface we need."""
 
-    def hybrid_query(self, tenant_id: str, query: str, top_k: int) -> Mapping[str, Any]:
-        ...
+    def hybrid_query(
+        self, tenant_id: str, query: str, top_k: int
+    ) -> Mapping[str, Any]: ...
 
-    def community_summaries(self, tenant_id: str, limit: int) -> Mapping[str, Any]:
-        ...
+    def community_summaries(self, tenant_id: str, limit: int) -> Mapping[str, Any]: ...
 
 
 class EvalsClient(Protocol):
@@ -59,8 +58,7 @@ class EvalsClient(Protocol):
         tenant_id: str,
         suite: str,
         thresholds: Mapping[str, float] | None = None,
-    ) -> Mapping[str, Any]:
-        ...
+    ) -> Mapping[str, Any]: ...
 
 
 def run_cove(*args: Any, **kwargs: Any) -> object:
@@ -119,9 +117,7 @@ class ToolRegistry:
         self._knowledge_client = knowledge_client or self._load_default_client(
             "KnowledgeMCPClient"
         )
-        self._evals_client = evals_client or self._load_default_client(
-            "EvalsMCPClient"
-        )
+        self._evals_client = evals_client or self._load_default_client("EvalsMCPClient")
 
     @staticmethod
     def _load_default_client(name: str) -> Any | None:
@@ -146,9 +142,7 @@ class ToolRegistry:
         except (TypeError, ValueError):
             return default
 
-    def _synthetic_metasearch(
-        self, limit: int
-    ) -> tuple[list[Source], ToolInvocation]:
+    def _synthetic_metasearch(self, limit: int) -> tuple[list[Source], ToolInvocation]:
         sources = [
             Source(
                 id=f"src-{idx}",
@@ -297,9 +291,7 @@ class ToolRegistry:
                     continue
                 metadata_raw = hit.get("metadata", {})
                 metadata = metadata_raw if isinstance(metadata_raw, dict) else {}
-                chunk_hash = str(
-                    metadata.get("chunk_hash", f"chunk-{document_id}")
-                )
+                chunk_hash = str(metadata.get("chunk_hash", f"chunk-{document_id}"))
                 provenance_id = str(
                     metadata.get("provenance_id", f"prov-{document_id}")
                 )
@@ -356,7 +348,10 @@ class ToolRegistry:
 
     def graph_artifacts(self, claims: Iterable[Claim]) -> GraphArtifacts:
         claim_list = list(claims)
-        if self._knowledge_client is not None:
+
+        def _try_from_knowledge() -> GraphArtifacts | None:
+            if self._knowledge_client is None:
+                return None
             try:
                 response = self._knowledge_client.community_summaries(
                     self.tenant_id, limit=max(len(claim_list), 1)
@@ -366,10 +361,15 @@ class ToolRegistry:
                     summaries = cast(Iterable[Mapping[str, Any]], raw_summaries)
                 else:
                     summaries = []
-            except (KeyError, AttributeError, TypeError) as e:
-                # Log the error for debugging; in production, consider using a logger
-                print(f"Error in community_summaries: {e}")
-                summaries = []
+            except Exception as e:  # Broadly catch to ensure offline fallback
+                import logging
+
+                logging.warning(
+                    "knowledge_client.community_summaries failed; using synthetic graph",
+                    exc_info=e,
+                )
+                return None
+
             nodes: list[GraphNode] = [
                 GraphNode(id="focus", label=self.query.title(), type="topic", score=0.8)
             ]
@@ -423,7 +423,13 @@ class ToolRegistry:
                     community_summaries=community_summaries,
                     narrative_chunks=narrative_chunks,
                 )
+            return None
 
+        artifacts = _try_from_knowledge()
+        if artifacts is not None:
+            return artifacts
+
+        # Fallback synthetic graph based on claims
         nodes = [
             GraphNode(id="focus", label=self.query.title(), type="topic", score=0.8),
         ]
@@ -482,9 +488,13 @@ class ToolRegistry:
                 response_payload = self._evals_client.run(
                     self.tenant_id, suite, thresholds=serialised_thresholds
                 )
-            except (RuntimeError, ValueError) as e:
+            except Exception as e:
                 import logging
-                logging.warning(f"Eval client error in run_evaluations: {e}")
+
+                logging.warning(
+                    "Eval client error in run_evaluations; using synthetic metrics",
+                    exc_info=e,
+                )
                 response_payload = None
             else:
                 metrics_payload = response_payload.get("metrics", {})
@@ -526,7 +536,11 @@ class ToolRegistry:
             arguments={
                 "suite": suite,
                 "tenant_id": self.tenant_id,
-                **({"thresholds": serialised_thresholds} if serialised_thresholds else {}),
+                **(
+                    {"thresholds": serialised_thresholds}
+                    if serialised_thresholds
+                    else {}
+                ),
             },
             response={"metrics": base_metrics, "source": "synthetic"},
         )

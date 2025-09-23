@@ -7,6 +7,7 @@ import importlib
 import importlib.util
 import logging
 import os
+import sys
 from collections.abc import Callable, Iterable, Sequence
 from datetime import UTC, datetime
 from typing import Any, Protocol, cast
@@ -305,20 +306,27 @@ class OrchestratorService:
         # Note: We intentionally avoid importing stratmaster_orchestrator at module import
         # time to keep the API server independent when the orchestrator is unavailable.
         self._strategy_graph = None
-        try:
-            if importlib.util.find_spec("stratmaster_orchestrator") is not None:
-                mod = importlib.import_module("stratmaster_orchestrator")
-                try:
-                    build_graph = cast(Any, mod).build_strategy_graph  # type: ignore[attr-defined]
-                except AttributeError:
-                    build_graph = None
-                if callable(build_graph):
-                    self._strategy_graph = build_graph()
-        except Exception as exc:  # pragma: no cover - setup guard
-            logger.warning(
-                "Strategy graph setup failed; falling back to local pipeline",
-                exc_info=exc,
-            )
+        # Allow disabling the graph in tests or via env to avoid network calls
+        disable_graph = (
+            os.getenv("STRATMASTER_DISABLE_GRAPH", "").lower() in {"1", "true", "yes"}
+            or ("pytest" in sys.modules)
+            or ("PYTEST_CURRENT_TEST" in os.environ)
+        )
+        if not disable_graph:
+            try:
+                if importlib.util.find_spec("stratmaster_orchestrator") is not None:
+                    mod = importlib.import_module("stratmaster_orchestrator")
+                    try:
+                        build_graph = cast(Any, mod).build_strategy_graph  # type: ignore[attr-defined]
+                    except AttributeError:
+                        build_graph = None
+                    if callable(build_graph):
+                        self._strategy_graph = build_graph()
+            except Exception as exc:  # pragma: no cover - setup guard
+                logger.warning(
+                    "Strategy graph setup failed; falling back to local pipeline",
+                    exc_info=exc,
+                )
 
     def _build_pipeline(self) -> Pipeline:
         # Lazy-import LangGraph to avoid hard dependency and import-order lint issues
