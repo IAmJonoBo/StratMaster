@@ -387,7 +387,7 @@ CI blocks merges on regression below thresholds.
 
 ## 15) Conventions (code, repos, review)
 
-- Python: 3.11+; ruff/black/mypy; typing required; pydantic v2 models; exceptions mapped to Problem Details JSON.
+- Python: 3.13+; ruff/black/mypy; typing required; pydantic v2 models; exceptions mapped to Problem Details JSON.
 - TypeScript/React: strict TypeScript; ESLint/Biome; Tailwind; accessibility (WCAG 2.1 AA); keyboard shortcuts documented.
 - Commits: Conventional Commits; signed commits recommended; small, reviewable PRs; checklist below.
 - Branching: trunk‑based with short‑lived feature branches; CI on PR; required status checks.

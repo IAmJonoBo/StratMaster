@@ -6,7 +6,7 @@ Thanks for your interest in contributing to StratMaster! This guide covers every
 
 ### Prerequisites
 
-- **Python 3.11+**: Required for all Python components
+- **Python 3.13+**: Required for all Python components
 - **Docker Desktop**: For full-stack development and testing
 - **Git**: With signed commits recommended
 - **Node.js 18+**: For web UI development (if working on frontend)

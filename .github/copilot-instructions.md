@@ -4,7 +4,7 @@
 
 ## Repository Overview
 
-StratMaster is a Python 3.11+ monorepo implementing an AI-powered Brand Strategy platform with FastAPI, multiple MCP (Model Context Protocol) servers, and comprehensive backing services. The system uses Docker Compose for local development and Helm for Kubernetes deployment.
+StratMaster is a Python 3.13+ monorepo implementing an AI-powered Brand Strategy platform with FastAPI, multiple MCP (Model Context Protocol) servers, and comprehensive backing services. The system uses Docker Compose for local development and Helm for Kubernetes deployment.
 
 ## Key Architecture Components
 
@@ -242,7 +242,7 @@ make test-docker                                        # 3-10 min (may fail on 
 
 The GitHub Actions CI pipeline:
 
-- Runs on Python 3.11 and 3.12
+- Runs on Python 3.13
 - Installs packages and runs pytest
 - Lints and validates Helm charts
 - Trunk linting for code quality

@@ -112,8 +112,8 @@ make bootstrap
 
 ```bash
 # Use pyenv for clean Python
-pyenv install 3.11.7
-pyenv local 3.11.7
+pyenv install 3.13.1
+pyenv local 3.13.1
 
 # Clean restart
 rm -rf .venv
