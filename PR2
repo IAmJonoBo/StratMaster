@@ -120,9 +120,20 @@ def evaluate(strategy, disciplines):
     "memos":{"type":"array","items": MEMO_SCHEMA}
   },"required":["strategy_id","weights","memos"]
 })
+def _memo_adapter(memo):
+    # If memo is a Pydantic model (has model_dump), use as-is; else wrap in adapter
+    if hasattr(memo, "model_dump") and callable(memo.model_dump):
+        return memo
+    class MemoAdapter:
+        def __init__(self, data):
+            self._data = data
+        def model_dump(self):
+            return self._data
+    return MemoAdapter(memo)
+
 def vote(strategy_id, weights, memos):
-    memos_objs = [type("X",(object,),{"model_dump":lambda self=x: x}) for x in memos]  # tolerate raw dict input
-    cv = _vote(strategy_id, weights, [m for m in memos_objs])  # reusing our vote logic
+    memos_objs = [_memo_adapter(m) for m in memos]  # tolerate raw dict input
+    cv = _vote(strategy_id, weights, memos_objs)  # reusing our vote logic
     return cv.model_dump()
 
 if __name__ == "__main__":
