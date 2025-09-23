@@ -302,6 +302,10 @@ def create_app() -> FastAPI:
 
     app.include_router(evals_router)
 
+    # Include experts router
+    from .routers.experts import router as experts_router
+    app.include_router(experts_router)
+
     return app
 
 

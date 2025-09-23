@@ -45,6 +45,14 @@ StratMaster is an AI-powered Brand Strategy platform built as a Python monorepo 
          │              │  - Quality      │              │
          │              └─────────────────┘              │
          │                       │                       │
+         │              ┌─────────────────┐              │
+         │              │ Expertise MCP   │              │
+         │              │ - Discipline    │              │
+         │              │   Evaluation    │              │
+         │              │ - Expert Memos  │              │
+         │              │ - Council Votes │              │
+         │              └─────────────────┘              │
+         │                       │                       │
          └───────────────────────┼───────────────────────┘
                                  │
                     ┌─────────────────┐
@@ -67,6 +75,8 @@ StratMaster is an AI-powered Brand Strategy platform built as a Python monorepo 
 - `POST /research/run` - Execute research and return structured claims
 - `POST /debate/run` - Multi-agent debate validation
 - `POST /recommendations` - Generate decision briefs
+- `POST /experts/evaluate` - Run expert discipline evaluation and return memos
+- `POST /experts/vote` - Aggregate expert memos into weighted council vote
 - `GET /providers/openai/tools` - OpenAI-compatible tool schemas
 
 ### MCP Servers (`packages/mcp-servers`)
@@ -95,6 +105,13 @@ StratMaster is an AI-powered Brand Strategy platform built as a Python monorepo 
 - **Metrics Collection**: Performance and accuracy tracking
 - **Test Suites**: FActScore, TruthfulQA integration
 - **A/B Testing**: Experiment framework for model comparisons
+
+#### Expertise MCP (`expertise-mcp`)
+- **Multi-Discipline Evaluation**: Psychology, design, communication, accessibility, brand science
+- **Expert Memos**: Structured findings and recommendations per discipline
+- **Council Voting**: Weighted aggregation of expert assessments
+- **Local-Only Processing**: No external network access, tenant-isolated evaluation
+- **Constitutional Integration**: Works with existing constitutional prompts and debate workflows
 
 #### Compression MCP (`compression-mcp`)
 - **LLMLingua Integration**: Intelligent prompt compression

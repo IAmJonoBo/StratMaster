@@ -1,0 +1,54 @@
+discipline: design
+title: "Design Expert Doctrine"
+description: "Design evaluation criteria based on Nielsen Norman Group usability heuristics"
+version: "1.0"
+
+heuristics:
+  visibility:
+    title: "Visibility of system status"
+    description: "The system should always keep users informed about what is going on"
+    keywords: 
+      - "status"
+      - "feedback"
+      - "progress"
+      - "loading"
+      - "indicator"
+  
+  match:
+    title: "Match between system and the real world"
+    description: "The system should speak the users' language"
+    keywords:
+      - "familiar"
+      - "language"
+      - "metaphor"
+      - "real world"
+      - "conventions"
+  
+  control:
+    title: "User control and freedom"
+    description: "Users often choose system functions by mistake"
+    keywords:
+      - "undo"
+      - "redo"
+      - "cancel"
+      - "exit"
+      - "freedom"
+  
+  consistency:
+    title: "Consistency and standards"
+    description: "Users should not have to wonder whether different words, situations, or actions mean the same thing"
+    keywords:
+      - "consistent"
+      - "standard"
+      - "pattern"
+      - "convention"
+      - "uniform"
+
+required_elements:
+  - "visual_proof"    # mockups, wireframes, screenshots
+  - "user_flow"       # interaction patterns
+  - "accessibility"   # a11y considerations
+
+thresholds:
+  missing_proof_severity: "warning"
+  heuristic_coverage_min: 0.3  # minimum proportion of heuristics that should be addressed
