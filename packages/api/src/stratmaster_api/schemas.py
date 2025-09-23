@@ -124,7 +124,8 @@ class PrivacyConfig(BaseModel):
 
 
 class EvalsThresholds(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    # Allow extra sections so config files can include additional domain-specific thresholds
+    model_config = ConfigDict(extra="ignore")
 
     ingestion: dict[str, str | float | int | bool]
     retrieval: dict[str, str | float | int | bool]

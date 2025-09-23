@@ -9,7 +9,6 @@ class Model(BaseModel):
     """Base model with standard configuration for Expert Council models."""
     
     model_config = ConfigDict(
-        ser_json_inf_nan=False,
         frozen=False,
         extra="forbid",
         strict=True,
