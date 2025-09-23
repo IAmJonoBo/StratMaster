@@ -99,9 +99,9 @@ StratMaster is a comprehensive, production-ready AI-powered Brand Strategy platf
 
 ## Outstanding Items
 
-### PR Status
-- ⚠️ **PR #87**: Ingestion pipeline implementation present but missing package setup
-- ⚠️ **PR #83**: Documentation updates available but need manual merge due to history conflicts
+### Outstanding Work Items
+- ⚠️ Ingestion pipeline implementation present but missing package setup
+- ⚠️ Documentation updates available but need manual merge due to history conflicts
 
 ### Future Enhancements
 - Complete ingestion pipeline package configuration
