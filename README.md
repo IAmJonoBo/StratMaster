@@ -10,14 +10,16 @@
 **Quick Start**: Jump to [Quick Start](#quick-start) for immediate setup
 
 **Comprehensive Guides**:
+
 - **[🏗️ Architecture Overview](docs/architecture.md)** - System design, components, and data flow
-- **[💻 Development Guide](docs/development.md)** - Setup, coding, testing, and contribution workflows  
+- **[💻 Development Guide](docs/development.md)** - Setup, coding, testing, and contribution workflows
 - **[🚀 Deployment Guide](docs/deployment.md)** - Local, staging, and production deployment
 - **[🔧 Infrastructure Guide](docs/infrastructure.md)** - All 12+ backing services configuration
 - **[🔒 Security Guide](docs/security.md)** - Security architecture and best practices
 - **[🩺 Troubleshooting Guide](docs/troubleshooting.md)** - Common issues and solutions
 
 **Additional Documentation**:
+
 - **[📋 Engineering Blueprint](PROJECT.md)** - Complete technical specification
 - **[📊 Project Backlog](docs/backlog.md)** - Development roadmap and status
 - **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
@@ -26,7 +28,7 @@
 ## Key Features
 
 - **🔍 Evidence-Grounded Research**: Web crawling with provenance tracking and PII hygiene
-- **🧠 Knowledge Fabric**: GraphRAG + hybrid retrieval (Qdrant + OpenSearch + NebulaGraph)  
+- **🧠 Knowledge Fabric**: GraphRAG + hybrid retrieval (Qdrant + OpenSearch + NebulaGraph)
 - **🤖 Multi-Agent Debate**: Constitutional AI with critic and adversary validation
 - **📊 Strategic Modeling**: CEPs, JTBD, DBAs, Experiments, and Forecasts as first-class objects
 - **🖥️ Modern Interface**: Desktop tri-pane UI and mobile read-only approvals
@@ -37,6 +39,7 @@
 ## Quick Start
 
 **Prerequisites**:
+
 - Python 3.11+
 - Docker Desktop (for full stack)
 - Optional: uv or pipx
@@ -59,14 +62,15 @@ Knowledge MCP on <http://localhost:8082>, Router MCP on <http://localhost:8083>,
 <http://localhost:9001>, and Keycloak on <http://localhost:8089> (admin/admin).
 
 **Service URLs** (when running full stack):
-- **API Gateway**: http://localhost:8080 (OpenAPI docs at `/docs`)
-- **Research MCP**: http://localhost:8081 (Web research and crawling)
-- **Knowledge MCP**: http://localhost:8082 (Vector and graph search)
-- **Router MCP**: http://localhost:8083 (Model routing and policies)
-- **Temporal UI**: http://localhost:8088 (Workflow management)
-- **Langfuse**: http://localhost:3000 (LLM observability)
-- **MinIO Console**: http://localhost:9001 (Object storage - stratmaster/stratmaster123)
-- **Keycloak**: http://localhost:8089 (Identity management - admin/admin)
+
+- **API Gateway**: [http://localhost:8080](http://localhost:8080) (OpenAPI docs at `/docs`)
+- **Research MCP**: [http://localhost:8081](http://localhost:8081) (Web research and crawling)
+- **Knowledge MCP**: [http://localhost:8082](http://localhost:8082) (Vector and graph search)
+- **Router MCP**: [http://localhost:8083](http://localhost:8083) (Model routing and policies)
+- **Temporal UI**: [http://localhost:8088](http://localhost:8088) (Workflow management)
+- **Langfuse**: [http://localhost:3000](http://localhost:3000) (LLM observability)
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) (Object storage - stratmaster/stratmaster123)
+- **Keycloak**: [http://localhost:8089](http://localhost:8089) (Identity management - admin/admin)
 
 For Python-only development, see the [Development Guide](docs/development.md).
 
@@ -197,7 +201,7 @@ make test-fast
 
 StratMaster follows a microservices architecture with multiple specialized components:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Web UI (Next.js)                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -212,6 +216,7 @@ StratMaster follows a microservices architecture with multiple specialized compo
 ```
 
 **Key Components**:
+
 - **MCP Servers**: Specialized microservices following Model Context Protocol
 - **Storage Layer**: Multi-modal data storage (relational, vector, graph, object)
 - **Infrastructure**: Temporal workflows, Keycloak auth, observability stack
@@ -224,7 +229,7 @@ For detailed architecture information, see the [Architecture Overview](docs/arch
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
 - **Development Setup**: Local environment and workflows
-- **Code Standards**: Python, TypeScript, and documentation requirements  
+- **Code Standards**: Python, TypeScript, and documentation requirements
 - **Testing**: Unit, integration, and end-to-end testing approaches
 - **Security**: Security review process and vulnerability reporting
 - **Release Process**: How changes are reviewed and deployed

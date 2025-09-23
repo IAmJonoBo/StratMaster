@@ -1,4 +1,4 @@
-"""Agent node implementations for the LangGraph orchestration pipeline."""
+"""Agent node implementations backed by deterministic tool stubs."""
 
 from __future__ import annotations
 
@@ -30,12 +30,9 @@ class ResearcherNode:
         working.retrieval = retrieval
         working.artefacts = self.tools.graph_artifacts(working.claims)
         working.completed_tasks.append("research")
-        next_tasks = [
-            task
-            for task in ("synthesis", "debate")
-            if task not in working.pending_tasks
-        ]
-        working.pending_tasks.extend(next_tasks)
+        working.pending_tasks.extend(
+            [task for task in ("synthesis", "debate") if task not in working.pending_tasks]
+        )
         self.checkpoints.save("researcher", working)
         return working
 
@@ -123,16 +120,17 @@ class AdversaryNode:
         working = state.copy()
         pad = ensure_agent_scratchpad(working, "adversary")
         guidance = self.prompts.adversary.get("principles", [])
-        principle_ids = [
-            rule["id"]
-            for rule in guidance
-            if isinstance(rule, dict) and "id" in rule
-        ]
         pad.notes.append("Stress-tested assumptions using adversary prompt")
         pad.tool_calls.append(
             ToolInvocation(
                 name="debate.adversary.review",
-                arguments={"principles": principle_ids},
+                arguments={
+                    "principles": [
+                        rule["id"]
+                        for rule in guidance
+                        if isinstance(rule, dict) and "id" in rule
+                    ]
+                },
             )
         )
         if working.debate is None:

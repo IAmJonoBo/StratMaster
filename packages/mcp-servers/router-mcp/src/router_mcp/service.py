@@ -81,7 +81,7 @@ class RouterService:
         )
 
     def rerank(self, payload: RerankRequest) -> RerankResponse:
-        tenant_policy, task_policy, route = self._select_route(
+        _tenant_policy, task_policy, route = self._select_route(
             payload.tenant_id,
             payload.task,
             default_model=self.config.default_provider.rerank_model,

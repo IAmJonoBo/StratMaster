@@ -57,7 +57,7 @@ class VerificationResult(BaseModel):
         questions: Sequence[VerificationQuestion],
         answers: Sequence[VerificationAnswer],
         minimum_pass_ratio: float,
-    ) -> VerificationResult:
+    ) -> "VerificationResult":
         """Build a result from questions and their answers."""
 
         question_index = {q.id: q for q in questions}

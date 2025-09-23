@@ -6,11 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
-from stratmaster_api.models import (
-    DebateTrace,
-    GraphArtifacts,
-    WorkflowMetadata,
-)
+from stratmaster_api.models import DebateTrace, GraphArtifacts, WorkflowMetadata
 
 from .agents import build_nodes
 from .checkpoints import InMemoryCheckpointStore
@@ -25,7 +21,9 @@ DEFAULT_EVALUATION_MINIMUMS = {
 }
 
 
-def _coerce_state(raw: StrategyState | dict[str, Any], seed: StrategyState) -> StrategyState:
+def _coerce_state(
+    raw: StrategyState | dict[str, Any], seed: StrategyState
+) -> StrategyState:
     if isinstance(raw, StrategyState):
         return raw
     if isinstance(raw, dict):
@@ -47,7 +45,9 @@ def _ensure_defaults(state: StrategyState) -> StrategyState:
             narrative_chunks=[],
         )
     if state.workflow is None:
-        state.workflow = WorkflowMetadata(workflow_id="wf-synthetic", tenant_id=state.tenant_id)
+        state.workflow = WorkflowMetadata(
+            workflow_id="wf-synthetic", tenant_id=state.tenant_id
+        )
     return state
 
 
@@ -84,7 +84,7 @@ def build_strategy_graph(
             graph.add_node(name, node)
 
         graph.add_edge(START, node_names[0])
-        for current, nxt in zip(node_names, node_names[1:]):
+        for current, nxt in zip(node_names, node_names[1:], strict=False):
             graph.add_edge(current, nxt)
         graph.add_edge(node_names[-1], END)
 
@@ -93,7 +93,9 @@ def build_strategy_graph(
         final_state = _coerce_state(raw_state, initial_state)
         final_state = _ensure_defaults(final_state)
         tool_registry = ToolRegistry(final_state.tenant_id, final_state.query)
-        outcome = tool_registry.compose_recommendation(final_state, final_state.workflow)
+        outcome = tool_registry.compose_recommendation(
+            final_state, final_state.workflow
+        )
         return OrchestrationResult(outcome=outcome, state=final_state)
 
     return _run

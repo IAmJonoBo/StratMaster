@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+<<<<<<< HEAD
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+=======
+from dataclasses import dataclass
+from typing import Iterable, Mapping
+>>>>>>> origin/main
 
 from stratmaster_api.models import (
     CEP,
@@ -26,6 +31,10 @@ from stratmaster_api.models import (
     SourceType,
     WorkflowMetadata,
 )
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 from stratmaster_cove import VerificationResult, run_cove
 
 from .state import StrategyState, ToolInvocation
@@ -45,7 +54,10 @@ class EvaluationGate:
                 failures.append(f"{name}<{threshold:.2f}")
         return (not failures, failures)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class ToolRegistry:
     """Synthetic MCP-like tool registry used by agent nodes."""
 
@@ -72,9 +84,13 @@ class ToolRegistry:
         )
         return sources, invocation
 
+<<<<<<< HEAD
     def crawl_and_embed(
         self, sources: Iterable[Source]
     ) -> tuple[list[RetrievalRecord], ToolInvocation]:
+=======
+    def crawl_and_embed(self, sources: Iterable[Source]) -> tuple[list[RetrievalRecord], ToolInvocation]:
+>>>>>>> origin/main
         records: list[RetrievalRecord] = []
         for idx, source in enumerate(sources, start=1):
             chunk_hash = f"hash-{source.id}-{idx}"

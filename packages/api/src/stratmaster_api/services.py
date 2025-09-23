@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import logging
 import os
@@ -11,7 +12,10 @@ from typing import Any, Protocol, cast
 from uuid import uuid4
 
 import httpx
-from stratmaster_orchestrator import StrategyState, build_strategy_graph
+"""
+Note: Do not import stratmaster_orchestrator at module import time. We load it
+optionally at runtime to avoid a hard dependency during API-only operation.
+"""
 
 from .models import (
     CEP,
@@ -297,7 +301,22 @@ class OrchestratorService:
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
         self._pipeline: Pipeline = self._build_pipeline()
-        self._strategy_graph = build_strategy_graph()
+        # Build strategy graph if orchestrator package is available; otherwise None
+        self._strategy_graph = None
+        try:
+            if importlib.util.find_spec("stratmaster_orchestrator") is not None:
+                mod = importlib.import_module("stratmaster_orchestrator")
+                try:
+                    build_graph = cast(Any, mod).build_strategy_graph  # type: ignore[attr-defined]
+                except AttributeError:
+                    build_graph = None
+                if callable(build_graph):
+                    self._strategy_graph = build_graph()
+        except Exception as exc:  # pragma: no cover - setup guard
+            logger.warning(
+                "Strategy graph setup failed; falling back to local pipeline",
+                exc_info=exc,
+            )
 
     def _build_pipeline(self) -> Pipeline:
         # Lazy-import LangGraph to avoid hard dependency and import-order lint issues
@@ -355,7 +374,9 @@ class OrchestratorService:
     def run_research(self, plan_id: str, tenant_id: str) -> dict[str, Any]:
         return self._collect_research(plan_id=plan_id, tenant_id=tenant_id)
 
-    def summarise_graph(self, tenant_id: str, focus: str, limit: int) -> dict[str, Any]:
+    def summarise_graph(
+        self, _tenant_id: str, focus: str, limit: int
+    ) -> dict[str, Any]:
         graph = GraphArtifacts(
             nodes=[
                 GraphNode(id=f"{focus}-node", label=f"{focus.title()} Node", type=focus)
@@ -388,9 +409,9 @@ class OrchestratorService:
 
     def run_debate(
         self,
-        tenant_id: str,
-        hypothesis_id: str | None,
-        claim_ids: list[str] | None,
+        _tenant_id: str,
+        _hypothesis_id: str | None,
+        _claim_ids: list[str] | None,
         max_turns: int,
     ) -> dict[str, Any]:
         # alias to preserve variable names used previously
@@ -512,8 +533,36 @@ class OrchestratorService:
     def generate_recommendation(
         self, tenant_id: str, cep_id: str, jtbd_ids: list[str], risk_tolerance: str
     ) -> RecommendationOutcome:
-        workflow = WorkflowMetadata(workflow_id=f"wf-{uuid4().hex[:6]}", tenant_id=tenant_id)
-        initial_state = StrategyState(
+        # If strategy graph is unavailable, compose directly using local helpers
+        if self._strategy_graph is None:
+            eval_summary = self.run_eval(tenant_id=tenant_id, suite="rag")
+            return self._compose_recommendation(
+                tenant_id=tenant_id,
+                cep_id=cep_id,
+                jtbd_ids=jtbd_ids,
+                risk_tolerance=risk_tolerance,
+                research=None,
+                evaluation=eval_summary,
+            )
+
+        workflow = WorkflowMetadata(
+            workflow_id=f"wf-{uuid4().hex[:6]}", tenant_id=tenant_id
+        )
+        try:
+            mod = importlib.import_module("stratmaster_orchestrator")
+            strategy_state_cls = cast(Any, mod).StrategyState  # type: ignore[attr-defined]
+        except Exception:
+            # Fallback if orchestrator became unavailable between init and runtime
+            eval_summary = self.run_eval(tenant_id=tenant_id, suite="rag")
+            return self._compose_recommendation(
+                tenant_id=tenant_id,
+                cep_id=cep_id,
+                jtbd_ids=jtbd_ids,
+                risk_tolerance=risk_tolerance,
+                research=None,
+                evaluation=eval_summary,
+            )
+        initial_state = strategy_state_cls(
             tenant_id=tenant_id,
             query=f"{cep_id} {risk_tolerance} strategy",
             workflow=workflow,
