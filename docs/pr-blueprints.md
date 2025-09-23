@@ -65,15 +65,46 @@ import argparse
 import json
 import pathlib
 import urllib.request
+import re
 
+MAX_DOWNLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+ALLOWED_URL_PATTERNS = [
+    r"^https://trusted-domain\.com/",  # Example allowlist pattern
+    r"^https://another-trusted\.org/"
+]
 
-def download_bundle(manifest_path: str, target_dir: str) -> None:
+def is_url_allowed(url: str) -> bool:
+    return any(re.match(pattern, url) for pattern in ALLOWED_URL_PATTERNS)
+
+def safe_download(source: str, output: pathlib.Path) -> None:
+    # If source is a local file path, just copy
+    if not re.match(r"^https?://", source):
+        src_path = pathlib.Path(source)
+        if not src_path.exists():
+            raise FileNotFoundError(f"Source file not found: {source}")
+        output.write_bytes(src_path.read_bytes())
+        return
+    # If source is a URL, validate and stream with size limit
+    if not is_url_allowed(source):
+        raise ValueError(f"URL not allowed: {source}")
+    with urllib.request.urlopen(source) as response, open(output, "wb") as out_file:
+        total = 0
+        while True:
+            chunk = response.read(8192)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > MAX_DOWNLOAD_SIZE:
+                out_file.close()
+                output.unlink(missing_ok=True)
+                raise ValueError(f"Download exceeds maximum allowed size ({MAX_DOWNLOAD_SIZE} bytes)")
+            out_file.write(chunk)
     manifest = json.loads(pathlib.Path(manifest_path).read_text())
     dest = pathlib.Path(target_dir).expanduser()
     dest.mkdir(parents=True, exist_ok=True)
     for artifact in manifest["artifacts"]:
         output = dest / f"{artifact['id']}.{artifact['type']}"
-        urllib.request.urlretrieve(artifact["source"], output)
+        safe_download(artifact["source"], output)
 
 
 if __name__ == "__main__":
