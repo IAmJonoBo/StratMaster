@@ -169,35 +169,138 @@ class ConstitutionalCriticNode:
     def __call__(self, state: StrategyState) -> StrategyState:
         working = state.copy()
         pad = ensure_agent_scratchpad(working, "critic")
-        pad.notes.append("Applied constitutional critic to evaluation metrics")
+        
+        # Apply constitutional review
+        constitutional_violations = self._check_constitutional_compliance(working)
+        
+        # Apply evaluation gate
         passed, failures = self.evaluation_gate.check(working.metrics)
+        
+        # Enhanced critique based on constitutional principles
+        critique_content = self._generate_constitutional_critique(
+            working, constitutional_violations, passed, failures
+        )
+        
+        pad.notes.append("Applied constitutional critic with comprehensive rule checking")
         pad.tool_calls.append(
             ToolInvocation(
-                name="assurance.evals.gate",
-                arguments={"metrics": list(self.evaluation_gate.minimums.keys())},
-                response={"passed": passed, "failures": failures},
+                name="assurance.constitutional.review",
+                arguments={
+                    "metrics": list(self.evaluation_gate.minimums.keys()),
+                    "constitutional_principles": list(self.prompts.critic.get("principles", {}).keys()),
+                },
+                response={
+                    "passed": passed and len(constitutional_violations) == 0,
+                    "failures": failures,
+                    "constitutional_violations": constitutional_violations,
+                },
             )
         )
+        
+        # Record comprehensive metrics
         working.record_metric("evaluation_passed", 1.0 if passed else 0.0)
+        working.record_metric("constitutional_compliance", 1.0 if len(constitutional_violations) == 0 else 0.0)
+        working.record_metric("total_critique_score", 1.0 if passed and len(constitutional_violations) == 0 else 0.0)
+        
         if working.debate is None:
             working.debate = DebateTrace(turns=[])
-        verdict = (
-            "Approved under constitution" if passed else "Requires operator review"
-        )
+        
         working.debate.turns.append(
             DebateTurn(
                 agent="critic",
                 role="ConstitutionalCritic",
-                content=verdict,
+                content=critique_content,
                 grounding=[],
             )
         )
-        working.debate.verdict = verdict
-        if not passed:
+        
+        # Set verdict based on comprehensive review
+        overall_passed = passed and len(constitutional_violations) == 0
+        working.debate.verdict = (
+            "Approved under constitution and evaluation criteria"
+            if overall_passed
+            else "Requires review for constitutional and evaluation concerns"
+        )
+        
+        # Mark failures comprehensively
+        if not overall_passed:
             for failure in failures:
-                working.mark_failed(failure)
+                working.mark_failed(f"Evaluation failure: {failure}")
+            for violation in constitutional_violations:
+                working.mark_failed(f"Constitutional violation: {violation}")
+        
         self.checkpoints.save("critic", working)
         return working
+
+    def _check_constitutional_compliance(self, state: StrategyState) -> list[str]:
+        """Check state against constitutional principles."""
+        violations = []
+        
+        critic_principles = self.prompts.critic.get("principles", [])
+        
+        for principle in critic_principles:
+            principle_id = principle.get("id", "unknown")
+            principle_rule = principle.get("rule", "")
+            
+            # Check sourcing compliance
+            if principle_id == "factual_accuracy":
+                if not state.claims or len(state.claims) == 0:
+                    violations.append("No factual claims provided for accuracy review")
+                else:
+                    for claim in state.claims:
+                        if not claim.provenance_ids or len(claim.provenance_ids) == 0:
+                            violations.append(f"Claim '{claim.statement}' lacks required provenance")
+            
+            # Check proportionality/confidence calibration
+            elif principle_id == "proportionality":
+                if state.decision_brief and state.decision_brief.confidence > 0.9:
+                    if not state.claims or all(claim.evidence_grade.value != "high" for claim in state.claims):
+                        violations.append("High confidence not justified by evidence grade")
+        
+        # Check house rules
+        house_principles = self.prompts.house.get("principles", [])
+        for principle in house_principles:
+            principle_id = principle.get("id", "unknown")
+            
+            if principle_id == "sourcing":
+                # Check minimum two sources requirement
+                all_provenance = set()
+                for claim in state.claims:
+                    all_provenance.update(claim.provenance_ids)
+                if len(all_provenance) < 2:
+                    violations.append("Insufficient sources: minimum two unique sources required")
+        
+        return violations
+
+    def _generate_constitutional_critique(
+        self, state: StrategyState, violations: list[str], eval_passed: bool, eval_failures: list[str]
+    ) -> str:
+        """Generate comprehensive constitutional critique."""
+        critique_parts = []
+        
+        # Constitutional assessment
+        if violations:
+            critique_parts.append("CONSTITUTIONAL CONCERNS:")
+            for violation in violations:
+                critique_parts.append(f"- {violation}")
+        else:
+            critique_parts.append("✓ Constitutional principles satisfied")
+        
+        # Evaluation assessment
+        if eval_failures:
+            critique_parts.append("EVALUATION CONCERNS:")
+            for failure in eval_failures:
+                critique_parts.append(f"- {failure}")
+        else:
+            critique_parts.append("✓ Evaluation thresholds met")
+        
+        # Overall recommendation
+        if not violations and eval_passed:
+            critique_parts.append("\nRECOMMENDATION: Strategy meets constitutional and evaluation standards")
+        else:
+            critique_parts.append("\nRECOMMENDATION: Strategy requires revision before approval")
+        
+        return "\n".join(critique_parts)
 
 
 @dataclass
