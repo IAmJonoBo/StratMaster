@@ -45,6 +45,78 @@ async def main() -> int:
             print("/docs: FAIL (swagger not detected)")
             return 1
         print("/docs: ok (swagger detected)")
+
+        # Test experiment endpoint
+        headers = {"Idempotency-Key": "smoke-test-exp-001"}
+        payload = {
+            "tenant_id": "smoke-test",
+            "hypothesis_id": "smoke-hyp",
+            "variants": [
+                {"name": "control", "description": "Current version"},
+                {"name": "treatment", "description": "New version"}
+            ],
+            "primary_metric": {
+                "name": "conversion",
+                "definition": "Conversion rate"
+            }
+        }
+        r = await client.post("/experiments", headers=headers, json=payload)
+        if r.status_code != 200:
+            print(f"/experiments: FAIL status={r.status_code} body={r.text}")
+            return 1
+        try:
+            data = r.json()
+        except Exception:
+            print(f"/experiments: FAIL (invalid JSON) body={r.text}")
+            return 1
+        if not data.get("experiment_id", "").startswith("exp-"):
+            print(f"/experiments: FAIL invalid experiment_id body={r.text}")
+            return 1
+        print("/experiments: ok")
+
+        # Test forecast endpoint
+        headers = {"Idempotency-Key": "smoke-test-forecast-001"}
+        payload = {
+            "tenant_id": "smoke-test",
+            "metric_id": "revenue",
+            "horizon_days": 30
+        }
+        r = await client.post("/forecasts", headers=headers, json=payload)
+        if r.status_code != 200:
+            print(f"/forecasts: FAIL status={r.status_code} body={r.text}")
+            return 1
+        try:
+            data = r.json()
+        except Exception:
+            print(f"/forecasts: FAIL (invalid JSON) body={r.text}")
+            return 1
+        forecast = data.get("forecast", {})
+        if not forecast.get("id", "").startswith("forecast-"):
+            print(f"/forecasts: FAIL invalid forecast_id body={r.text}")
+            return 1
+        print("/forecasts: ok")
+
+        # Test debate escalate endpoint
+        headers = {"Idempotency-Key": "smoke-test-debate-001"}
+        payload = {
+            "debate_id": "smoke-debate-123",
+            "tenant_id": "smoke-test",
+            "escalation_reason": "Need brand strategy expert review"
+        }
+        r = await client.post("/debate/escalate", headers=headers, json=payload)
+        if r.status_code != 200:
+            print(f"/debate/escalate: FAIL status={r.status_code} body={r.text}")
+            return 1
+        try:
+            data = r.json()
+        except Exception:
+            print(f"/debate/escalate: FAIL (invalid JSON) body={r.text}")
+            return 1
+        if not data.get("escalation_id", "").startswith("esc-"):
+            print(f"/debate/escalate: FAIL invalid escalation_id body={r.text}")
+            return 1
+        print("/debate/escalate: ok")
+
     print("Smoke: PASS")
     return 0
 

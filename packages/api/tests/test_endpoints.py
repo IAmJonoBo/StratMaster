@@ -124,3 +124,50 @@ def test_clarify_endpoint_generates_prompts():
     prompts = clarify.json()["prompts"]
     assert prompts
     assert "noisy" in prompts[0]["question"].lower()
+
+
+def test_experiment_endpoint_creates_experiment():
+    c = client()
+    resp = c.post(
+        "/experiments",
+        headers=IDEMPOTENCY_HEADERS,
+        json={
+            "tenant_id": "tenant-a",
+            "hypothesis_id": "hyp-1",
+            "variants": [
+                {"name": "control", "description": "Current approach"},
+                {"name": "treatment", "description": "New premium positioning"},
+            ],
+            "primary_metric": {
+                "name": "conversion_rate",
+                "definition": "Percentage of visitors who convert",
+                "unit": "percent",
+            },
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["experiment_id"].startswith("exp-")
+
+
+def test_forecast_endpoint_creates_forecast():
+    c = client()
+    resp = c.post(
+        "/forecasts",
+        headers=IDEMPOTENCY_HEADERS,
+        json={
+            "tenant_id": "tenant-a",
+            "metric_id": "revenue",
+            "horizon_days": 90,
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    forecast = body["forecast"]
+    assert forecast["id"].startswith("forecast-")
+    assert forecast["metric"]["id"] == "revenue"
+    assert forecast["horizon_days"] == 90
+    assert forecast["point_estimate"] == 1.0
+    assert len(forecast["intervals"]) == 2
+    assert forecast["intervals"][0]["confidence"] == 50
+    assert forecast["intervals"][1]["confidence"] == 90
