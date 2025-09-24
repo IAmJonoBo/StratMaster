@@ -880,6 +880,346 @@ All models use Pydantic v2 with strict validation:
 
 ---
 
+## Complex Workflow Examples
+
+### Comprehensive Market Analysis Workflow
+
+This example demonstrates a complete market analysis workflow combining multiple StratMaster services:
+
+```python
+import asyncio
+import httpx
+from typing import Dict, List, Any
+
+class MarketAnalysisWorkflow:
+    def __init__(self, api_base_url: str, api_key: str):
+        self.client = httpx.AsyncClient(
+            base_url=api_base_url,
+            headers={"Authorization": f"Bearer {api_key}"}
+        )
+    
+    async def execute_market_analysis(
+        self, 
+        market: str, 
+        tenant_id: str
+    ) -> Dict[str, Any]:
+        """Execute comprehensive market analysis workflow"""
+        
+        # Step 1: Initialize research session
+        session = await self._create_research_session(
+            research_question=f"Market analysis for {market} sector including competitive landscape, trends, and opportunities",
+            tenant_id=tenant_id,
+            scope="comprehensive"
+        )
+        
+        # Step 2: Parallel research and knowledge gathering
+        research_tasks = [
+            self._gather_market_intelligence(session["session_id"], market, tenant_id),
+            self._analyze_competitive_landscape(session["session_id"], market, tenant_id), 
+            self._identify_market_trends(session["session_id"], market, tenant_id)
+        ]
+        
+        research_results = await asyncio.gather(*research_tasks)
+        market_intel, competitive_data, trend_analysis = research_results
+        
+        # Step 3: Synthesize findings into claims
+        claims = await self._synthesize_claims(
+            session["session_id"],
+            market_intel + competitive_data + trend_analysis,
+            tenant_id
+        )
+        
+        # Step 4: Multi-agent validation debate
+        debate_result = await self._conduct_validation_debate(
+            session["session_id"],
+            claims,
+            tenant_id
+        )
+        
+        # Step 5: Generate strategic recommendations
+        recommendations = await self._generate_recommendations(
+            session["session_id"],
+            debate_result["validated_claims"],
+            tenant_id
+        )
+        
+        return {
+            "session_id": session["session_id"],
+            "market": market,
+            "validated_claims": debate_result["validated_claims"],
+            "recommendations": recommendations,
+            "confidence_score": debate_result["overall_confidence"]
+        }
+    
+    async def _create_research_session(
+        self, 
+        research_question: str, 
+        tenant_id: str, 
+        scope: str
+    ) -> Dict[str, Any]:
+        """Create new research session"""
+        response = await self.client.post("/research/session", json={
+            "tenant_id": tenant_id,
+            "research_question": research_question,
+            "scope": scope,
+            "priority": "high",
+            "tags": ["market_analysis", "strategic_planning"]
+        })
+        return response.json()
+    
+    async def _conduct_validation_debate(
+        self, 
+        session_id: str, 
+        claims: List[Dict[str, Any]], 
+        tenant_id: str
+    ) -> Dict[str, Any]:
+        """Conduct multi-agent debate to validate claims"""
+        
+        debate_response = await self.client.post("/debate/run", json={
+            "tenant_id": tenant_id,
+            "session_id": session_id,
+            "claims": claims,
+            "debate_config": {
+                "agents": ["market_analyst", "financial_analyst", "trend_specialist", "risk_assessor"],
+                "max_rounds": 4,
+                "consensus_threshold": 0.8,
+                "focus_areas": [
+                    "data_quality_validation",
+                    "methodology_assessment", 
+                    "assumption_testing",
+                    "risk_evaluation"
+                ]
+            },
+            "constitutional_constraints": {
+                "accuracy_threshold": 0.85,
+                "bias_mitigation": True,
+                "uncertainty_quantification": True
+            }
+        })
+        
+        return debate_response.json()
+
+# Usage Example
+async def main():
+    workflow = MarketAnalysisWorkflow(
+        api_base_url="https://api.stratmaster.com",
+        api_key="your-api-key"
+    )
+    
+    result = await workflow.execute_market_analysis(
+        market="artificial_intelligence",
+        tenant_id="your-tenant-id"
+    )
+    
+    print(f"Market analysis completed for {result['market']}")
+    print(f"Overall confidence score: {result['confidence_score']}")
+    print(f"Validated claims: {len(result['validated_claims'])}")
+
+# Run the workflow
+asyncio.run(main())
+```
+
+### Competitive Intelligence Pipeline
+
+```python
+class CompetitiveIntelligencePipeline:
+    def __init__(self, client: httpx.AsyncClient):
+        self.client = client
+    
+    async def execute_competitive_analysis(
+        self,
+        target_company: str,
+        competitors: List[str],
+        tenant_id: str
+    ) -> Dict[str, Any]:
+        """Execute comprehensive competitive intelligence pipeline"""
+        
+        # Step 1: Multi-source data gathering
+        intelligence_data = await self._gather_competitive_intelligence(
+            target_company, competitors, tenant_id
+        )
+        
+        # Step 2: Relationship mapping using knowledge graph
+        relationship_map = await self.client.post("/knowledge/graph/query", json={
+            "tenant_id": tenant_id,
+            "query_type": "competitive_relationships",
+            "parameters": {
+                "target_entity": target_company,
+                "competitor_entities": competitors,
+                "relationship_types": ["COMPETES_WITH", "PARTNERS_WITH", "SUPPLIES_TO"],
+                "max_depth": 3
+            }
+        })
+        
+        # Step 3: Strategic positioning assessment
+        positioning_analysis = await self._assess_strategic_positioning(
+            target_company, competitors, intelligence_data, tenant_id
+        )
+        
+        # Step 4: Scenario modeling
+        scenarios = await self.client.post("/analysis/scenarios", json={
+            "tenant_id": tenant_id,
+            "scenario_type": "competitive_dynamics",
+            "base_entities": [target_company] + competitors,
+            "scenario_parameters": {
+                "time_horizon": "18_months",
+                "uncertainty_factors": [
+                    "market_disruption",
+                    "regulatory_changes", 
+                    "technology_shifts"
+                ]
+            }
+        })
+        
+        return {
+            "target_company": target_company,
+            "intelligence_summary": intelligence_data["summary"],
+            "relationship_insights": relationship_map.json(),
+            "positioning_assessment": positioning_analysis,
+            "future_scenarios": scenarios.json()["scenarios"]
+        }
+
+# Usage
+pipeline = CompetitiveIntelligencePipeline(client)
+competitive_analysis = await pipeline.execute_competitive_analysis(
+    target_company="Tesla",
+    competitors=["Rivian", "Ford", "GM"],
+    tenant_id="your-tenant-id"
+)
+```
+
+### Real-Time Decision Support
+
+```python
+class RealTimeDecisionSupport:
+    def __init__(self, client: httpx.AsyncClient):
+        self.client = client
+        self.active_sessions = {}
+    
+    async def initiate_decision_support(
+        self,
+        decision_context: Dict[str, Any],
+        tenant_id: str,
+        urgency: str = "high"
+    ) -> str:
+        """Initiate real-time decision support session"""
+        
+        session_response = await self.client.post("/research/session", json={
+            "tenant_id": tenant_id,
+            "research_question": decision_context["description"],
+            "scope": "comprehensive" if urgency == "high" else "standard",
+            "priority": urgency,
+            "metadata": decision_context
+        })
+        
+        session_id = session_response.json()["session_id"]
+        self.active_sessions[session_id] = {
+            "status": "active",
+            "context": decision_context,
+            "tenant_id": tenant_id
+        }
+        
+        # Start continuous intelligence gathering
+        asyncio.create_task(self._continuous_intelligence_gathering(session_id))
+        
+        return session_id
+    
+    async def _continuous_intelligence_gathering(self, session_id: str):
+        """Continuously gather and analyze relevant intelligence"""
+        
+        session_info = self.active_sessions[session_id]
+        context = session_info["context"]
+        tenant_id = session_info["tenant_id"]
+        
+        while session_info["status"] == "active":
+            try:
+                # Execute research based on current context
+                research_response = await self.client.post("/research/plan", json={
+                    "tenant_id": tenant_id,
+                    "session_id": session_id,
+                    "query": context["description"],
+                    "focus_areas": context.get("key_concerns", [])
+                })
+                
+                # Update decision recommendations based on new intelligence
+                await self._update_decision_recommendations(session_id)
+                
+                # Wait before next intelligence cycle
+                await asyncio.sleep(300)  # 5 minutes
+                
+            except Exception as e:
+                print(f"Intelligence gathering error for session {session_id}: {e}")
+                await asyncio.sleep(60)  # Retry after 1 minute
+    
+    async def get_decision_recommendations(
+        self,
+        session_id: str
+    ) -> Dict[str, Any]:
+        """Get current decision recommendations"""
+        
+        response = await self.client.post("/recommendations", json={
+            "tenant_id": self.active_sessions[session_id]["tenant_id"],
+            "cep_id": session_id,
+            "jtbd_ids": ["strategic_decision"],
+            "risk_tolerance": "medium"
+        })
+        
+        return response.json()
+    
+    async def request_expedited_analysis(
+        self,
+        session_id: str,
+        specific_question: str,
+        max_time_minutes: int = 15
+    ) -> Dict[str, Any]:
+        """Request expedited analysis for urgent decisions"""
+        
+        response = await self.client.post("/research/plan", json={
+            "tenant_id": self.active_sessions[session_id]["tenant_id"],
+            "query": specific_question,
+            "scope": "focused",
+            "priority": "urgent",
+            "max_duration_minutes": max_time_minutes
+        })
+        
+        return response.json()
+
+# Usage
+decision_support = RealTimeDecisionSupport(client)
+
+# Initiate decision support for market entry
+session_id = await decision_support.initiate_decision_support(
+    decision_context={
+        "type": "market_entry",
+        "description": "Evaluating entry into European EV market",
+        "timeline": "decision_needed_in_2_weeks",
+        "key_concerns": ["regulatory_compliance", "competition", "supply_chain"]
+    },
+    tenant_id="your-tenant-id",
+    urgency="high"
+)
+
+# Get current recommendations
+recommendations = await decision_support.get_decision_recommendations(session_id)
+
+# Request expedited analysis for specific concern
+expedited_analysis = await decision_support.request_expedited_analysis(
+    session_id,
+    "What are the specific regulatory requirements for EV market entry in Germany?",
+    max_time_minutes=10
+)
+```
+
+These examples demonstrate advanced usage patterns for StratMaster's API, showing how to:
+
+1. **Orchestrate Complex Workflows**: Combine multiple services for comprehensive analysis
+2. **Handle Parallel Processing**: Use async/await for efficient concurrent operations  
+3. **Implement Real-Time Intelligence**: Continuous monitoring and analysis
+4. **Manage Session State**: Track and manage long-running analysis sessions
+5. **Context-Aware Analysis**: Adapt analysis based on decision context and urgency
+
+---
+
 <div class="note">
 <p><strong>📝 Note:</strong> All code examples in this reference are derived from the actual test suite in <code>packages/api/tests/</code> to ensure accuracy and up-to-date functionality.</p>
 </div>
