@@ -1,6 +1,6 @@
 # StratMaster Documentation Release-Ready Report
 
-**Generated:** January 18, 2024  
+**Generated:** September 24, 2025  
 **Version:** 0.1.0  
 **Branch:** `docs/release-ready`
 
@@ -74,10 +74,15 @@ All moved to `docs/archive/planning/`:
 - `docs/changelog.md`: "Phase 2/3" → "v0.2.0/v0.3.0"
 - `docs/how-to/faq.md`: "Phase 2" → "v0.2.0"
 - `docs/explanation/architecture.md`: Development phases → Release versions
+- `docs/legacy/dev-quickstart.md`: Removed "(Sprint 5)" reference
+- `docs/legacy/ENGINEERING_STATUS.md`: Removed "(Phase 2)" reference
+- `scripts/validate_phase3.sh` → `scripts/validate_advanced_features.sh`
+- `tests/integration/test_phase3_features.py` → `tests/integration/test_advanced_features.py`
 - All references updated to use version-based terminology
 
 #### README Enhancements
 - `README.md`: Updated documentation section with Diátaxis navigation
+- `README.md`: Fixed broken GAP_ANALYSIS.md link → docs/legacy/ENGINEERING_STATUS.md
 - `docs/README.md`: Enhanced quick navigation with proper links
 
 ## 📁 Current Documentation Structure
