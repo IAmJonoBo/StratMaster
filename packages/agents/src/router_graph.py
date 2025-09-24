@@ -73,7 +73,8 @@ class AgentRouter:
             AgentType.KNOWLEDGE: [
                 r'\b(explain|understand|knowledge|definition|concept)\b',
                 r'\b(what is|how does|why|when|where)\b',
-                r'\b(database|repository|knowledge base|vector)\b'
+                r'\b(database|repository|knowledge base|vector)\b',
+                r'\b(define|definition)\b'
             ],
             AgentType.STRATEGY: [
                 r'\b(strategy|strategic|plan|planning|roadmap)\b',
@@ -86,9 +87,10 @@ class AgentRouter:
                 r'\b(customer|audience|segment|persona|experience)\b'
             ],
             AgentType.OPS: [
-                r'\b(process|operation|workflow|procedure|system)\b',
+                r'\b(process|operation|operational|workflow|procedure|system)\b',
                 r'\b(efficiency|optimization|automation|improvement)\b',
-                r'\b(deployment|infrastructure|monitoring|maintenance)\b'
+                r'\b(deployment|infrastructure|monitoring|maintenance)\b',
+                r'\b(streamline|optimize|automate)\b'
             ]
         }
     
@@ -151,12 +153,7 @@ class AgentRouter:
         
         modified_scores = scores.copy()
         
-        # Single agent mode - only select highest scoring agent
-        if policy_flags.get("single_agent_mode", False):
-            max_agent = max(scores.keys(), key=lambda k: scores[k])
-            modified_scores = {agent: (1.0 if agent == max_agent else 0.0) for agent in scores.keys()}
-        
-        # Restrict specific agents
+        # Restrict specific agents - set to zero first
         if policy_flags.get("disable_research", False):
             modified_scores[AgentType.RESEARCH] = 0.0
         if policy_flags.get("disable_web_access", False):
@@ -165,6 +162,11 @@ class AgentRouter:
         # Boost specific agents
         if policy_flags.get("prefer_local_knowledge", False):
             modified_scores[AgentType.KNOWLEDGE] = modified_scores.get(AgentType.KNOWLEDGE, 0) + 0.2
+        
+        # Single agent mode - only select highest scoring agent AFTER restrictions
+        if policy_flags.get("single_agent_mode", False):
+            max_agent = max(modified_scores.keys(), key=lambda k: modified_scores[k])
+            modified_scores = {agent: (modified_scores[agent] if agent == max_agent else 0.0) for agent in modified_scores.keys()}
         
         return modified_scores
     
@@ -188,7 +190,7 @@ class AgentRouter:
                 metadata_scores.get(agent_type, 0.0) * 0.3   # Metadata provides hints
             )
         
-        # Step 4: Apply policy flags
+        # Step 4: Apply policy flags BEFORE agent selection
         final_scores = self._apply_policy_flags(combined_scores, router_input.policy_flags or {})
         
         # Step 5: Select agents (threshold of 0.1 minimum)
@@ -198,11 +200,16 @@ class AgentRouter:
             if score >= threshold
         ]
         
-        # Ensure at least one agent is selected (select highest scoring)
+        # Ensure at least one agent is selected (select highest scoring non-zero agent)
         if not selected_agents:
-            max_agent = max(final_scores.keys(), key=lambda k: final_scores[k])
-            selected_agents = [max_agent]
-            # Don't override the actual score
+            # Find agents with non-zero scores first
+            non_zero_agents = {k: v for k, v in final_scores.items() if v > 0.0}
+            if non_zero_agents:
+                max_agent = max(non_zero_agents.keys(), key=lambda k: non_zero_agents[k])
+                selected_agents = [max_agent]
+            else:
+                # Fallback to knowledge agent if all scores are zero
+                selected_agents = [AgentType.KNOWLEDGE]
         
         # Step 6: Calculate overall confidence
         max_score = max(final_scores.values()) if final_scores else 0.5
