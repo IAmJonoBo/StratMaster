@@ -16,7 +16,7 @@
 
 **Implementation Status**: [🚀 Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Complete progress and next steps
 
-**Comprehensive Documentation**: [📚 Full Documentation](docs/README.md)
+**Comprehensive Documentation**: [📚 Full Documentation](docs/) - Complete rebuilt documentation
 
 <div class="grid grid-2col">
 
@@ -39,7 +39,7 @@
 
 ### 💡 [Explanation](docs/explanation/)
 **Deep understanding** - System concepts:
-- [Architecture](docs/explanation/architecture.md) - System design
+- [Architecture Overview](docs/explanation/architecture.md) - System design
 - [Multi-Agent Debate](docs/explanation/multi-agent-debate.md) - AI approach
 - [Security Model](docs/explanation/security.md) - Security architecture
 

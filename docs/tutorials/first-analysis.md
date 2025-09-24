@@ -1,12 +1,3 @@
----
-title: Your First Strategy Analysis
-description: Build a complete strategic analysis using StratMaster's multi-agent system
-version: 0.1.0
-platform: Python 3.11+
-nav_order: 2
-parent: Tutorials
----
-
 # Your First Strategy Analysis
 
 This tutorial walks you through creating a complete strategic analysis using StratMaster's multi-agent debate system. You'll learn how to orchestrate research, validation, and recommendation generation for a real business scenario.
@@ -22,6 +13,7 @@ This tutorial walks you through creating a complete strategic analysis using Str
 We'll analyze a strategic question: **"Should our B2B SaaS company invest in AI-powered customer support?"**
 
 This scenario demonstrates:
+
 - Multi-step research planning
 - Evidence collection and validation  
 - Multi-agent debate for fact-checking
@@ -30,7 +22,7 @@ This scenario demonstrates:
 
 ## Step 1: Define the Strategic Context
 
-First, let's establish the business context with a Customer Episode Profile (CEP) and Jobs-to-be-Done (JTBD):
+First, let's establish the business context with a strategic experiment:
 
 ```bash
 # Create a strategic experiment  
@@ -54,433 +46,272 @@ curl -X POST http://127.0.0.1:8080/experiments \
 **Expected response:**
 ```json
 {
-  "experiment_id": "exp-ai-support-001",
+  "experiment_id": "exp-ai-support-analysis",
   "tenant_id": "tutorial-company",
-  "status": "planned",
-  "created_at": "2024-01-18T10:00:00Z",
-  "hypothesis_confidence": 0.6,
-  "risk_factors": [
-    "Implementation complexity",
-    "Customer adoption curve", 
-    "Integration challenges"
-  ]
+  "status": "created",
+  "hypothesis_id": "hyp-ai-support-roi",
+  "created_at": "2024-01-18T11:00:00Z"
 }
 ```
 
 ## Step 2: Comprehensive Research Planning
 
-Create a multi-faceted research plan covering technology, market, and business aspects:
+Create a detailed research plan that covers multiple angles:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/research/plan \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: analysis-tutorial-002" \
   -d '{
-    "query": "AI customer support ROI implementation challenges B2B SaaS 2024",
-    "tenant_id": "tutorial-company", 
-    "max_sources": 8,
+    "query": "AI customer support ROI B2B SaaS cost reduction satisfaction metrics",
+    "tenant_id": "tutorial-company",
+    "max_sources": 10,
     "research_depth": "comprehensive",
     "focus_areas": [
-      "technology_readiness",
-      "market_adoption", 
-      "financial_impact",
-      "implementation_risk",
-      "competitive_landscape"
+      "cost_analysis",
+      "customer_satisfaction",
+      "implementation_challenges",
+      "competitive_advantage"
     ]
   }'
-```
-
-**Response includes expanded task breakdown:**
-```json
-{
-  "plan_id": "plan-comprehensive-001",
-  "tenant_id": "tutorial-company",
-  "tasks": [
-    {
-      "id": "task-tech-1",
-      "type": "technology_analysis", 
-      "query": "AI chatbot accuracy rates enterprise implementation",
-      "priority": "high",
-      "estimated_duration_minutes": 20
-    },
-    {
-      "id": "task-market-1", 
-      "type": "market_research",
-      "query": "B2B SaaS customer support automation adoption 2024",
-      "priority": "high",
-      "estimated_duration_minutes": 25
-    },
-    {
-      "id": "task-financial-1",
-      "type": "financial_analysis",
-      "query": "customer support automation cost savings ROI studies", 
-      "priority": "medium",
-      "estimated_duration_minutes": 15
-    }
-  ],
-  "estimated_total_duration_minutes": 85
-}
 ```
 
 ## Step 3: Execute Research with Evidence Collection
 
 Run the comprehensive research plan:
 
-```bash  
+```bash
 curl -X POST http://127.0.0.1:8080/research/run \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: analysis-tutorial-003" \
   -d '{
-    "plan_id": "plan-comprehensive-001",
+    "plan_id": "plan-comprehensive-ai-support",
     "tenant_id": "tutorial-company",
-    "evidence_standards": {
-      "min_sources_per_claim": 2,
-      "credibility_threshold": 0.7,
-      "recency_weight": 0.8
-    }
+    "evidence_validation": true
   }'
 ```
 
-**Response provides structured claims with evidence:**
+**Expected response includes multiple claims with evidence:**
 ```json
 {
-  "session_id": "session-comprehensive-001", 
-  "tenant_id": "tutorial-company",
+  "session_id": "session-comprehensive-analysis",
   "claims": [
     {
       "id": "claim-cost-reduction",
-      "text": "AI customer support systems reduce operational costs by 25-40% within 12 months",
-      "confidence": 0.87,
-      "evidence_count": 4,
-      "source_ids": ["src-gartner-2024", "src-forrester-ai", "src-mckinsey-automation"]
+      "text": "AI customer support systems typically reduce operational costs by 20-40%",
+      "confidence": 0.78,
+      "evidence_count": 5,
+      "controversy_score": 0.2
     },
     {
-      "id": "claim-customer-satisfaction",  
-      "text": "Customer satisfaction scores improve by 15-20% with properly implemented AI support",
-      "confidence": 0.82,
-      "evidence_count": 3,
-      "source_ids": ["src-zendesk-study", "src-salesforce-report"]
-    },
-    {
-      "id": "claim-implementation-time",
-      "text": "Enterprise AI support deployment typically requires 6-9 months for full implementation",
-      "confidence": 0.79,
-      "evidence_count": 2, 
-      "source_ids": ["src-implementation-study", "src-vendor-timelines"]
+      "id": "claim-satisfaction",
+      "text": "Customer satisfaction with AI support varies by implementation quality",
+      "confidence": 0.65,
+      "evidence_count": 7,
+      "controversy_score": 0.6
     }
   ],
-  "evidence": [
-    {
-      "text": "Enterprise study of 500 companies showed 32% average cost reduction after AI support deployment",
-      "source_id": "src-gartner-2024",
-      "url": "https://example.com/gartner-ai-support-2024",
-      "relevance_score": 0.95,
-      "credibility_score": 0.91,
-      "publication_date": "2024-01-10"
-    }
-  ],
-  "assumptions": [
-    {
-      "id": "assume-integration",  
-      "text": "Existing CRM and ticketing systems can integrate with AI platforms",
-      "confidence": 0.75,
-      "requires_validation": true
-    }
-  ]
+  "evidence_summary": {
+    "total_sources": 8,
+    "peer_reviewed": 3,
+    "industry_reports": 4,
+    "case_studies": 1
+  }
 }
 ```
 
-## Step 4: Multi-Agent Debate Validation
+## Step 4: Multi-Agent Debate for Validation
 
-Now validate the research findings using multi-agent debate to catch biases and strengthen conclusions:
+Now comes the powerful part - let's validate our findings through multi-agent debate:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/debate/run \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: analysis-tutorial-004" \
   -d '{
-    "session_id": "session-comprehensive-001",
     "tenant_id": "tutorial-company",
-    "claims": [
-      {
-        "id": "claim-cost-reduction",
-        "text": "AI customer support systems reduce operational costs by 25-40% within 12 months", 
-        "confidence": 0.87,
-        "evidence_ids": ["evidence-1", "evidence-2", "evidence-3"]
-      }
-    ],
-    "debate_config": {
-      "max_rounds": 3,
-      "agents": ["strategist", "critic", "adversary"],
-      "consensus_threshold": 0.8
+    "hypothesis_id": "hyp-ai-support-roi",
+    "claim_ids": ["claim-cost-reduction", "claim-satisfaction"],
+    "max_turns": 3,
+    "agent_config": {
+      "proponent": "optimistic_analyst",
+      "critic": "conservative_analyst",
+      "moderator": "experienced_strategist"
     }
   }'
 ```
 
-**Response shows multi-agent validation:**
+**The debate response shows agent interactions:**
 ```json
 {
-  "debate_id": "debate-ai-support-001",
-  "tenant_id": "tutorial-company", 
-  "rounds": [
-    {
-      "round": 0,
-      "agent": "strategist",
-      "position": "The 25-40% cost reduction claim is well-supported by multiple enterprise studies",
-      "confidence": 0.87,
-      "supporting_evidence": ["src-gartner-2024", "src-forrester-ai"]
+  "debate_id": "debate-ai-support-validation",
+  "status": "completed",
+  "turns": 3,
+  "final_consensus": {
+    "claim_cost_reduction": {
+      "validated": true,
+      "confidence_adjustment": -0.1,
+      "key_concerns": ["implementation_complexity", "training_costs"]
     },
-    {
-      "round": 1,
-      "agent": "critic",
-      "position": "Need to account for implementation and training costs in first year",
-      "issues_raised": ["hidden_costs", "timeline_assumptions"], 
-      "confidence": 0.75
-    },
-    {
-      "round": 2, 
-      "agent": "adversary",
-      "position": "Sample bias in studies - mostly successful implementations reported",
-      "issues_raised": ["selection_bias", "survivorship_bias"],
-      "confidence": 0.68
+    "claim_satisfaction": {
+      "validated": false,
+      "confidence_adjustment": -0.3,
+      "key_concerns": ["customer_preference_variation", "support_complexity"]
     }
-  ],
-  "verdict": {
-    "consensus_reached": true,
-    "final_confidence": 0.78,
-    "approved_claims": ["claim-cost-reduction-modified"],
-    "modifications_required": [
-      {
-        "claim_id": "claim-cost-reduction", 
-        "modification": "Specify net cost reduction after 18-24 months to account for implementation costs",
-        "reason": "Implementation costs reduce initial savings"
-      }
-    ]
   }
 }
 ```
 
-## Step 5: Expert Council Evaluation
+## Step 5: Generate Strategic Recommendations
 
-Get domain expert perspectives on the strategic decision:
-
-```bash
-curl -X POST http://127.0.0.1:8080/experts/evaluate \
-  -H "Content-Type: application/json" \
-  -H "Idempotency-Key: analysis-tutorial-005" \
-  -d '{
-    "tenant_id": "tutorial-company",
-    "decision_context": {
-      "type": "technology_investment",
-      "domain": "customer_experience", 
-      "timeline": "12_months",
-      "budget_range": "100k-500k"
-    },
-    "claims": [
-      {
-        "id": "claim-cost-reduction-modified",
-        "text": "AI customer support reduces net operational costs by 25-35% after 18-24 months",
-        "confidence": 0.78
-      }
-    ],
-    "expert_disciplines": ["customer_experience", "technology_implementation", "financial_analysis"]
-  }'
-```
-
-**Expert evaluation response:**
-```json
-{
-  "evaluation_id": "eval-expert-council-001",
-  "expert_memos": [
-    {
-      "discipline": "customer_experience",
-      "expert_id": "cx-expert-001", 
-      "assessment": {
-        "recommendation": "proceed_with_caution",
-        "confidence": 0.72,
-        "key_risks": ["customer_adoption_curve", "escalation_complexity"],
-        "success_factors": ["proper_training_data", "human_escalation_paths"]
-      }
-    },
-    {
-      "discipline": "technology_implementation",
-      "expert_id": "tech-expert-001",
-      "assessment": {
-        "recommendation": "recommend",
-        "confidence": 0.81, 
-        "key_risks": ["integration_complexity", "data_quality"],
-        "success_factors": ["phased_rollout", "robust_fallback_systems"]
-      }
-    },
-    {
-      "discipline": "financial_analysis", 
-      "expert_id": "finance-expert-001",
-      "assessment": {
-        "recommendation": "recommend",
-        "confidence": 0.76,
-        "roi_timeline": "24_months",
-        "break_even_month": 18
-      }
-    }
-  ]
-}
-```
-
-## Step 6: Generate Final Recommendations
-
-Synthesize all analysis into actionable strategic recommendations:
+With validated claims, generate actionable recommendations:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/recommendations \
   -H "Content-Type: application/json" \
-  -H "Idempotency-Key: analysis-tutorial-006" \
+  -H "Idempotency-Key: analysis-tutorial-005" \
   -d '{
     "tenant_id": "tutorial-company",
-    "experiment_id": "exp-ai-support-001",
-    "session_id": "session-comprehensive-001",
-    "debate_id": "debate-ai-support-001", 
-    "evaluation_id": "eval-expert-council-001",
-    "decision_criteria": {
-      "risk_tolerance": "medium",
-      "timeline": "flexible",
-      "budget_constraint": "moderate"
+    "cep_id": "cep-b2b-saas-support",
+    "jtbd_ids": ["jtbd-reduce-support-costs", "jtbd-improve-satisfaction"],
+    "risk_tolerance": "medium",
+    "time_horizon": "12_months",
+    "context": {
+      "debate_id": "debate-ai-support-validation",
+      "validated_claims": ["claim-cost-reduction"]
     }
   }'
 ```
 
-**Final strategic recommendations:**
+**Strategic recommendations response:**
 ```json
 {
   "decision_brief": {
-    "id": "brief-ai-support-investment", 
-    "title": "AI-Powered Customer Support Investment Strategy",
-    "executive_summary": "Recommend proceeding with phased AI customer support implementation targeting 30% cost reduction over 24 months",
+    "id": "brief-ai-support-decision",
+    "title": "AI Customer Support Investment Decision",
+    "executive_summary": "Implement AI customer support in phased approach with strong human oversight",
     "key_recommendations": [
       {
-        "action": "Implement AI chatbot for Tier 1 support",
-        "timeline": "Months 1-6", 
-        "success_metric": "Handle 60% of initial inquiries",
-        "investment": "$150k-200k"
+        "title": "Phase 1: Pilot Implementation",
+        "description": "Deploy AI for tier-1 support questions with 6-month evaluation",
+        "priority": "high",
+        "confidence": 0.75,
+        "investment_required": "$50K-$100K"
       },
       {
-        "action": "Develop comprehensive training dataset", 
-        "timeline": "Months 2-4",
-        "success_metric": "95%+ accuracy on common issues",
-        "investment": "$50k-75k"
-      },
-      {
-        "action": "Establish human escalation protocols",
-        "timeline": "Month 3",
-        "success_metric": "< 2min escalation time", 
-        "investment": "$25k process redesign"
+        "title": "Enhanced Training Program",
+        "description": "Invest in comprehensive AI training and customer communication",
+        "priority": "high", 
+        "confidence": 0.82,
+        "investment_required": "$25K-$50K"
       }
     ],
-    "risk_mitigation": [
-      "Phased rollout to minimize disruption",
-      "Robust fallback to human agents",
-      "Continuous monitoring and optimization"
-    ],
-    "expected_outcomes": {
-      "cost_reduction": "25-35% net savings by month 24",
-      "customer_satisfaction": "10-15% improvement",
-      "operational_efficiency": "40% faster initial response times"
-    },
-    "confidence_score": 0.78
-  },
-  "implementation_roadmap": {
-    "procurement": "Technology selection and procurement (Months 1-2)",
-    "integration": "Integration and testing (Months 3-5)", 
-    "pilot": "Pilot deployment (Month 6)",
-    "rollout": "Full rollout and optimization (Months 7-12)"
+    "risk_assessment": {
+      "implementation_risk": "medium",
+      "financial_risk": "low",
+      "customer_satisfaction_risk": "medium-high"
+    }
   }
 }
 ```
 
-## Step 7: Quality Gate Evaluation
+## Step 6: Evaluation and Quality Gates
 
-Finally, run evaluation gates to ensure the analysis meets quality standards:
+Finally, run quality evaluation on our analysis:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/evals/run \
   -H "Content-Type: application/json" \
-  -H "Idempotency-Key: analysis-tutorial-007" \
+  -H "Idempotency-Key: analysis-tutorial-006" \
   -d '{
     "tenant_id": "tutorial-company",
     "suite": "strategic_analysis",
-    "artifacts": {
-      "decision_brief": "brief-ai-support-investment",
-      "research_session": "session-comprehensive-001", 
-      "debate_id": "debate-ai-support-001"
+    "target": {
+      "type": "decision_brief",
+      "id": "brief-ai-support-decision"
     },
     "thresholds": {
-      "evidence_coverage": 0.8,
-      "claim_confidence": 0.75,
-      "recommendation_actionability": 0.8
+      "evidence_quality": 0.7,
+      "reasoning_coherence": 0.75,
+      "actionability": 0.8
     }
   }'
 ```
 
-**Quality evaluation results:**
-```json
-{
-  "run_id": "eval-strategic-analysis-001",
-  "tenant_id": "tutorial-company",
-  "passed": true, 
-  "overall_score": 0.82,
-  "metrics": {
-    "evidence_coverage": 0.85,
-    "claim_confidence": 0.78, 
-    "recommendation_actionability": 0.84,
-    "constitutional_compliance": 0.89
-  },
-  "quality_gates": {
-    "sufficient_evidence": "passed",
-    "diverse_perspectives": "passed", 
-    "actionable_recommendations": "passed",
-    "risk_assessment": "passed"
-  }
-}
-```
+## Step 7: Review Your Complete Analysis
 
-## Summary
+You've now completed a full strategic analysis workflow! Let's review what you accomplished:
 
-Congratulations! You've completed a comprehensive strategic analysis using StratMaster's full capabilities:
+### Analysis Components Created
 
-### ✅ What You Accomplished
+1. **Strategic Experiment** - Defined hypothesis and success metrics
+2. **Research Plan** - Comprehensive multi-angle investigation  
+3. **Evidence Collection** - Gathered and validated supporting data
+4. **Multi-Agent Debate** - Cross-examined claims for reliability
+5. **Strategic Recommendations** - Generated actionable next steps
+6. **Quality Evaluation** - Assessed analysis rigor and completeness
 
-1. **Strategic Context**: Defined business scenario with clear success metrics
-2. **Comprehensive Research**: Planned and executed multi-faceted research  
-3. **Evidence Collection**: Gathered structured claims with source validation
-4. **Multi-Agent Validation**: Used debate system to identify biases and strengthen findings
-5. **Expert Evaluation**: Incorporated domain expertise across multiple disciplines
-6. **Strategic Synthesis**: Generated actionable recommendations with implementation roadmap
-7. **Quality Assurance**: Validated analysis quality through automated evaluation gates
+### Key Learning Points
 
-### 🔑 Key Insights
-
-- **Evidence-First Approach**: Every claim is backed by credible sources
-- **Perspective Diversity**: Multi-agent and expert systems catch blind spots  
-- **Implementation Focus**: Recommendations include timelines, metrics, and risk mitigation
-- **Quality Standards**: Automated gates ensure consistent analysis quality
+- **Evidence-Grounded**: All recommendations backed by validated research
+- **Multi-Perspective**: Debate process catches blind spots and biases
+- **Risk-Aware**: Explicit assessment of implementation challenges
+- **Actionable**: Clear next steps with priorities and investment levels
+- **Measurable**: Success metrics defined upfront for tracking
 
 ## Next Steps
 
-| Goal | Next Tutorial |
-|------|---------------|
-| **Add multi-agent debate** | [Multi-Agent Debate Setup](multi-agent-setup.md) |
-| **Deploy to production** | [Production Deployment](production-deployment.md) |
-| **Understand architecture** | [Architecture Overview](../explanation/architecture.md) |
-| **Customize configurations** | [Configuration Management](../how-to/configuration.md) |
+### Explore Advanced Features
 
-## Further Reading
+- **Custom Agent Configuration**: Train specialized debate agents
+- **Industry-Specific Research**: Use domain-focused research templates
+- **Integration Workflows**: Connect with existing business systems
+- **Monitoring Dashboards**: Track recommendation implementation
 
-- [Multi-Agent Debate System](../explanation/multi-agent-debate.md) - Deep dive into AI validation
-- [Constitutional AI Framework](../explanation/constitutional-ai.md) - Understanding safety guardrails  
-- [API Reference](../reference/api/) - Complete endpoint documentation
-- [Performance Tuning](../how-to/performance-tuning.md) - Optimize for larger analyses
+### Deployment Options
+
+- **Local Development**: Continue with current setup for experimentation
+- **Team Deployment**: Set up shared infrastructure for collaboration
+- **Enterprise Integration**: Connect to existing strategy processes
+
+### Additional Tutorials
+
+| Topic | Description |
+|-------|-------------|
+| [Multi-Agent Setup](multi-agent-setup.md) | Configure specialized debate agents |
+| [Production Deployment](production-deployment.md) | Deploy for team/enterprise use |
+
+## Troubleshooting
+
+### Common Issues
+
+**Long processing times:**
+- Complex analyses may take 5-10 minutes
+- Monitor progress via status endpoints
+- Consider reducing research scope for testing
+
+**Debate consensus failures:**
+- Lower consensus thresholds in agent config
+- Review claim evidence quality
+- Try different agent personality configurations
+
+**Low confidence scores:**
+- Increase research depth and source count
+- Focus on peer-reviewed and authoritative sources
+- Consider domain expertise validation
+
+### Getting Help
+
+- **How-to Guides**: [Troubleshooting](../how-to/troubleshooting.md) for specific issues
+- **Reference Docs**: [API Reference](../reference/api/) for endpoint details
+- **Community**: [GitHub Discussions](https://github.com/IAmJonoBo/StratMaster/discussions)
 
 ---
 
-<div class="success">
-<p><strong>🎯 Achievement Unlocked!</strong> You've mastered StratMaster's complete strategic analysis workflow. You're ready to tackle real business challenges with AI-powered strategic intelligence!</p>
-</div>
+!!! success "Analysis Complete!"
+    
+    You've successfully built a complete strategic analysis using StratMaster's multi-agent system. The approach demonstrates how AI can augment human strategic thinking with evidence-based validation and collaborative reasoning.
+
+!!! tip "Next Challenge"
+    
+    Try applying this workflow to a strategic question from your own organization. Start with a clear hypothesis and success metrics, then let the system guide you through evidence-based decision making.

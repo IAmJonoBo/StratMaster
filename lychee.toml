@@ -1,0 +1,37 @@
+base_url = "http://localhost:8080"
+scheme = "http"
+timeout = 10
+max_retries = 2
+user_agent = "lychee/StratMaster-docs"
+
+# Include patterns
+include = ["*.md", "*.html"]
+
+# Exclude patterns  
+exclude = [
+    "file://.*",
+    "mailto:.*",
+    "tel:.*",
+    ".*\\.localhost.*",
+    ".*127\\.0\\.0\\.1.*",
+    ".*\\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$"
+]
+
+# Accept status codes
+accept = [200, 204, 301, 302, 403, 429, 999]
+
+# Check external links
+check_anchors = true
+require_https = false
+
+# Headers for requests
+headers = [
+    "accept=text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+]
+
+# Output format
+format = "markdown"
+output = "lychee-report.md"
+
+# GitHub API token support
+github_token = ""

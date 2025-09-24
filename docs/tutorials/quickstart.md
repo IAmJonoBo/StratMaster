@@ -1,12 +1,3 @@
----
-title: Quick Start Tutorial
-description: Get up and running with StratMaster in 10 minutes
-version: 0.1.0
-platform: Python 3.11+, Docker
-nav_order: 1
-parent: Tutorials
----
-
 # Quick Start Tutorial
 
 Get StratMaster running on your machine in under 10 minutes. This tutorial will walk you through setting up the environment, starting the API server, and making your first strategic research request.
@@ -14,7 +5,8 @@ Get StratMaster running on your machine in under 10 minutes. This tutorial will 
 ## Prerequisites
 
 Before you begin, ensure you have:
-- **Python 3.11+** installed
+
+- **Python 3.13+** installed
 - **Docker Desktop** (optional, for full stack)
 - **Git** for cloning the repository
 - **4GB+ RAM** available
@@ -33,14 +25,14 @@ make bootstrap
 ```
 
 This command will:
+
 - Create a Python virtual environment (`.venv`)
 - Install the StratMaster API package  
 - Install development tools (pytest, pre-commit)
 - Set up pre-commit hooks
 
-<div class="note">
-<p><strong>💡 Note:</strong> The bootstrap process typically takes 2-3 minutes. If you encounter network timeouts, this is normal in restricted environments - the core functionality will still work.</p>
-</div>
+!!! note "Bootstrap Process"
+    The bootstrap process typically takes 2-3 minutes. If you encounter network timeouts, this is normal in restricted environments - the core functionality will still work.
 
 ## Step 2: Verify Installation
 
@@ -53,7 +45,7 @@ PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 
 **Expected output:**
 ```
-.....................
+......................
 23 passed in 1.28s
 ```
 
@@ -89,9 +81,10 @@ curl -s http://127.0.0.1:8080/healthz
 ## Step 5: Explore the API Documentation
 
 Visit the interactive API documentation in your browser:
-- **Swagger UI**: http://127.0.0.1:8080/docs
-- **ReDoc**: http://127.0.0.1:8080/redoc
-- **OpenAPI Schema**: http://127.0.0.1:8080/openapi.json
+
+- **Swagger UI**: [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
+- **ReDoc**: [http://127.0.0.1:8080/redoc](http://127.0.0.1:8080/redoc)  
+- **OpenAPI Schema**: [http://127.0.0.1:8080/openapi.json](http://127.0.0.1:8080/openapi.json)
 
 ## Step 6: Your First Research Request
 
@@ -122,38 +115,6 @@ curl -X POST http://127.0.0.1:8080/research/plan \
       "type": "web_search",
       "query": "brand strategy trends 2024",
       "priority": "high"
-    },
-    {
-      "id": "task-2", 
-      "type": "academic_search",
-      "query": "brand positioning digital transformation",
-      "priority": "medium"
-    },
-    {
-      "id": "task-3",
-      "type": "industry_analysis", 
-      "query": "marketing technology adoption rates",
-      "priority": "medium"
-    }
-  ],
-  "sources": [
-    {
-      "id": "src-1",
-      "url": "https://example.com/marketing-trends",
-      "type": "web_page",
-      "priority": 0.9
-    },
-    {
-      "id": "src-2",
-      "url": "https://example.com/brand-study", 
-      "type": "research_paper",
-      "priority": 0.8
-    },
-    {
-      "id": "src-3",
-      "url": "https://example.com/industry-report",
-      "type": "industry_report", 
-      "priority": 0.7
     }
   ],
   "estimated_duration_minutes": 45,
@@ -175,34 +136,6 @@ curl -X POST http://127.0.0.1:8080/research/run \
   }'
 ```
 
-**Expected response includes:**
-```json
-{
-  "session_id": "session-xyz789abc123",
-  "tenant_id": "demo-tenant",
-  "claims": [
-    {
-      "id": "claim-1",
-      "text": "Digital transformation is driving 67% of brand strategy changes in 2024",
-      "confidence": 0.85,
-      "evidence_count": 3,
-      "source_ids": ["src-1", "src-2"]
-    }
-  ],
-  "evidence": [
-    {
-      "text": "Survey of 1000 enterprises shows 67% reported major brand strategy shifts",
-      "source_id": "src-1", 
-      "url": "https://example.com/marketing-trends",
-      "relevance_score": 0.95,
-      "credibility_score": 0.88
-    }
-  ],
-  "status": "completed",
-  "completed_at": "2024-01-18T10:35:00Z"
-}
-```
-
 ### Generate Strategic Recommendations
 
 Finally, generate actionable recommendations based on the research:
@@ -219,30 +152,10 @@ curl -X POST http://127.0.0.1:8080/recommendations \
   }'
 ```
 
-**Expected response includes:**
-```json
-{
-  "decision_brief": {
-    "id": "brief-def789ghi012",
-    "title": "Digital Brand Transformation Strategy", 
-    "key_recommendations": [
-      "Implement customer-centric digital touchpoints",
-      "Develop data-driven brand messaging framework",
-      "Establish cross-channel brand consistency protocols"
-    ],
-    "confidence_score": 0.82,
-    "risk_assessment": "medium"
-  },
-  "workflow": {
-    "tenant_id": "demo-tenant",
-    "status": "completed"
-  }
-}
-```
-
 ## Step 7: What's Next?
 
 Congratulations! You've successfully:
+
 - ✅ Set up StratMaster locally
 - ✅ Created a research plan
 - ✅ Executed research with evidence collection
@@ -253,15 +166,15 @@ Congratulations! You've successfully:
 | Goal | Next Tutorial |
 |------|---------------|
 | **Build a complete analysis** | [Your First Strategy Analysis](first-analysis.md) |
-| **Set up multi-agent validation** | [Multi-Agent Debate Setup](multi-agent-setup.md) |
-| **Deploy to production** | [Production Deployment](production-deployment.md) |
 | **Understand the architecture** | [Architecture Overview](../explanation/architecture.md) |
+| **Deploy to production** | [Deployment Guide](../how-to/deployment.md) |
 
 ### Explore More Features
 
 The system includes many more capabilities:
+
 - **Multi-Agent Debate**: Validate findings through AI critic review
-- **Expert Council**: Leverage domain expertise evaluation
+- **Expert Council**: Leverage domain expertise evaluation  
 - **Graph Knowledge**: Build knowledge graphs from research
 - **Evaluation Gates**: Ensure quality with automated testing
 - **Full Stack**: Complete UI and infrastructure services
@@ -299,6 +212,5 @@ make test-docker
 
 ---
 
-<div class="success">
-<p><strong>🎉 Success!</strong> You now have StratMaster running locally and have made your first strategic research requests. The system is ready for more advanced workflows!</p>
-</div>
+!!! success "Success!"
+    You now have StratMaster running locally and have made your first strategic research requests. The system is ready for more advanced workflows!

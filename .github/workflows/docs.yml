@@ -1,0 +1,167 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs.new/**'
+      - 'packages/api/**'
+      - '.markdownlint.json'
+      - '.vale.ini'
+      - 'cspell.json'
+      - 'lychee.toml'
+      - '.github/workflows/docs.yml'
+  push:
+    branches:
+      - main
+      - 'docs/**'
+    paths:
+      - 'docs.new/**'
+      - 'packages/api/**'
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    name: Validate Documentation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Install documentation dependencies
+      - name: Install MkDocs and dependencies
+        run: |
+          cd docs.new
+          pip install -r requirements.txt
+
+      # Install linting tools
+      - name: Install documentation linting tools
+        run: |
+          npm install -g markdownlint-cli2
+          npm install -g cspell
+          npm install -g lychee-cli
+
+      # Install Vale
+      - name: Install Vale
+        run: |
+          curl -sfL https://install.goreleaser.com/github.com/ValeLint/vale.sh | sh -s -- -b /usr/local/bin
+          vale --version
+
+      # Generate OpenAPI specification
+      - name: Generate OpenAPI spec from FastAPI
+        run: |
+          # Set up API development environment
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -e packages/api
+          
+          # Run OpenAPI generation script
+          python scripts/generate_openapi.py
+        continue-on-error: true  # Don't fail if API dependencies have issues
+
+      # Build documentation
+      - name: Build MkDocs site
+        run: |
+          cd docs.new
+          mkdocs build --strict
+        env:
+          PYTHONNOUSERSITE: 1
+
+      # Lint markdown files
+      - name: Lint markdown files
+        run: |
+          markdownlint-cli2 "docs.new/**/*.md" --config .markdownlint.json
+        continue-on-error: true
+
+      # Spell check
+      - name: Spell check documentation
+        run: |
+          cspell "docs.new/**/*.md" --config cspell.json
+        continue-on-error: true
+
+      # Prose linting with Vale (skip if styles not available)
+      - name: Prose linting with Vale
+        run: |
+          if [ -d .vale/styles ]; then
+            vale docs.new/
+          else
+            echo "Vale styles not found, skipping prose linting"
+          fi
+        continue-on-error: true
+
+      # Link checking  
+      - name: Check links
+        run: |
+          # Start MkDocs dev server in background for local link checking
+          cd docs.new
+          mkdocs serve --dev-addr=127.0.0.1:8000 &
+          MKDOCS_PID=$!
+          sleep 5
+          
+          # Check links
+          lychee --config ../lychee.toml "**/*.md" || true
+          
+          # Cleanup
+          kill $MKDOCS_PID || true
+        continue-on-error: true
+
+      # Upload build artifacts
+      - name: Upload documentation site
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: docs.new/site/
+          retention-days: 7
+
+      # Upload OpenAPI spec if generated
+      - name: Upload OpenAPI specification
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: docs.new/reference/api/openapi.json
+          retention-days: 7
+        if: always()
+
+  # Check for parity between docs and code
+  parity-check:
+    runs-on: ubuntu-latest
+    name: Documentation-Code Parity Check
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install development dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -e packages/api
+        continue-on-error: true
+
+      - name: Extract API endpoints from code
+        run: |
+          # This would run a script to extract all endpoints from FastAPI
+          echo "TODO: Implement endpoint extraction from FastAPI app"
+          # python scripts/extract_endpoints.py > endpoints.json
+        continue-on-error: true
+
+      - name: Check documentation coverage
+        run: |
+          # This would verify all endpoints are documented
+          echo "TODO: Implement documentation coverage check"
+          # python scripts/check_docs_coverage.py
+        continue-on-error: true

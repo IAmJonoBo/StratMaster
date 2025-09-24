@@ -1,0 +1,189 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "StratMaster API",
+    "version": "0.2.0",
+    "description": "AI-powered Brand Strategy platform API - comprehensive endpoints for research, knowledge management, and strategy generation."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Simple health check endpoint to verify API availability",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/plan": {
+      "post": {
+        "summary": "Create Research Plan",
+        "description": "Generate a structured research plan for strategy development",
+        "tags": ["research"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchPlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Research plan created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchPlanResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/run": {
+      "post": {
+        "summary": "Execute Research Plan",
+        "description": "Execute a previously created research plan",
+        "tags": ["research"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Research execution completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchRunResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ResearchPlanRequest": {
+        "type": "object",
+        "required": ["query", "tenant_id"],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Research question or topic to investigate"
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Tenant identifier for multi-tenancy"
+          },
+          "max_sources": {
+            "type": "integer",
+            "description": "Maximum number of sources to gather",
+            "default": 10
+          }
+        }
+      },
+      "ResearchPlanResponse": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "description": "Unique identifier for the research plan"
+          },
+          "query": {
+            "type": "string",
+            "description": "Original research query"
+          },
+          "sources": {
+            "type": "array",
+            "description": "Planned research sources",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ResearchRunRequest": {
+        "type": "object",
+        "required": ["plan_id", "tenant_id"],
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "description": "Research plan identifier to execute"
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Tenant identifier for multi-tenancy"
+          }
+        }
+      },
+      "ResearchRunResponse": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Research session identifier"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["started", "running", "completed", "failed"],
+            "description": "Execution status"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ]
+}
