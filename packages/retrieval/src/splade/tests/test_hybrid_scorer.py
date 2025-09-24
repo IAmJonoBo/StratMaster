@@ -1,7 +1,6 @@
 """Tests for SPLADE hybrid search scoring."""
 
 import pytest
-
 from splade.hybrid_scorer import HybridScore, RetrievalBudget, SpladeHybridScorer
 
 

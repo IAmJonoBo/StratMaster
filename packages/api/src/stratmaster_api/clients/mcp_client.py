@@ -5,14 +5,15 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import queue
 import subprocess
 import sys
-from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import Any, AsyncIterator
-import queue
 import threading
 import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

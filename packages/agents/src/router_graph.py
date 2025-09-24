@@ -14,9 +14,9 @@ The router uses conditional edges to route queries to:
 
 import os
 import re
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from langgraph.graph import StateGraph
 
@@ -35,17 +35,17 @@ class RouterInput:
     """Input for the router graph."""
     query: str
     tenant_id: str
-    metadata: Optional[Dict[str, Any]] = None
-    policy_flags: Optional[Dict[str, bool]] = None
+    metadata: dict[str, Any] | None = None
+    policy_flags: dict[str, bool] | None = None
 
 
 @dataclass
 class RouterOutput:
     """Output from the router graph."""
-    selected_agents: List[AgentType]
+    selected_agents: list[AgentType]
     rationale: str
     confidence: float
-    routing_metadata: Dict[str, Any]
+    routing_metadata: dict[str, Any]
 
 
 class AgentRouter:
@@ -92,7 +92,7 @@ class AgentRouter:
             ]
         }
     
-    def _classify_query(self, query: str) -> Dict[AgentType, float]:
+    def _classify_query(self, query: str) -> dict[AgentType, float]:
         """Classify query using rule-based patterns."""
         query_lower = query.lower()
         scores = {}
@@ -109,7 +109,7 @@ class AgentRouter:
         
         return scores
     
-    def _evaluate_metadata(self, metadata: Dict[str, Any]) -> Dict[AgentType, float]:
+    def _evaluate_metadata(self, metadata: dict[str, Any]) -> dict[AgentType, float]:
         """Evaluate metadata for routing hints."""
         if not metadata:
             return {}
@@ -144,7 +144,7 @@ class AgentRouter:
         
         return metadata_scores
     
-    def _apply_policy_flags(self, scores: Dict[AgentType, float], policy_flags: Dict[str, bool]) -> Dict[AgentType, float]:
+    def _apply_policy_flags(self, scores: dict[AgentType, float], policy_flags: dict[str, bool]) -> dict[AgentType, float]:
         """Apply policy flags to modify routing decisions."""
         if not policy_flags:
             return scores
@@ -244,15 +244,15 @@ def create_router_graph() -> StateGraph:
     """
     
     # Define the graph state
-    class RouterState(Dict):
+    class RouterState(dict):
         query: str
         tenant_id: str
-        metadata: Optional[Dict[str, Any]]
-        policy_flags: Optional[Dict[str, bool]]
-        selected_agents: Optional[List[str]]
-        rationale: Optional[str]
-        confidence: Optional[float]
-        routing_metadata: Optional[Dict[str, Any]]
+        metadata: dict[str, Any] | None
+        policy_flags: dict[str, bool] | None
+        selected_agents: list[str] | None
+        rationale: str | None
+        confidence: float | None
+        routing_metadata: dict[str, Any] | None
     
     # Create the router instance
     router = AgentRouter()

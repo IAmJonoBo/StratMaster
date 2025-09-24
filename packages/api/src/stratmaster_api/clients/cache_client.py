@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
-from typing import Any, Optional
 from functools import wraps
-import hashlib
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ except ImportError:
 class CacheClient:
     """Redis cache client with async support."""
 
-    def __init__(self, redis_url: Optional[str] = None, default_ttl: int = 300):
+    def __init__(self, redis_url: str | None = None, default_ttl: int = 300):
         """Initialize cache client.
         
         Args:
@@ -31,7 +31,7 @@ class CacheClient:
         """
         self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379/0")
         self.default_ttl = default_ttl
-        self.client: Optional[aioredis.Redis] = None
+        self.client: aioredis.Redis | None = None
         self.enabled = redis is not None
 
     async def connect(self):
@@ -61,7 +61,7 @@ class CacheClient:
         key_hash = hashlib.md5(key_data.encode()).hexdigest()
         return f"{prefix}:{key_hash}"
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         if not self.client:
             return None
@@ -74,7 +74,7 @@ class CacheClient:
             logger.error(f"Cache get error: {e}")
         return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache."""
         if not self.client:
             return False
@@ -114,7 +114,7 @@ class CacheClient:
             logger.error(f"Cache clear pattern error: {e}")
             return False
 
-    def cache_result(self, prefix: str, ttl: Optional[int] = None):
+    def cache_result(self, prefix: str, ttl: int | None = None):
         """Decorator to cache function results."""
         def decorator(func):
             @wraps(func)
@@ -142,7 +142,7 @@ class CacheClient:
 
 
 # Global cache client instance
-_cache_client: Optional[CacheClient] = None
+_cache_client: CacheClient | None = None
 
 
 async def get_cache_client() -> CacheClient:

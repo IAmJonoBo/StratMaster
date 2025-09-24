@@ -1,6 +1,7 @@
 """Voting models for the Expert Council weighted consensus system."""
 
 from pydantic import Field
+
 from .base import WithMeta
 
 

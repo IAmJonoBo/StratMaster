@@ -1,6 +1,7 @@
 """Persuasion risk assessment model for psychological reactance detection."""
 
 from pydantic import Field
+
 from .base import WithMeta
 
 

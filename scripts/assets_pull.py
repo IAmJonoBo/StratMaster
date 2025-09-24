@@ -19,15 +19,13 @@ Usage:
 import argparse
 import hashlib
 import json
-import os
 import sys
 import time
-import urllib.request
 import urllib.error
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+from pathlib import Path
 
 try:
     import yaml
@@ -78,12 +76,12 @@ class AssetManager:
         self.manifest = self._load_manifest()
         self.lock_data = self._load_lock_file()
         
-    def _load_manifest(self) -> Dict:
+    def _load_manifest(self) -> dict:
         """Load and validate asset manifest."""
         if not self.manifest_path.exists():
             raise FileNotFoundError(f"Asset manifest not found: {self.manifest_path}")
             
-        with open(self.manifest_path, 'r') as f:
+        with open(self.manifest_path) as f:
             manifest = yaml.safe_load(f)
             
         # Basic validation
@@ -94,13 +92,13 @@ class AssetManager:
                 
         return manifest
     
-    def _load_lock_file(self) -> Dict[str, AssetLockEntry]:
+    def _load_lock_file(self) -> dict[str, AssetLockEntry]:
         """Load existing asset lock file."""
         if not self.lock_path.exists():
             return {}
             
         try:
-            with open(self.lock_path, 'r') as f:
+            with open(self.lock_path) as f:
                 lock_data = json.load(f)
                 
             return {
@@ -132,7 +130,7 @@ class AssetManager:
         with open(self.lock_path, 'w') as f:
             json.dump(lock_dict, f, indent=2)
     
-    def _get_all_assets(self) -> List[AssetInfo]:
+    def _get_all_assets(self) -> list[AssetInfo]:
         """Extract all assets from manifest."""
         assets = []
         
@@ -166,7 +164,7 @@ class AssetManager:
                 
         return sha256_hash.hexdigest()
     
-    def _verify_asset(self, asset: AssetInfo) -> Tuple[bool, str]:
+    def _verify_asset(self, asset: AssetInfo) -> tuple[bool, str]:
         """Verify an asset's integrity."""
         file_path = self.assets_dir / asset.name
         
@@ -338,7 +336,7 @@ class AssetManager:
                 # Quick verification
                 is_valid, message = self._verify_asset(asset)
                 if is_valid:
-                    print(f"  ✅ Already downloaded and verified")
+                    print("  ✅ Already downloaded and verified")
                     success_count += 1
                     continue
                 else:
@@ -368,7 +366,7 @@ class AssetManager:
                         )
                         self._save_lock_file()
                         success_count += 1
-                        print(f"  ✅ Downloaded and verified successfully")
+                        print("  ✅ Downloaded and verified successfully")
                     else:
                         print(f"  ❌ Verification failed: {message}")
                         # Mark as failed in lock file
@@ -384,7 +382,7 @@ class AssetManager:
                         self._save_lock_file()
         
         # Summary
-        print(f"\n📊 Download Summary")
+        print("\n📊 Download Summary")
         print(f"Successfully downloaded: {success_count}/{len(assets)}")
         if success_count < len(assets):
             print(f"Failed downloads: {len(assets) - success_count}")
@@ -425,7 +423,7 @@ class AssetManager:
             self._save_lock_file()
         
         # Summary
-        print(f"\n📊 Verification Summary")
+        print("\n📊 Verification Summary")
         print(f"Successfully verified: {verified_count}/{len(assets)}")
         
         if verified_count == len(assets):

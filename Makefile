@@ -1,6 +1,6 @@
 .PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
-        phase2.up phase2.down phase2.full phase2.status telemetry.up collaboration.up ml.up dev.phase2 setup health-check \
+        monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
         assets.plan assets.pull assets.verify assets.required deps.check deps.plan deps.upgrade deps.upgrade.safe \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
@@ -141,6 +141,10 @@ telemetry.up:
 collaboration.up:
 	@echo "🤝 Starting collaboration services"
 	docker compose --profile collaboration up -d collaboration-ws
+
+# Development monitoring stack (alias for monitoring.up)
+dev.monitoring: monitoring.up
+	@echo "🔧 Development monitoring ready"
 
 # Start only ML services
 ml.up:
@@ -304,8 +308,18 @@ test.load.dry:
 	.venv/bin/python scripts/advanced_testing.py --dry-run load-test
 
 # Backward compatibility aliases (deprecated - use monitoring.* targets)
+# TODO: Remove in v0.2.0 
 phase2.up: monitoring.up
-phase2.down: monitoring.down
+	@echo "⚠️  'phase2.up' is deprecated. Use 'monitoring.up' instead."
+
+phase2.down: monitoring.down  
+	@echo "⚠️  'phase2.down' is deprecated. Use 'monitoring.down' instead."
+
 phase2.status: monitoring.status
+	@echo "⚠️  'phase2.status' is deprecated. Use 'monitoring.status' instead."
+
 phase2.full: monitoring.full
+	@echo "⚠️  'phase2.full' is deprecated. Use 'monitoring.full' instead."
+
 dev.phase2: dev.monitoring
+	@echo "⚠️  'dev.phase2' is deprecated. Use 'dev.monitoring' instead."

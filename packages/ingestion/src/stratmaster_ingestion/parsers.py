@@ -8,8 +8,9 @@ import json
 import mimetypes
 import re
 import textwrap
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from .models import ChunkKind, ChunkMetadata, ChunkStatistics, DocumentPayload
 

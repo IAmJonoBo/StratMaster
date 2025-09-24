@@ -13,22 +13,20 @@ Features:
 - Mobile-optimized data payloads
 """
 
-import os
 import json
 import logging
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+import os
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
 
-import asyncio
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
-import firebase_admin
-from firebase_admin import messaging, credentials
 import asyncpg
-import httpx
+import firebase_admin
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from firebase_admin import credentials, messaging
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +62,13 @@ class ApprovalStage:
     id: str
     name: str
     description: str
-    required_roles: List[str]
+    required_roles: list[str]
     minimum_approvals: int
     timeout_hours: int
     auto_escalate: bool = True
     blocking: bool = False
     consensus_required: bool = False
-    conditions: Dict[str, Any] = None
+    conditions: dict[str, Any] = None
 
 
 @dataclass
@@ -84,25 +82,25 @@ class ApprovalItem:
     status: ApprovalStatus
     priority: Priority
     created_at: datetime
-    due_date: Optional[datetime]
+    due_date: datetime | None
     author_id: str
     author_name: str
-    author_avatar_url: Optional[str]
+    author_avatar_url: str | None
     current_stage: ApprovalStage
     approvers_required: int
     approvers_completed: int
     attachments_count: int
     comments_count: int
     tenant_id: str
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
 
 class ApprovalRequest(BaseModel):
     """Request model for approval actions."""
     approval_id: str
     action: str = Field(..., regex="^(approve|reject)$")
-    comment: Optional[str] = None
-    signature: Optional[str] = None  # Base64 encoded signature image
+    comment: str | None = None
+    signature: str | None = None  # Base64 encoded signature image
 
 
 class ApprovalResponse(BaseModel):
@@ -110,7 +108,7 @@ class ApprovalResponse(BaseModel):
     success: bool
     message: str
     approval_status: str
-    next_stage: Optional[str] = None
+    next_stage: str | None = None
 
 
 class NotificationRequest(BaseModel):
@@ -253,7 +251,7 @@ class ApprovalWorkflowManager:
     def load_workflow_definitions(self, config_path: str):
         """Load workflow definitions from configuration."""
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = json.load(f)
             
             self.workflow_definitions = config.get("workflows", {})
@@ -268,7 +266,7 @@ class ApprovalWorkflowManager:
         tenant_id: str,
         limit: int = 50,
         offset: int = 0
-    ) -> List[ApprovalItem]:
+    ) -> list[ApprovalItem]:
         """Get pending approvals for a user."""
         query = """
             SELECT a.*, w.workflow_name, w.title, w.description,

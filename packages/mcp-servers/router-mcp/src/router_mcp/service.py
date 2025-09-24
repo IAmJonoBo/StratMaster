@@ -11,6 +11,8 @@ from fastapi import HTTPException
 
 from .config import AppConfig, ProviderConfig, TaskPolicy, TaskRoute, TenantPolicy
 from .models import (
+    AgentRouteRequest,
+    AgentRouteResponse,
     CompletionRequest,
     CompletionResponse,
     EmbeddingRequest,
@@ -19,8 +21,6 @@ from .models import (
     RerankRequest,
     RerankResponse,
     RerankResult,
-    AgentRouteRequest,
-    AgentRouteResponse,
 )
 from .providers import ProviderAdapter
 

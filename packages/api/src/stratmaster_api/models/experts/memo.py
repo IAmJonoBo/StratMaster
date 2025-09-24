@@ -1,6 +1,7 @@
 """Discipline memo models for Expert Council assessments."""
 
 from pydantic import Field
+
 from .base import WithMeta
 
 

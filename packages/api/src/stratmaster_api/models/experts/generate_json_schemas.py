@@ -1,7 +1,9 @@
 """JSON schema generator for Expert Council models."""
 
 import json
+
 from pydantic.json_schema import models_json_schema
+
 from .schema_registry import REGISTRY
 
 

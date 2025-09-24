@@ -18,24 +18,21 @@ Usage:
 """
 
 import argparse
+import asyncio
 import json
-import subprocess
+import random
+import statistics
 import sys
 import time
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-import statistics
-import random
-import string
+from typing import Any
 
 try:
     import httpx
     import hypothesis
-    from hypothesis import given, strategies as st, settings
     import pytest
+    from hypothesis import given, settings
+    from hypothesis import strategies as st
 except ImportError:
     print("Error: Missing dependencies. Install with:")
     print("pip install httpx hypothesis pytest schemathesis")
@@ -48,8 +45,8 @@ class TestResult:
     test_name: str
     status: str  # "passed", "failed", "skipped"
     duration: float
-    error_message: Optional[str] = None
-    metrics: Optional[Dict[str, Any]] = None
+    error_message: str | None = None
+    metrics: dict[str, Any] | None = None
 
 
 @dataclass
@@ -71,7 +68,7 @@ class AdvancedTestSuite:
     def __init__(self, base_url: str = "http://localhost:8080", dry_run: bool = False):
         self.base_url = base_url
         self.dry_run = dry_run
-        self.results: List[TestResult] = []
+        self.results: list[TestResult] = []
         
         # Test data generators
         self.query_strategy = st.text(min_size=1, max_size=200, alphabet=st.characters(
@@ -200,12 +197,12 @@ class AdvancedTestSuite:
             duration = time.time() - start_time
             self.results.append(TestResult(test_name, status, duration, error_message))
         
-        print(f"\n📊 Property Test Summary:")
+        print("\n📊 Property Test Summary:")
         passed = sum(1 for r in self.results if r.status == "passed")
         failed = sum(1 for r in self.results if r.status == "failed")
         print(f"Passed: {passed}, Failed: {failed}")
     
-    def contract_tests(self, endpoint: Optional[str] = None) -> None:
+    def contract_tests(self, endpoint: str | None = None) -> None:
         """Run API contract tests against OpenAPI specification."""
         print("📋 API Contract Testing")
         print("=" * 40)
@@ -235,7 +232,7 @@ class AdvancedTestSuite:
                 schema_response = self._make_request("GET", "/openapi.json")
                 
                 if schema_response.status_code != 200:
-                    print(f"  ⚠️  Could not retrieve OpenAPI schema")
+                    print("  ⚠️  Could not retrieve OpenAPI schema")
                     continue
                 
                 schema = schema_response.json()
@@ -243,7 +240,7 @@ class AdvancedTestSuite:
                 # Validate endpoint exists in schema
                 path_item = schema.get("paths", {}).get(test_endpoint)
                 if not path_item:
-                    print(f"  ⚠️  Endpoint not found in OpenAPI schema")
+                    print("  ⚠️  Endpoint not found in OpenAPI schema")
                     continue
                 
                 operation = path_item.get(method.lower())
@@ -296,7 +293,7 @@ class AdvancedTestSuite:
                     str(e)
                 ))
     
-    def _generate_contract_test_cases(self, endpoint: str, method: str, operation: Dict) -> List[Dict]:
+    def _generate_contract_test_cases(self, endpoint: str, method: str, operation: dict) -> list[dict]:
         """Generate test cases based on OpenAPI operation definition."""
         test_cases = []
         
@@ -333,7 +330,7 @@ class AdvancedTestSuite:
         
         return test_cases
     
-    async def _make_concurrent_request(self, session: httpx.AsyncClient, endpoint: str, payload: Dict) -> Tuple[float, int]:
+    async def _make_concurrent_request(self, session: httpx.AsyncClient, endpoint: str, payload: dict) -> tuple[float, int]:
         """Make concurrent request and return timing and status."""
         start_time = time.time()
         
@@ -401,7 +398,7 @@ class AdvancedTestSuite:
                             try:
                                 duration, status_code = await task
                                 results.append((duration, status_code))
-                            except Exception as e:
+                            except Exception:
                                 results.append((5.0, 0))  # Timeout/error
                             done_tasks.append(task)
                     
@@ -442,7 +439,7 @@ class AdvancedTestSuite:
         else:
             print("❌ No requests completed during load test")
     
-    async def _make_load_test_request(self, session: httpx.AsyncClient, endpoint: str, payload: Dict, headers: Dict) -> Tuple[float, int]:
+    async def _make_load_test_request(self, session: httpx.AsyncClient, endpoint: str, payload: dict, headers: dict) -> tuple[float, int]:
         """Make load test request with proper error handling."""
         start_time = time.time()
         
@@ -456,12 +453,12 @@ class AdvancedTestSuite:
     
     def _display_performance_metrics(self, metrics: PerformanceMetrics) -> None:
         """Display performance test results."""
-        print(f"\n📊 Performance Results:")
+        print("\n📊 Performance Results:")
         print(f"Total Requests: {metrics.total_requests}")
         print(f"Successful: {metrics.successful_requests} ({metrics.successful_requests/metrics.total_requests*100:.1f}%)")
         print(f"Failed: {metrics.failed_requests} ({metrics.failed_requests/metrics.total_requests*100:.1f}%)")
         print(f"Requests/sec: {metrics.requests_per_second:.1f}")
-        print(f"\nResponse Times:")
+        print("\nResponse Times:")
         print(f"  Average: {metrics.avg_response_time:.3f}s")
         print(f"  Min: {metrics.min_response_time:.3f}s") 
         print(f"  Max: {metrics.max_response_time:.3f}s")
@@ -521,7 +518,7 @@ class AdvancedTestSuite:
             self.results.append(TestResult(f"Integration {service_name}", status, duration, error_message))
         
         # Test end-to-end workflow
-        print(f"\n🔄 Testing End-to-End Workflow")
+        print("\n🔄 Testing End-to-End Workflow")
         if not self.dry_run:
             self._test_e2e_workflow()
         else:
@@ -529,7 +526,7 @@ class AdvancedTestSuite:
         
         # Summary
         healthy_services = sum(1 for _, status in connectivity_results if status == "passed")
-        print(f"\n📊 Integration Test Summary:")
+        print("\n📊 Integration Test Summary:")
         print(f"Healthy services: {healthy_services}/{len(connectivity_results)}")
     
     def _test_e2e_workflow(self) -> None:
@@ -562,7 +559,7 @@ class AdvancedTestSuite:
             )
             
             if rec_response.status_code == 200:
-                print(f"  ✅ Recommendations generated")
+                print("  ✅ Recommendations generated")
             else:
                 print(f"  ⚠️  Recommendations unavailable (status {rec_response.status_code})")
             
@@ -574,7 +571,7 @@ class AdvancedTestSuite:
             )
             
             if eval_response.status_code == 200:
-                print(f"  ✅ Evaluations completed")
+                print("  ✅ Evaluations completed")
             else:
                 print(f"  ⚠️  Evaluations unavailable (status {eval_response.status_code})")
             
@@ -604,7 +601,7 @@ class AdvancedTestSuite:
         print(f"Total Duration: {total_duration:.2f}s")
         
         if failed_tests > 0:
-            print(f"\n❌ Failed Tests:")
+            print("\n❌ Failed Tests:")
             for result in self.results:
                 if result.status == "failed":
                     print(f"  • {result.test_name}: {result.error_message}")
@@ -634,7 +631,7 @@ class AdvancedTestSuite:
             with open("advanced-test-report.json", "w") as f:
                 json.dump(report_data, f, indent=2)
             
-            print(f"\n📄 Detailed report saved to: advanced-test-report.json")
+            print("\n📄 Detailed report saved to: advanced-test-report.json")
 
 
 def main():

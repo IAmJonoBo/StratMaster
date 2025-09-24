@@ -5,8 +5,8 @@ from __future__ import annotations
 import math
 import re
 import string
+from collections.abc import Iterable
 from statistics import mean
-from typing import Iterable
 
 
 class ConfidenceScorer:

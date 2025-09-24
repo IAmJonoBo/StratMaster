@@ -28,7 +28,7 @@ graph TB
     
     D --> L[deploy.sh]
     D --> M[health_check.py]
-    D --> N[validate_phase3.sh]
+    D --> N[validate_production.sh]
     
     E --> O[dependency_upgrade.py]
     E --> P[cleanup_appledouble.sh]
@@ -502,24 +502,24 @@ Options:
 - **Functionality**: Core feature validation
 - **Security**: Certificate and authentication checks
 
-### validate_phase3.sh
+### validate_production.sh
 
-Phase 3 deployment validation script.
+Production deployment validation script.
 
-**Location**: `scripts/validate_phase3.sh`  
-**Purpose**: Validate Phase 3 features and deployment readiness
+**Location**: `scripts/validate_production.sh`  
+**Purpose**: Validate production features and deployment readiness
 
 ```bash
-# Full Phase 3 validation
-./scripts/validate_phase3.sh
+# Full production validation
+./scripts/validate_production.sh
 
 # Validate specific features
-./scripts/validate_phase3.sh --feature multi-agent-debate
-./scripts/validate_phase3.sh --feature knowledge-graph
+./scripts/validate_production.sh --feature multi-agent-debate
+./scripts/validate_production.sh --feature knowledge-graph
 
 # Environment-specific validation
-./scripts/validate_phase3.sh --environment staging
-./scripts/validate_phase3.sh --environment prod --strict
+./scripts/validate_production.sh --environment staging
+./scripts/validate_production.sh --environment prod --strict
 ```
 
 ## Maintenance Scripts

@@ -7,13 +7,13 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from stratmaster_api.clients.cache_client import get_cache_client
+from stratmaster_api.clients.mcp_client import get_mcp_client
 from stratmaster_api.models.experts.memo import DisciplineMemo
 from stratmaster_api.models.experts.vote import CouncilVote
-from stratmaster_api.clients.mcp_client import get_mcp_client
-from stratmaster_api.clients.cache_client import get_cache_client
 
 logger = logging.getLogger(__name__)
 

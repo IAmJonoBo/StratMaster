@@ -32,7 +32,6 @@ from .core import (
     SourceType,
     WorkflowMetadata,
 )
-
 from .experts import (
     CouncilVote,
     DisciplineMemo,

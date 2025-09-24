@@ -7,7 +7,6 @@ import asyncio
 import json
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
 
 import pytest
 import httpx
