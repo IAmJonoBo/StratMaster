@@ -44,7 +44,7 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
-from .routers import debate as debate_hitl_router
+from .routers import debate as debate_hitl_router, ui as ui_router, strategy as strategy_router
 from .routers import ingestion as ingestion_router
 from .schemas import (
     CompressionConfig,
@@ -191,6 +191,8 @@ def create_app() -> FastAPI:
 
     app.include_router(ingestion_router.router)
     app.include_router(debate_hitl_router.router)
+    app.include_router(ui_router.router)
+    app.include_router(strategy_router.router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
