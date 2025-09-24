@@ -657,15 +657,12 @@ document_parser = DocumentParser()
 strategy_engine = StrategyEngine()
 
 
-# TODO: Uncomment after python-multipart dependency is installed
-# This endpoint requires python-multipart for file upload functionality
-"""
 @router.post("/parse", response_model=DocumentParseResponse)
 async def parse_document(
     request: DocumentParseRequest,
     file: UploadFile = File(..., description="Document to parse")
 ) -> DocumentParseResponse:
-    \"\"\"Parse multi-format document for strategy content - Sprint 8.\"\"\"
+    """Parse multi-format document for strategy content - Sprint 8."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename is required")
     
@@ -683,7 +680,6 @@ async def parse_document(
     except Exception as e:
         logger.error(f"Document parsing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Document parsing failed: {str(e)}")
-"""
 
 @router.post("/brief", response_model=StrategyBriefResponse) 
 async def generate_strategy_brief(request: StrategyBriefRequest) -> StrategyBriefResponse:

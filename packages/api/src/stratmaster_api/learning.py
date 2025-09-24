@@ -9,40 +9,12 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-# TODO: Add scikit-learn as dependency to enable ML functionality
-# Currently using optional import due to environment constraints
-try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.pipeline import Pipeline
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    # Create mock classes for when sklearn is not available
-    class TfidfVectorizer:
-        def __init__(self, **kwargs):
-            pass
-    
-    class LogisticRegression:
-        def __init__(self, **kwargs):
-            pass
-    
-    class Pipeline:
-        def __init__(self, steps):
-            pass
-        
-        def fit(self, X, y):
-            pass
-        
-        def predict(self, X):
-            return [0] * len(X)
-        
-        def predict_proba(self, X):
-            return [[0.5, 0.5]] * len(X)
-        
-        def score(self, X, y):
-            return 0.5
-    
-    SKLEARN_AVAILABLE = False
+# Import scikit-learn components - dependency confirmed as installed
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+
+SKLEARN_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
