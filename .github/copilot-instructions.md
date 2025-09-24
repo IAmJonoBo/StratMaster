@@ -1,288 +1,210 @@
-# StratMaster - GitHub Copilot Instructions
+# StratMaster — GitHub Copilot Instructions
 
-**ALWAYS** reference these instructions first before searching or using bash commands. Only use additional search and context gathering if the information here is incomplete or found to be in error.
+These instructions define how we use GitHub Copilot and Copilot Chat effectively and safely in this repository. They incorporate GitHub’s official best practices and StratMaster-specific policies.
 
-## Repository Overview
+Reference: [GitHub Copilot Best Practices](https://docs.github.com/en/copilot/get-started/best-practices)
 
-StratMaster is a Python 3.13+ monorepo implementing an AI-powered Brand Strategy platform with FastAPI, multiple MCP (Model Context Protocol) servers, and comprehensive backing services. The system uses Docker Compose for local development and Helm for Kubernetes deployment.
+Contents
+- Purpose and scope
+- How to work with Copilot in this repo
+- Safe Internet Access policy for Copilot
+- Repository architecture and invariants
+- Development commands and validations
+- Code quality, security, and CI/CD
+- Suggested Copilot Chat prompts
 
-## Key Architecture Components
+## 1) Purpose and scope
 
-- **API Server**: FastAPI application (`packages/api`) with Pydantic v2 models
-- **MCP Servers**: Research, Knowledge, Router, Evals, and Compression microservices
-- **Infrastructure**: Postgres, Qdrant, OpenSearch, NebulaGraph, MinIO, Temporal, Langfuse, Keycloak
-- **Build System**: Make-based with Python virtual environments
-- **Quality**: Pre-commit hooks, Trunk linting, pytest testing
+- Copilot is a pair-programmer. You remain the reviewer and approver. Treat suggestions like third‑party code.
+- Prefer repository context first. Only use additional web search or external context when necessary (see Internet Access policy below).
+- Always validate outputs with our tests, linters, and manual checks before committing.
 
-## Frontier-Grade AI Capabilities
+## 2) How to work with Copilot in this repo
 
-**StratMaster implements advanced AI features at ~95% completion**:
+Follow these best-practice patterns when prompting Copilot or Copilot Chat:
 
-1. **Multi-Agent Debate System**: Constitutional AI with critic and adversary validation
-2. **Knowledge Fabric**: GraphRAG with hybrid retrieval (Qdrant + OpenSearch + NebulaGraph)
-3. **Learning System**: ML-powered learning from debate outcomes with scikit-learn
-4. **Evidence-Grounded Research**: Web crawling with provenance tracking and PII hygiene
-5. **Strategic Modeling**: CEPs, JTBD, DBAs, Experiments, and Forecasts as first-class objects
-6. **Hardware Detection**: Intelligent UX adaptation based on device capabilities
-7. **Accessibility**: WCAG 2.1 AA compliance with AI-driven user assistance
-8. **Enterprise Integration**: SSO, data export/import, real-time collaboration
+- Be specific and provide context
+  - Include: file paths, function/class names, interfaces, examples, constraints, and acceptance criteria.
+  - Add relevant snippets (minimal necessary code) rather than entire files.
+- Set constraints and goals
+  - Specify frameworks (FastAPI, Pydantic v2), Python version (3.13+), patterns (e.g., dependency injection), performance or memory limits, and desired outputs (tests, docs, types).
+- Work iteratively
+  - Start small, request a scaffold or outline, then refine. Ask Copilot to add tests, then have it explain the diff or reasoning.
+- Prefer existing patterns
+  - Ask Copilot to follow similar code within packages/api, existing Pydantic models, and current project conventions (imports, logging, error handling).
+- Ask for verification
+  - Have Copilot produce or update unit tests, run through edge cases, add docstrings, and explain security implications of proposed changes.
+- Keep prompts privacy‑safe
+  - Do not paste secrets, tokens, or sensitive customer or company data into prompts. Redact or use placeholders.
 
-## Development Commands
+Security and licensing considerations:
+- Review all code suggestions for:
+  - Vulnerabilities, unsafe patterns, injection risks, insecure defaults.
+  - License compatibility if snippets resemble public code; prefer standard library and official docs.
+- Never accept “curl | bash” style commands without verification and justification.
+- Prefer pinned dependencies and reproducible builds.
 
-### **CRITICAL**: Build and Bootstrap - NEVER CANCEL
+## 3) Safe Internet Access policy for Copilot
 
-**ALWAYS** run bootstrap first before any other commands:
+We allow Copilot or contributors to use the internet when needed, with safeguards:
 
+When to use the internet
+- Use local repository context first.
+- Use internet search only when:
+  - The answer is not in this repo, or is time-sensitive (new CVEs, library changes, API deprecations).
+  - You need official documentation (Python, FastAPI, Pydantic, Helm, Kubernetes, Docker, GitHub Actions).
+  - You need authoritative security guidance (CWE, NIST, vendor advisories).
+
+How to use it safely
+- Source quality and citations
+  - Prefer official docs, standards, and vendor sources.
+  - Provide explicit citations (markdown links) for all external claims or copied patterns.
+- Data hygiene
+  - Never include secrets, tokens, or proprietary data in web queries.
+  - Minimize code shared; include only what’s necessary for the question.
+- Code provenance and licensing
+  - If adopting code from the web, link the source, check license compatibility, and adapt to our style.
+  - Avoid copying large excerpts; prefer understanding and re-implementing.
+- Security review
+  - Validate shell commands; avoid piping to shell from unverified URLs.
+  - For downloads, prefer checksums/signatures, and our Make targets that verify integrity.
+- Reproducibility
+  - If internet content changes behavior, add tests or notes explaining the dependency and pin versions where applicable.
+
+Recommended doc sources
+- Python: https://docs.python.org/3/
+- FastAPI: https://fastapi.tiangolo.com/
+- Pydantic v2: https://docs.pydantic.dev/
+- Pytest: https://docs.pytest.org/
+- Helm: https://helm.sh/docs/
+- Kubernetes: https://kubernetes.io/docs/
+- Docker: https://docs.docker.com/
+- GitHub Actions: https://docs.github.com/actions
+
+## 4) Repository architecture and invariants
+
+- Language/runtime: Python 3.13+
+- Web: FastAPI app in packages/api with Pydantic v2 models
+- MCP microservices: research-mcp, knowledge-mcp, router-mcp, evals-mcp, compression-mcp
+- Infra: Postgres, Qdrant, OpenSearch, NebulaGraph, MinIO, Temporal, Langfuse, Keycloak
+- Build system: Make + venvs
+- Quality: pre-commit, Trunk, pytest
+- Deployment: Helm charts, docker-compose for local full stack
+
+Architectural invariants Copilot must respect:
+- Pydantic v2 usage and validation patterns
+- Consistent FastAPI routing, dependency injection, and error handling
+- Typed code with clear docstrings and tests
+- No breaking changes to public API or schemas without explicit approval and migration notes
+
+## 5) Development commands and validations
+
+Bootstrap (always first)
 ```bash
 make bootstrap
 ```
+- Creates .venv, installs API package, pytest, and pre-commit.
+- Internet-enabled. If behind a firewall, see “Docker-based testing” below.
 
-- **Time**: 2-3 minutes normally, can take up to 5 minutes
-- **NEVER CANCEL**: Set timeout to 10+ minutes minimum
-- **What it does**: Creates `.venv`, installs API package, pytest, and pre-commit
-- **Network issues**: **COMMON FAILURE** - pip installs often timeout due to network restrictions. This is documented as a known limitation.
-
-**IMPORTANT**: If `make bootstrap` fails due to network timeouts, this is **normal** in restricted environments and should be documented as "fails due to firewall/network limitations".
-
-### **CRITICAL**: Testing - Multiple Options Available
-
-**Primary testing** (requires bootstrap first):
-
+Primary tests (fast, reliable)
 ```bash
-# Run API tests only (recommended - works reliably)
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
+- Expect all tests to pass. Do not rely on a specific test count.
 
-- **Time**: ~1 second, 19 tests pass
-- **Reliable**: Always works after bootstrap
-
-**Full test suite** (often has network issues):
-
-```bash
-make test
-```
-
-- **Time**: 2-5 minutes if successful
-- **Network dependency**: Often fails due to pip timeouts
-- **Alternative**: Use Docker approach if local environment has issues
-
-**Docker-based testing** (when local pip fails):
-
-```bash
-make test-docker
-```
-
-- **Time**: 3-10 minutes (includes Docker image pull)
-- **Use when**: Local pip has network timeouts
-- **NEVER CANCEL**: Allow full completion
-
-### **CRITICAL**: Running the Application
-
-**API Server** (using bootstrap environment):
-
+Run API locally
 ```bash
 .venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080
+# Health: http://127.0.0.1:8080/healthz  -> {"status":"ok"}
+# Docs:   http://127.0.0.1:8080/docs
 ```
 
-- **Time**: Starts in ~2-3 seconds
-- **Endpoints**: Health at `/healthz`, OpenAPI docs at `/docs`
-- **Test**: `curl http://127.0.0.1:8080/healthz` should return `{"status":"ok"}`
-
-**Full stack** (when Docker images are available):
-
+Full stack (if Docker available)
 ```bash
-make dev.up      # Start all services
-make dev.logs    # View logs
-make dev.down    # Stop all services
+make dev.up
+make dev.logs
+make dev.down
 ```
 
-- **Time**: 2-5 minutes to start all containers
-- **Services**: API (8080), Research MCP (8081), Knowledge MCP (8082), Router MCP (8083), etc.
-- **Known issue**: Some Docker images may have access restrictions
-
-## **CRITICAL**: Validation Requirements
-
-**ALWAYS** run these validation steps after making changes:
-
-1. **Bootstrap validation**:
-
+Validation checklist before commit/PR
+1) Bootstrap completes without errors:
 ```bash
-make bootstrap  # Should complete without errors
+make bootstrap
 ```
-
-2. **API test validation**:
-
+2) API tests pass:
 ```bash
 PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 ```
-
-**Expected result**: `19 passed in ~1.6s`
-
-3. **API functionality validation**:
-
+3) API functionality sanity:
 ```bash
-# Start API server
 .venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080 &
-
-# Test health endpoint
 curl http://127.0.0.1:8080/healthz
-# Should return: {"status":"ok"}
-
-# Test OpenAPI docs
-curl http://127.0.0.1:8080/docs | grep "StratMaster API"
-# Should return HTML with title containing "StratMaster API"
 ```
-
-4. **Helm chart validation**:
-
+4) Helm chart linting:
 ```bash
 helm lint helm/stratmaster-api
 helm lint helm/research-mcp
 ```
 
-**Expected result**: Charts should lint with 0 failures (warnings OK)
+## 6) Code quality, security, and CI/CD
 
-## Code Quality and Linting
-
-**Pre-commit hooks** (may have network timeouts):
-
+Pre-commit
 ```bash
-# Install hooks (part of bootstrap)
 .venv/bin/pre-commit install
-
-# Run all hooks (may fail due to network issues)
 .venv/bin/pre-commit run --all-files
 ```
 
-**Trunk linting** (requires network access):
-
+Trunk
 ```bash
 trunk check --all --no-fix
 ```
 
-**Time**: 1-2 minutes when working
-
-**Manual file cleanup**:
-
+Security and dependencies
 ```bash
-# Remove macOS artifacts (always safe to run)
-bash scripts/cleanup_appledouble.sh
+make security.install     # install security tools
+make security.scan        # vulnerability scan
+make deps.check           # check for updates
+make deps.upgrade.safe    # safe patch updates
+make deps.upgrade         # minor updates with review
 ```
 
-## Package Structure
-
-- `packages/api/`: Main FastAPI application
-- `packages/mcp-servers/`: Microservices (research-mcp, knowledge-mcp, router-mcp, evals-mcp, compression-mcp)
-- `packages/orchestrator/`: Workflow orchestration
-- `packages/retrieval/`: ColBERT and SPLADE retrieval systems
-- `packages/rerankers/`: BGE reranking systems
-- `helm/`: Kubernetes deployment charts
-- `infra/`: Infrastructure configuration
-- `configs/`: Application configuration files
-- `tests/`: End-to-end, integration, and unit tests
-
-## Internet Access and Modern Deployment
-
-**StratMaster now supports full internet access for enhanced capabilities**:
-
-1. **Intelligent Package Management**: Full internet-enabled dependency management
-   - **Asset Downloads**: Cryptographically verified ML models and resources via `make assets.pull`
-   - **Dependency Upgrades**: Automated upgrades with `make deps.upgrade.safe` and `make deps.upgrade`
-   - **Security Scanning**: Real-time vulnerability detection with `make security.scan`
-   - **Network Access**: Full access to PyPI, Docker Hub, and GitHub for seamless installation
-
-2. **Enhanced Development Experience**:
-   - **Real-time Updates**: Live dependency checking and automated upgrades
-   - **ML Model Downloads**: Automatic retrieval of required models and corpora
-   - **CI/CD Integration**: Full GitHub Actions integration with internet-based validations
-   - **Container Management**: Access to all required Docker images and registries
-
-3. **Production Deployment Support**:
-   - **Cloud-Native**: Full Kubernetes deployment with Helm charts and internet access
-   - **Enterprise Integration**: OIDC/SAML connectivity and external API integrations  
-   - **Monitoring**: Real-time observability with external metrics and logging services
-
-## **CRITICAL**: Timing Expectations & Performance Targets
-
-- **make bootstrap**: 2-3 minutes (internet-enabled, all dependencies available)
-- **API tests**: 1-2 seconds (23 tests pass consistently)
-- **API server startup**: 2-3 seconds (sub-second after warmup)
-- **make dev.up**: 2-5 minutes (full stack with 12+ services)
-- **Helm linting**: 5-10 seconds per chart
-- **Pre-commit hooks**: 1-2 minutes (internet-enabled for full functionality)
-- **Asset downloads**: 1-10 minutes depending on models (resumable)
-- **Dependency upgrades**: 30 seconds to 2 minutes (incremental updates)
-- **Security scans**: 1-3 minutes (comprehensive vulnerability assessment)
-
-## **CRITICAL**: Manual Testing Scenarios
-
-**After making API changes**:
-
-1. Run `PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q`
-2. Start API server and test `/healthz` endpoint
-3. Check OpenAPI schema at `/openapi.json`
-4. Test a POST endpoint like `/research/plan` with proper JSON payload
-
-**After infrastructure changes**:
-
-1. Run `helm lint helm/stratmaster-api`
-2. Test `make dev.up` if Docker is available
-3. Check docker-compose.yml syntax
-
-## Enhanced Command Suite with Internet Access
-
+Assets (verify integrity)
 ```bash
-# Core Development (Always Available):
-make bootstrap                                           # 2-3 min (internet-enabled)
-PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q  # 1-2 sec
-.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080  # 2-3 sec
-helm lint helm/stratmaster-api                          # 5-10 sec
-
-# Asset Management (Internet-Enabled):
-make assets.pull                                         # Download all ML models and resources
-make assets.required                                     # Download required assets only  
-make assets.verify                                       # Verify asset integrity
-
-# Intelligent Dependency Management:
-make deps.check                                          # Check for updates
-make deps.upgrade.safe                                   # Apply patch updates safely
-make deps.upgrade                                        # Apply minor updates with review
-
-# Security and Quality (Internet-Enabled):
-make security.scan                                       # Comprehensive security scan
-make security.install                                    # Install security tools
-.venv/bin/pre-commit run --all-files                   # Full pre-commit hooks
-trunk check --all --no-fix                             # Advanced linting
-
-# Full Stack Development:
-make dev.up                                             # Start complete stack
-make dev.logs                                           # Monitor all services
-make dev.down                                           # Clean shutdown
-
-# Production Deployment:
-make test                                               # Full test suite
-make test-docker                                        # Containerized testing
+make assets.required
+make assets.pull
+make assets.verify
 ```
 
-## Important Files and Locations
+CI parity
+- CI runs on Python 3.13, installs packages, runs pytest, lints Helm, and executes Trunk checks.
+- Ensure local commands match CI before pushing.
 
-- **Main API**: `packages/api/src/stratmaster_api/`
-- **API Tests**: `packages/api/tests/` (19 tests, all pass)
-- **MCP Server**: `packages/mcp-servers/research-mcp/`
-- **Docker Compose**: `docker-compose.yml` (12+ services)
-- **Makefile**: All build targets and commands
-- **Helm Charts**: `helm/stratmaster-api/`, `helm/research-mcp/`
-- **CI/CD**: `.github/workflows/ci.yml`, `.github/workflows/trunk.yml`
-- **Quality Config**: `.pre-commit-config.yaml`, `.trunk/trunk.yaml`
+## 7) Suggested Copilot Chat prompts
 
-## CI/CD Pipeline
+General
+- “Explain what this FastAPI endpoint does and propose tests to cover edge cases.”
+- “Refactor this Pydantic v2 model for clarity and add type annotations and docstrings.”
+- “Given these acceptance criteria, implement the endpoint and generate pytest unit tests.”
+- “Create a Helm values override example for enabling X and document it in README.”
 
-The GitHub Actions CI pipeline:
+Security and safety
+- “Review this change for security issues (injection, deserialization, SSRF, path traversal). Propose safer alternatives.”
+- “Propose dependency pins and reasons, and update pyproject.toml accordingly.”
 
-- Runs on Python 3.13
-- Installs packages and runs pytest
-- Lints and validates Helm charts
-- Trunk linting for code quality
-- **All commands in CI should work locally** after proper setup
+Internet-assisted (with citations)
+- “Summarize the breaking changes from FastAPI X.Y release that affect this code and link to the docs. Then recommend minimal changes.”
 
-Always test your changes against the same commands used in CI before committing.
+## 8) Important files and locations
+
+- Main API: packages/api/src/stratmaster_api/
+- API tests: packages/api/tests/
+- MCP servers: packages/mcp-servers/
+- Docker Compose: docker-compose.yml
+- Helm charts: helm/stratmaster-api/, helm/research-mcp/
+- CI/CD: .github/workflows/
+- Quality config: .pre-commit-config.yaml, .trunk/trunk.yaml
+- Makefile: canonical dev, quality, security, and infra targets
+
+---
+
+By using Copilot with the above practices—clear prompting, iterative refinement, comprehensive validation, and safe internet usage—we maintain quality, security, and velocity across StratMaster.
