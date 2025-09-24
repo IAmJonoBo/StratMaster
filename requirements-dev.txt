@@ -2,5 +2,5 @@
 pytest~=8.4.2
 httpx~=0.28.1
 pip-tools~=7.5.0
-typer>=0.12.5
+typer>=0.19.2
 types-PyYAML>=6.0.12.20250915
