@@ -38,7 +38,7 @@ class MCPConnectionPool:
             if self.initialized:
                 return
                 
-            for i in range(self.pool_size):
+            for _ in range(self.pool_size):
                 client = MCPClient(self.server_path)
                 await client.start()
                 self.all_clients.append(client)

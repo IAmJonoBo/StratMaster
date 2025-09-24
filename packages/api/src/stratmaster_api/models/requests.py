@@ -129,26 +129,44 @@ class ExperimentCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     tenant_id: str
-    hypothesis_id: str
-    variants: list[dict]
-    primary_metric: dict
+    title: str = Field(..., min_length=3, max_length=200)
+    hypothesis: str = Field(..., min_length=10, max_length=1000)
+    success_metrics: list[str] = Field(..., min_length=1, max_length=10)
+    duration_weeks: int = Field(..., ge=1, le=52)
+    confidence_threshold: float = Field(..., ge=0.5, le=0.99)
+    variants: list[dict] | None = Field(default=None, max_length=10)
+    primary_metric: dict | None = None
 
 
 class ExperimentCreateResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     experiment_id: str
+    tenant_id: str
+    status: str = Field(default="created")
+    created_at: str = Field(description="ISO timestamp")
+    hypothesis_confidence: float = Field(description="AI-assessed hypothesis confidence")
+    risk_factors: list[str] = Field(description="Identified risk factors")
 
 
 class ForecastCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     tenant_id: str
-    metric_id: str
-    horizon_days: int = Field(..., ge=1, le=365)
+    forecast_type: str = Field(..., description="Type of forecast: sales, traffic, conversion, etc.")
+    time_horizon: str = Field(..., description="Time horizon: weekly, monthly, quarterly")
+    variables: list[str] = Field(..., min_length=1, description="Variables to forecast")
+    confidence_intervals: list[float] = Field(default=[50, 80, 95], description="Confidence levels")
+    historical_data: dict | None = Field(default=None, description="Optional historical data")
+    external_factors: list[str] = Field(default_factory=list, description="External factors to consider")
 
 
 class ForecastCreateResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    forecast_id: str
+    predictions: list[dict] = Field(description="List of predictions with confidence intervals")
+    model_performance: dict = Field(description="Model accuracy metrics")
+    methodology: str = Field(description="Forecasting methodology used")
+    created_at: str = Field(description="ISO timestamp")
     forecast: Forecast

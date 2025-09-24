@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from ..dependencies import require_idempotency_key
 from ..tracing import tracing_manager
+from ..learning import debate_learning_system, DebateOutcome
 
 router = APIRouter(prefix="/debate", tags=["debate"])
 
@@ -35,7 +36,9 @@ class DebateEscalateResponse(BaseModel):
     debate_id: str
     status: str = Field(description="Status after escalation")
     specialist_assigned: str | None = Field(default=None)
-    estimated_response_time: int | None = Field(default=None, description="Estimated response time in minutes")
+    estimated_response_time: int | None = Field(
+        default=None, description="Estimated response time in minutes"
+    )
 
 
 class DebateAcceptRequest(BaseModel):
@@ -77,7 +80,9 @@ class DebatePauseRequest(BaseModel):
     tenant_id: str
     pause_reason: str = Field(description="Reason for pausing")
     timeout_minutes: int | None = Field(default=30, description="Timeout for human response")
-    required_input_type: str = Field(description="Type of input needed: decision, clarification, approval")
+    required_input_type: str = Field(
+        description="Type of input needed: decision, clarification, approval"
+    )
 
 
 class DebatePauseResponse(BaseModel):
@@ -104,7 +109,10 @@ class DebateService:
         escalation_id = f"esc-{request.debate_id}-{len(self.escalations)}"
         
         # Determine specialist based on escalation reason and domain
-        specialist_domain = request.specialist_domain or self._infer_specialist_domain(request.escalation_reason)
+        specialist_domain = (
+            request.specialist_domain or 
+            self._infer_specialist_domain(request.escalation_reason)
+        )
         specialist_assigned = f"{specialist_domain}-specialist"
         
         # Estimate response time based on domain and urgency
@@ -128,6 +136,18 @@ class DebateService:
             self.debates[request.debate_id]["status"] = "escalated"
             self.debates[request.debate_id]["escalation_id"] = escalation_id
         
+        # Record escalation outcome for learning (Sprint 2)
+        debate_features = self.debates.get(request.debate_id, {})
+        outcome = DebateOutcome(
+            debate_id=request.debate_id,
+            outcome="escalated",
+            confidence=0.3,  # Low confidence for escalated debates
+            quality_rating=None,  # No quality rating for escalations
+            human_feedback=request.escalation_reason,
+            debate_features=debate_features
+        )
+        debate_learning_system.record_outcome(outcome)
+        
         return DebateEscalateResponse(
             escalation_id=escalation_id,
             debate_id=request.debate_id,
@@ -149,6 +169,18 @@ class DebateService:
             self.debates[request.debate_id]["status"] = "accepted"
             self.debates[request.debate_id]["acceptance_id"] = acceptance_id
             self.debates[request.debate_id]["quality_rating"] = request.quality_rating
+        
+        # Record outcome for learning (Sprint 2)
+        debate_features = self.debates.get(request.debate_id, {})
+        outcome = DebateOutcome(
+            debate_id=request.debate_id,
+            outcome="accepted",
+            confidence=0.8,  # High confidence for accepted debates
+            quality_rating=request.quality_rating,
+            human_feedback=request.notes,
+            debate_features=debate_features
+        )
+        debate_learning_system.record_outcome(outcome)
         
         return DebateAcceptResponse(
             acceptance_id=acceptance_id,
@@ -337,7 +369,7 @@ async def escalate_debate(
         "debate_id": payload.debate_id,
         "specialist_domain": payload.specialist_domain,
         "escalation_reason": payload.escalation_reason[:100]  # Truncate for tracing
-    }) as trace_context:
+    }):
         result = debate_service.escalate_debate(payload)
         return result
 
@@ -355,7 +387,7 @@ async def accept_debate(
         "quality_rating": payload.quality_rating,
         "has_notes": bool(payload.notes),
         "action_items_count": len(payload.action_items)
-    }) as trace_context:
+    }):
         result = debate_service.accept_debate(payload)
         return result
 
@@ -365,7 +397,7 @@ async def get_debate_status(debate_id: str) -> DebateStatusResponse:
     """Get current status of a debate - Sprint 3 HITL."""
     with tracing_manager.trace_operation("debate:status", {
         "debate_id": debate_id
-    }) as trace_context:
+    }):
         result = debate_service.get_debate_status(debate_id)
         return result
 
@@ -390,6 +422,28 @@ async def pause_debate(
         "pause_reason": payload.pause_reason[:100],
         "required_input_type": payload.required_input_type,
         "timeout_minutes": payload.timeout_minutes
-    }) as trace_context:
+    }):
         result = debate_service.pause_debate(payload)
         return result
+
+
+@router.get("/learning/metrics")
+async def get_debate_learning_metrics() -> dict[str, Any]:
+    """Get metrics about the debate learning system - Sprint 2."""
+    with tracing_manager.trace_operation("debate:learning_metrics", {}):
+        metrics = debate_learning_system.get_learning_metrics()
+        return {"learning_system": metrics}
+
+
+@router.post("/learning/predict")  
+async def predict_debate_outcome(
+    payload: dict[str, Any],
+    _: str = Depends(require_idempotency_key),
+) -> dict[str, Any]:
+    """Predict likely outcome for a debate - Sprint 2."""
+    with tracing_manager.trace_operation("debate:predict", {
+        "has_hypothesis": "hypothesis" in payload,
+        "has_evidence": "evidence" in payload
+    }):
+        prediction = debate_learning_system.predict_outcome(payload)
+        return {"prediction": prediction}

@@ -23,7 +23,10 @@ router = APIRouter(prefix="/experts", tags=["experts"])
 class EvaluateBody(BaseModel):
     """Request body for expert evaluation."""
     strategy: dict[str, Any]
-    disciplines: list[str] = ["psychology", "design", "communication", "brand_science", "economics", "legal"]
+    disciplines: list[str] = [
+        "psychology", "design", "communication", 
+        "brand_science", "economics", "legal"
+    ]
 
 
 class VoteBody(BaseModel):
@@ -81,7 +84,9 @@ async def evaluate(body: EvaluateBody) -> list[DisciplineMemo]:
         
     except Exception as e:
         logger.error(f"Evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Evaluation failed: {str(e)}"
+        ) from e
 
 
 @router.post("/vote", response_model=CouncilVote)
@@ -130,7 +135,9 @@ async def vote(body: VoteBody) -> CouncilVote:
         
     except Exception as e:
         logger.error(f"Vote aggregation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Vote aggregation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Vote aggregation failed: {str(e)}"
+        ) from e
 
 
 @router.get("/health")
@@ -149,4 +156,6 @@ async def clear_cache() -> dict[str, str]:
         return {"status": "ok", "message": "Cache cleared successfully"}
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to clear cache: {str(e)}"
+        ) from e
