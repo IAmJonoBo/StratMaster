@@ -32,5 +32,3 @@ where = ["src"]
 [tool.pyright]
 typeCheckingMode = "basic"
 
-[tool.ruff]
-line-length = 100
