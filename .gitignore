@@ -124,4 +124,8 @@ monitoring_config.json
 .trunk/cache/
 .trunk/.state
 .venv-test/
+
 test_venv/
+
+# Ignore uvicorn pid files
+.uvicorn.pid
