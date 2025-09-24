@@ -1,51 +1,273 @@
-Role: Lead engineer + technical writer performing a docs↔code parity drive for the StratMaster repo.
+Sprint 0 — Baseline & Safety Rails (stabilise what’s there)
 
-Context (repo-specific):
-- Monorepo, Python-first. Key dirs: /.github, /.githooks, /.trunk, /apps, /packages, /docs, /ops, /infra, /helm, /docker, /scripts, /tests, /seeds, /prompts; plus root files: README.md, PROJECT.md, SECURITY.md, ALPHA_READINESS_SUMMARY.md, IMPLEMENTATION_SUMMARY.md, ENHANCED_IMPLEMENTATION.md, PHASE3_GAP_ANALYSIS.md, docker-compose.yml, Makefile, ruff.toml, mypy.ini, pytest.ini, requirements*.txt/lock. 
-- API: FastAPI app factory; multiple MCP servers; docker-compose + Helm (GitOps); pre-commit/ruff/mypy/pytest configured.
+Goal: Get deterministic builds, visible traces, and a “green bar” before re-architecture.
 
-Objectives:
-1) Docs↔Code Parity:
-   - Build a matrix of claims/features in /docs and root *.md files (README.md, PROJECT.md, IMPLEMENTATION_*.md, PHASE3_GAP_ANALYSIS.md, ALPHA_READINESS_SUMMARY.md) vs actual code artifacts in /apps, /packages, /ops, /infra, /helm.
-   - For each documented feature, locate the corresponding module, routes, handlers, services, configs, Helm values, and tests. Mark status = {implemented, partially implemented, missing}.
-   - Where “future plans”, “phase/sprint” notes, or placeholders exist, either (a) implement the minimum viable, production-safe slice now, or (b) create a precise TODO with file/line anchors and open a draft PR checklist item. Replace “Sprint/Phase” phrasing with release-oriented language.
+Copilot instructions (paste into a GitHub issue):
+	•	Read Makefile targets and docker-compose.yml. Add a scripts/devcheck.sh that:
+	•	lints, runs unit/integration tests, checks helm lint for charts already in repo, then pings all health endpoints listed in README. Exit non-zero on any failure.
+	•	Add OTEL traces to FastAPI gateway + all MCP servers; export to OTLP (already in stack) and annotate with trace_id echoed to response headers for /v1/run calls.
+	•	Wire Langfuse client in API/MCPs (only if not already) with span names debate:start, agent:call, retrieval:hybrid, guard:evidence etc.
 
-2) Directory & wiring correctness:
-   - Enforce the intended layout (see Context). Ensure import paths, app startup, router inclusion, settings/env, and service clients are wired and referenced consistently across API, MCP services, scripts, docker-compose, Helm charts, and Makefile targets.
-   - Verify Helm charts/values reference current image tags and env vars; align compose/Helm ports and health endpoints; ensure secrets and config maps are declared and consumed in a least-surprise way.
+Deliverables:
+	•	scripts/devcheck.sh; GitHub Action ci-devcheck.yml running it on PRs.
+	•	X-Trace-Id header on gateway responses.
+	•	Langfuse + OTEL spans visible for a trivial run.
 
-3) Test coverage & smoke checks:
-   - Ensure pytest discovers and runs fast API tests and integration tests; add/repair tests for each public API route and critical service boundary; add a smoke test for /healthz and OpenAPI /docs.
-   - Guarantee ruff and mypy pass with repo settings; add missing type hints where trivial; avoid broad “type: ignore” unless justified inline.
+Quality gates:
+	•	scripts/devcheck.sh passes locally and in CI.
+	•	Temporal UI shows at least one sample workflow execution; OTEL shows traces; Langfuse shows events.  ￼
 
-4) Documentation curation to Diátaxis:
-   - Reorganise /docs into tutorials, how-to guides, reference, and explanations. Add an index/TOC. Cross-link to code, tests, and ops scripts. Remove stale sprint/phase artefacts or move them to /docs/_archive with an explanatory note.
-   - Keep SECURITY.md and Operations/Runbooks accurate; link to health checks, ports, Make targets, compose/Helm entry points.
+⸻
 
-Deliverables (commit/PR plan):
-- Commit set with Conventional Commits. Include:
-  a) A machine-readable docs↔code parity report at /docs/parity-report.md (tables with links).
-  b) Added/updated tests; green `make test` locally.
-  c) Fixed wiring (imports/routers/settings), updated compose/Helm where needed.
-  d) Curated /docs to Diátaxis sections with cross-links.
-- Open a single PR: title “chore: docs↔code parity & release-prep”. Checklist must include: unit+integration tests pass; ruff/mypy clean; compose up; helm lint; smoke test; docs pass Diátaxis; no “Sprint/Phase” language in public docs.
+Sprint 1 — Dynamic Agent Selection (routing without overhead)
 
-Safety & constraints:
-- No destructive deletes: move clearly obsolete docs to /docs/_archive with a short rationale; otherwise propose deletions in the PR description.
-- Keep external secrets out of VCS. If a setting is missing, gate with env var and document defaults.
-- Prefer minimal, safe implementations over speculative features. If a “future plan” needs non-trivial design, create a scoped TODO + PR task instead.
+Goal: Route questions to the right specialist(s) via lightweight, inspectable policy.
 
-Acceptance criteria (must meet before finishing):
-- `make bootstrap && make test` passes locally; `ruff` and `mypy` clean.
-- `scripts/smoke_api.py` succeeds; /healthz returns 200; /docs renders.
-- `helm lint` for stratmaster charts passes; docker-compose services start with documented ports.
-- /docs contains TOC + the four Diátaxis sections, each linking to code and tests.
-- /docs/parity-report.md shows 100% mapped or explicitly gated items.
+Approach: Use LangGraph conditional edges (router node) + your existing Router MCP. Start with a small domain classifier (few-shot + rules), not a heavyweight model.  ￼
 
-Execution steps (what to do now):
-1) Scan repo to build the parity matrix; produce /docs/parity-report.md.
-2) Implement or gate missing items; update wiring (routers, DI, settings).
-3) Add/repair tests; ensure pytest collection/smoke work.
-4) Curate /docs into Diátaxis; scrub “Sprint/Phase” language from public docs, keeping historical notes in /docs/_archive as needed.
-5) Run ruff, mypy, pytest; lint Helm; validate compose; update README Quick Start if commands changed.
-6) Produce a concise PR with the checklist and rationale. 
+Copilot instructions:
+	•	In packages/agents/, create router_graph.py:
+	•	Define a LangGraph with router → {research, knowledge, strategy, brand, ops} via conditional edges.
+	•	Conditions evaluate: input metadata, detected entities, required tools, policy flags.
+	•	Expose POST /route on Router MCP: returns chosen agents + rationale.
+	•	Add feature flag ROUTER_VERBOSE to emit route rationale and confidence.
+
+Deliverables:
+	•	Router graph with unit tests covering at least 12 routing cases (brand vs business vs data ops vs research vs governance).
+
+Quality gates:
+	•	≥95% routing accuracy on a hand-labelled 60-prompt set.
+	•	Mean route latency < 20ms (local, warm).
+	•	Traces show one router span per call; no fan-out unless policy says so.
+
+⸻
+
+Sprint 2 — Learning from Debates (closed-loop improvement)
+
+Goal: Make debates self-improving using logged outcomes; learn when to debate, who to include.
+
+Approach: Log per-turn features → store outcome labels (accepted, revised, rejected). Train a cheap policy (logistic/GBM) offline; deploy as an inference step gating debate breadth/depth.
+
+Copilot instructions:
+	•	In Evals MCP, add debate_outcome schema: {task_id, agents[], evidence_count, citations_ok, critique_count, user_acceptance, latency, cost_tokens}.
+	•	Write an offline trainer (Python, scikit-learn) producing a pickle debate_policy.pkl.
+	•	Gateway: before launching a debate, call policy to decide: single-agent vs 2-agent vs adversarial round.
+
+Deliverables:
+	•	packages/evals/train_debate_policy.py + model artifact.
+	•	Gate that sometimes skips debate if past data says it adds cost without quality delta.
+
+Quality gates:
+	•	A/B on 100 historical tasks: keep or reduce median tokens; hold or improve acceptance rate by ≥5% relative.
+	•	Policy inference ≤3ms p95 (local).
+
+⸻
+
+Sprint 3 — Human-in-the-Loop (HITL) & Mobile approvals
+
+Goal: Let humans steer debates at high-leverage points; keep mobile read-only approvals sleek.
+
+Copilot instructions:
+	•	Web UI: add “Decision Deck” panel with three tabs:
+	1.	Claims & Evidence (collapsible citations, source reputations).
+	2.	Counterpoints (auto-clustered critiques).
+	3.	Action Plan (tasks exportable).
+	•	Controls: “Request counter-argument”, “Escalate to domain specialist”, “Accept with notes”.
+	•	Mobile (existing read-only concept): add “Approve/Request Rework” and show provenance.
+
+Deliverables:
+	•	UI components + gateway endpoints: POST /debate/escalate, POST /debate/accept.
+	•	Temporal workflow step for “pause-for-human” with timeout fallback.  ￼
+
+Quality gates:
+	•	No action requires more than two taps on mobile.
+	•	WCAG 2.2 AA checks pass for new components.
+
+⸻
+
+Sprint 4 — Retrieval & Reasoning Performance pass
+
+Goal: Faster, better retrieval + stable reasoning throughput.
+
+Approach: Tune OpenSearch hybrid search (lexical + vector) + Qdrant, keep graphs for relationships; ensure vLLM is sized and benchmarked.  ￼
+
+Copilot instructions:
+	•	Add OpenSearch hybrid search pipeline with text_embedding processor and BM25+vector fusion; include field boosts for titles/abstracts.
+	•	Implement retrieval budget: cap passages; use disagreement sampling only when router/ policy indicates.
+	•	Add scripts/bench_vllm.sh to run vLLM throughput tests on two reference models; record TPS and p95.  ￼
+
+Deliverables:
+	•	opensearch/hybrid_pipeline.json; retrieval unit tests for fusion ordering.
+	•	Bench report committed under bench/vllm/*.md.
+
+Quality gates:
+	•	≥20% MRR@10 uplift on an internal QA set, or equal MRR with ≥25% less token usage.
+	•	p95 end-to-end latency not worse than baseline.
+
+⸻
+
+Sprint 5 — Exports: Notion, Trello, Jira (templates + mapping)
+
+Goal: One-click export of strategies and nested tactics/deliverables into Notion DBs, Trello boards, Jira issues.
+
+Copilot instructions:
+	•	Implement adapters:
+	•	Notion: create DB (or append to an existing one), map Strategy → Page; Tactic → DB Row; include status fields.  ￼
+	•	Trello: Strategy → Board (optional), Tactic → Card, Subtasks → Checklist.  ￼
+	•	Jira: Strategy → Epic, Tactic → Story/Task; use POST /rest/api/3/issue.  ￼
+	•	Add export wizard with dry-run preview + idempotency keys.
+
+Deliverables:
+	•	packages/integrations/{notion,trello,jira}/client.py with retries/backoff.
+	•	Mappings for Strategyzer canvases → fields (segments, pains/gains, channels).  ￼
+
+Quality gates:
+	•	Round-trip: create → fetch → verify fields for all three integrations in integration tests (use sandbox credentials).
+	•	User can export an entire plan in ≤3 clicks.
+
+⸻
+
+Sprint 6 — UX System: CDN-friendly, non-power-user first
+
+Goal: A modern, framework-agnostic design system that still plays well with Next.js.
+
+Decision: Shoelace web components (CDN or npm) + Open Props tokens; Pico.css for semantic defaults in ultra-light setups. All OSS, easy theming, framework-agnostic.  ￼
+
+Copilot instructions:
+	•	Add Shoelace via CDN to a static fallback (/public/ui-preview.html) and via npm to the main Next.js app.
+	•	Define a /styles/tokens.css using Open Props (colors, spacing, radii, shadows); wrap Shoelace with brand tokens.
+	•	IA & flows:
+	•	/dashboard
+	•	/wizard/new (guided intake: business vs brand; English variants)
+	•	/workspace/[id]: tri-pane (Brief • Evidence • Plan)
+	•	/exports: Notion/Trello/Jira mappings
+	•	/settings: Models, privacy, data sources
+	•	/mobile: approvals & summaries only
+	•	Add an onboarding setup wizard (detect CPU/GPU/RAM; suggest config profiles and remote vs local models).
+
+Deliverables:
+	•	Component library wrappers (TSX) around Shoelace primitives; theming via Open Props.
+	•	Wizard flow with system profiling & recommended configuration.
+
+Quality gates:
+	•	First Contentful Paint remains ≤2s on a cold load (CDN path).
+	•	Axe CI: 0 critical accessibility issues.
+
+⸻
+
+Sprint 7 — Packaging & Distribution (cross-platform)
+
+Goal: Cross-platform desktop + easy server deploy; keep it free-friendly with paid opt-ins.
+
+Decision: Package the desktop app with Tauri 2.0 (tiny, fast, secure) and keep Electron as an alternative if native webviews are problematic in some Linux flavours. Charts & docs for both.  ￼
+
+Copilot instructions:
+	•	Create apps/desktop (Tauri + React/Next frontend build). Expose a minimal bridge for filesystem access and deep-links back to the web UI.
+	•	Add release scripts for Windows/macOS/Linux; code-signing placeholders.
+	•	Keep Docker/Helm for server; add one-file install script that chooses: Local (Tauri), Docker (single host), or K8s (Helm) based on user choice/constraints.
+
+Deliverables:
+	•	Tauri app binaries; Electron Forge config as future alt path.
+	•	Install wizard that proposes the optimal mode based on hardware/profile.
+
+Quality gates:
+	•	App bundle size under 30MB (Tauri default); cold start under 1.5s.
+	•	Helm lint passes; helm install brings up API + Router/Research/Knowledge MCPs and backing stores.
+
+⸻
+
+Sprint 8 — Strategy Engine (templates → plans → tactics)
+
+Goal: Convert multiple document formats into business and brand strategies using Strategyzer-style models, with export-grade rationales and briefs.
+
+Copilot instructions:
+	•	Add a strategy_pipeline/ that:
+	1.	parses docs (docx, pdf, pptx, md); 2) extracts entities/facts; 3) maps to canvases (BMC, VPC); 4) synthesises a Strategy Brief; 5) expands to tactics & deliverables; 6) optional PIE scoring to prioritise.  ￼
+	•	PIE is opt-in; allow ICE/RICE later; include our own guardrails: require evidence cites for each claim.
+
+Deliverables:
+	•	packages/strategy/ with prompts + guards + tests; export to Notion/Trello/Jira.
+	•	Sample inputs/outputs checked into examples/.
+
+Quality gates:
+	•	For a 3-doc pack, system produces: Brief (≤2 pages), Rationale (evidence-linked), Plan (epics/stories or cards), all exportable in one run.
+
+⸻
+
+Sprint 9 — Security & Compliance finishing pass
+
+Goal: Enterprise-grade hygiene without pain.
+
+Copilot instructions:
+	•	Enforce Keycloak OIDC across UI/API; role-based scoping for data sources.
+	•	Privacy switches per workspace: disable web research, restrict model vendors, enforce on-prem retrieval.
+	•	PII redaction stays on by default for web research; provenance required for all claims.
+
+Deliverables:
+	•	Security tests; docs page: “Security & Privacy Modes”.
+	•	Audit log emitted for exports and model choices.
+
+Quality gates:
+	•	SSO smoke with a test IdP; audit events visible in Grafana; no PII in logs.
+
+⸻
+
+CDN design system options (quick read)
+	•	Shoelace (chosen): framework-agnostic, CDN-ready web components; pairs well with tokens; excellent docs.  ￼
+	•	Open Props (tokens): OSS CSS variables via CDN for colour/space/radius/motion, easy theming.  ￼
+	•	Pico.css (semantic base): minimal CSS via CDN; great as a no-JS baseline/fallback.  ￼
+
+⸻
+
+Reasoning & Retrieval notes (why these choices)
+	•	LangGraph conditional routing gives explicit, testable agent selection and graceful fan-in/fan-out without making the graph a Rube Goldberg machine.  ￼
+	•	Temporal for pause/resume + HITL + retries keeps stateful debate flows reliable (replayable, observable).  ￼
+	•	OpenSearch hybrid with embedding ingestion + BM25 gives robust recall and controllable boosts; keep Qdrant for fast ANN and NebulaGraph for relationship queries.  ￼
+	•	vLLM anchors high-throughput serving with standardised benchmarking; we’ll right-size models per hardware via the setup wizard.  ￼
+
+⸻
+
+Packaging & distribution
+	•	Desktop: Tauri 2.0 binaries for Win/macOS/Linux; Electron Forge config documented as an alternative path if WebView constraints bite.  ￼
+	•	Server: Docker Compose for dev; Helm for prod; keep ArgoCD for GitOps if you already use it.
+	•	Wizard: Detect hardware (CPU cores, RAM, GPU/VRAM); propose local vLLM vs remote API; suggest retrieval stores (OpenSearch/Qdrant) per constraints.
+
+⸻
+
+Evidence-gated exports (Notion/Trello/Jira)
+
+Each export path is a thin adapter around official APIs with dry-run previews and idempotency.  ￼
+
+⸻
+
+Edge-case coverage (built into sprints)
+	•	Long docs: chunk w/ overlap, dynamic window size, and evidence quota.
+	•	Offline/air-gapped: disable research; use local vLLM + local OpenSearch; wizard enforces mode.
+	•	Rate limits/fail-opens: circuit breakers + retries; cheap fallback models for classifiers.
+	•	English variants: language-specific tone/style switches at render step; one content model, multiple style mappers.
+
+⸻
+
+Two provenance blocks for key choices
+
+Design system (Shoelace + Open Props)
+	•	Data: CDN-first web components library; tokens via CDN; examples and docs show framework-agnostic use.  ￼
+	•	Methods: Compared CDN-friendly OSS systems for 2025: footprint, theming ease, accessibility, framework-agnosticism.
+	•	Key results: Fast theming, minimal JS, works in Next.js and static fallbacks; reduces custom UI work.
+	•	Uncertainty: Team familiarity; component gaps vs React-only stacks.
+	•	Safer alternative: Keep existing Next.js UI + shadcn/radix; add Open Props for tokens only (no runtime web components).
+
+Orchestration (Temporal)
+	•	Data: Temporal workflows provide durable, replayable, inspectable state machines; ships with web UI; multi-language SDKs.  ￼
+	•	Methods: Measured need for HITL pauses + retries across multi-agent steps.
+	•	Key results: Fewer “lost” debates; better observability and recoverability.
+	•	Uncertainty: Operational overhead for small installs.
+	•	Safer alternative: Use in-process state machine for single-host mode; keep Temporal for cluster mode only.
+
+⸻
+
+What this gives you
+	•	Frontier-grade reasoning with explicit routing, debate policies that learn, and HITL at the right moments.
+	•	Non-power-user UX with a wizarded journey, clean defaults, and export in a few clicks.
+	•	OSS-first & free-friendly stack that still scales: Shoelace/Open Props, Temporal, OpenSearch/Qdrant/NebulaGraph, vLLM.
+	•	Launch-ready packaging for desktop and server.
