@@ -142,7 +142,7 @@ class ModelRecommender:
         logger.info(f"Updated performance data for {len(self.performance_cache)} models")
     
     async def _fetch_arena_leaderboard(self) -> dict[str, float]:
-        """Fetch current LMSYS Arena Elo ratings."""
+        """Fetch current LMSYS Arena Elo ratings from multiple sources."""
         # If V2 is not enabled, return cached representative data
         if not is_model_recommender_v2_enabled():
             logger.debug("Model Recommender V2 disabled, using cached data")
@@ -154,36 +154,82 @@ class ModelRecommender:
                 "llama-3.1-8b": 1156,
             }
         
-        try:
-            # Fetch from LMSYS Arena leaderboard 
-            # Using the publicly available GitHub data source
-            url = "https://raw.githubusercontent.com/lm-sys/FastChat/main/fastchat/serve/monitor/elo_results_20240101.json"
-            response = await self.client.get(url, timeout=30.0)
-            
-            if response.status_code == 200:
-                arena_data = response.json()
+        # Try multiple data sources for robustness
+        data_sources = [
+            {
+                "name": "Hugging Face Leaderboards",
+                "url": "https://api.huggingface.co/api/models?search=arena&filter=leaderboard",
+                "parser": self._parse_hf_arena_data
+            },
+            {
+                "name": "LMSYS GitHub",
+                "url": "https://raw.githubusercontent.com/lm-sys/FastChat/main/fastchat/serve/monitor/elo_results_20241201.json",
+                "parser": self._parse_lmsys_github_data
+            },
+            {
+                "name": "LMSYS GitHub (fallback)",
+                "url": "https://raw.githubusercontent.com/lm-sys/FastChat/main/fastchat/serve/monitor/elo_results_20240101.json", 
+                "parser": self._parse_lmsys_github_data
+            }
+        ]
+        
+        for source in data_sources:
+            try:
+                logger.info(f"Fetching Arena data from {source['name']}")
+                response = await self.client.get(source["url"], timeout=30.0)
                 
-                # Extract Elo ratings from the response
-                elo_ratings = {}
-                if "leaderboard_table_df" in arena_data:
-                    for entry in arena_data["leaderboard_table_df"]:
-                        model_name = entry.get("key", "").lower()
-                        elo_score = entry.get("rating", 0)
-                        
-                        # Map model names to our internal naming
-                        normalized_name = self._normalize_model_name(model_name)
-                        if normalized_name and elo_score > 0:
-                            elo_ratings[normalized_name] = float(elo_score)
+                if response.status_code == 200:
+                    arena_data = response.json()
+                    elo_ratings = source["parser"](arena_data)
+                    
+                    if elo_ratings and len(elo_ratings) >= 5:  # Minimum threshold
+                        logger.info(f"Successfully fetched Arena data from {source['name']} for {len(elo_ratings)} models")
+                        return elo_ratings
+                    
+            except Exception as e:
+                logger.warning(f"Failed to fetch from {source['name']}: {e}")
+                continue
+        
+        logger.warning("All Arena data sources failed, using fallback data")
+        return self._get_fallback_arena_data()
+    
+    def _parse_hf_arena_data(self, data: dict) -> dict[str, float]:
+        """Parse Arena data from Hugging Face API."""
+        elo_ratings = {}
+        # This is a placeholder parser - actual HF API structure may differ
+        if isinstance(data, list):
+            for model in data:
+                if "arena_elo" in model and "modelId" in model:
+                    model_name = model["modelId"].lower()
+                    elo_score = model["arena_elo"]
+                    normalized_name = self._normalize_model_name(model_name)
+                    if normalized_name and elo_score > 0:
+                        elo_ratings[normalized_name] = float(elo_score)
+        return elo_ratings
+    
+    def _parse_lmsys_github_data(self, data: dict) -> dict[str, float]:
+        """Parse Arena data from LMSYS GitHub repository."""
+        elo_ratings = {}
+        
+        if "leaderboard_table_df" in data:
+            for entry in data["leaderboard_table_df"]:
+                model_name = entry.get("key", "").lower()
+                elo_score = entry.get("rating", 0)
                 
-                logger.info(f"Fetched Arena data for {len(elo_ratings)} models")
-                return elo_ratings
-            else:
-                logger.warning(f"Arena API returned status {response.status_code}")
-                return self._get_fallback_arena_data()
-                
-        except Exception as e:
-            logger.warning(f"Failed to fetch Arena data: {e}")
-            return self._get_fallback_arena_data()
+                normalized_name = self._normalize_model_name(model_name)
+                if normalized_name and elo_score > 0:
+                    elo_ratings[normalized_name] = float(elo_score)
+        
+        # Try alternative format
+        elif "models" in data:
+            for model_name, model_data in data["models"].items():
+                if "elo" in model_data:
+                    elo_score = model_data["elo"]
+                    normalized_name = self._normalize_model_name(model_name.lower())
+                    if normalized_name and elo_score > 0:
+                        elo_ratings[normalized_name] = float(elo_score)
+        
+        return elo_ratings
     
     def _normalize_model_name(self, model_name: str) -> str | None:
         """Normalize model names from external sources to internal format."""
@@ -226,7 +272,7 @@ class ModelRecommender:
         }
     
     async def _fetch_mteb_scores(self) -> dict[str, float]:
-        """Fetch MTEB embedding benchmarks."""
+        """Fetch MTEB embedding benchmarks from multiple sources."""
         # If V2 is not enabled, return cached representative data
         if not is_model_recommender_v2_enabled():
             logger.debug("Model Recommender V2 disabled, using cached MTEB data")
@@ -237,35 +283,105 @@ class ModelRecommender:
                 "bge-large-en-v1.5": 63.5,
             }
         
-        try:
-            # Fetch from HuggingFace MTEB leaderboard
-            url = "https://huggingface.co/api/datasets/mteb/results/parquet/default/train/0.parquet"
-            response = await self.client.get(url, timeout=30.0)
-            
-            if response.status_code == 200 and pd is not None:
-                # Load parquet data using pandas
-                import io
-                df = pd.read_parquet(io.BytesIO(response.content))
+        # Try multiple MTEB data sources
+        data_sources = [
+            {
+                "name": "MTEB Hugging Face Leaderboard API",
+                "url": "https://huggingface.co/api/datasets/mteb/leaderboard/data",
+                "parser": self._parse_mteb_api_data
+            },
+            {
+                "name": "MTEB GitHub Repository",
+                "url": "https://raw.githubusercontent.com/embeddings-benchmark/mteb/main/results/en/SentenceTransformersEval.json",
+                "parser": self._parse_mteb_github_data
+            },
+            {
+                "name": "MTEB Parquet Data",
+                "url": "https://huggingface.co/api/datasets/mteb/results/parquet/default/train/0.parquet",
+                "parser": self._parse_mteb_parquet_data
+            }
+        ]
+        
+        for source in data_sources:
+            try:
+                logger.info(f"Fetching MTEB data from {source['name']}")
+                response = await self.client.get(source["url"], timeout=45.0)
                 
-                # Extract average scores per model
-                mteb_scores = {}
-                if 'model_name' in df.columns and 'score' in df.columns:
-                    model_scores = df.groupby('model_name')['score'].mean()
+                if response.status_code == 200:
+                    if source["name"] == "MTEB Parquet Data":
+                        # Handle binary parquet data
+                        mteb_scores = source["parser"](response.content)
+                    else:
+                        # Handle JSON data
+                        mteb_data = response.json()
+                        mteb_scores = source["parser"](mteb_data)
                     
-                    for model_name, avg_score in model_scores.items():
-                        normalized_name = self._normalize_embedding_model_name(model_name)
-                        if normalized_name:
-                            mteb_scores[normalized_name] = float(avg_score)
+                    if mteb_scores and len(mteb_scores) >= 3:  # Minimum threshold
+                        logger.info(f"Successfully fetched MTEB data from {source['name']} for {len(mteb_scores)} models")
+                        return mteb_scores
+                    
+            except Exception as e:
+                logger.warning(f"Failed to fetch from {source['name']}: {e}")
+                continue
+        
+        logger.warning("All MTEB data sources failed, using fallback data")
+        return self._get_fallback_mteb_data()
+    
+    def _parse_mteb_api_data(self, data: dict) -> dict[str, float]:
+        """Parse MTEB data from HuggingFace API."""
+        mteb_scores = {}
+        
+        # Handle different API response formats
+        if "data" in data:
+            for entry in data["data"]:
+                if "model" in entry and "score" in entry:
+                    model_name = entry["model"]
+                    score = entry["score"]
+                    normalized_name = self._normalize_embedding_model_name(model_name)
+                    if normalized_name and score > 0:
+                        mteb_scores[normalized_name] = float(score)
+                        
+        return mteb_scores
+    
+    def _parse_mteb_github_data(self, data: dict) -> dict[str, float]:
+        """Parse MTEB data from GitHub repository."""
+        mteb_scores = {}
+        
+        if isinstance(data, dict):
+            for model_name, model_data in data.items():
+                if isinstance(model_data, dict) and "average_score" in model_data:
+                    score = model_data["average_score"]
+                    normalized_name = self._normalize_embedding_model_name(model_name)
+                    if normalized_name and score > 0:
+                        mteb_scores[normalized_name] = float(score)
+                        
+        return mteb_scores
+    
+    def _parse_mteb_parquet_data(self, content: bytes) -> dict[str, float]:
+        """Parse MTEB data from parquet file."""
+        mteb_scores = {}
+        
+        if pd is None:
+            logger.warning("Pandas not available, cannot parse parquet data")
+            return mteb_scores
+        
+        try:
+            import io
+            df = pd.read_parquet(io.BytesIO(content))
+            
+            # Extract average scores per model
+            if 'model_name' in df.columns and 'score' in df.columns:
+                model_scores = df.groupby('model_name')['score'].mean()
                 
-                logger.info(f"Fetched MTEB data for {len(mteb_scores)} models")
-                return mteb_scores
-            else:
-                logger.warning(f"MTEB API returned status {response.status_code}")
-                return self._get_fallback_mteb_data()
-                
+                for model_name, avg_score in model_scores.items():
+                    normalized_name = self._normalize_embedding_model_name(model_name)
+                    if normalized_name:
+                        mteb_scores[normalized_name] = float(avg_score)
+                        
         except Exception as e:
-            logger.warning(f"Failed to fetch MTEB data: {e}")
-            return self._get_fallback_mteb_data()
+            logger.error(f"Error parsing parquet data: {e}")
+            
+        return mteb_scores
     
     def _normalize_embedding_model_name(self, model_name: str) -> str | None:
         """Normalize embedding model names from MTEB to internal format."""
