@@ -6,7 +6,7 @@
 
 **StratMaster** is an AI-powered Brand Strategy platform that combines evidence-grounded research, multi-agent debate, and constitutional AI to deliver reliable strategic recommendations. Built as a Python monorepo with FastAPI, multiple MCP servers, and comprehensive backing services.
 
-> 🎉 **Production Ready**: All core implementations complete with enterprise features. See [Gap Analysis](GAP_ANALYSIS.md) for full details.
+> 🎉 **95% Complete**: All core implementations substantially complete with enterprise features. See **[📊 Complete Implementation Status](Upgrade.md)** for verified details and roadmap.
 
 ## 📖 Documentation
 
@@ -43,6 +43,7 @@
 
 **Additional Documentation**:
 
+- **[📊 Implementation Status & Roadmap](Upgrade.md)** - **SINGLE SOURCE OF TRUTH** for current status and future plans
 - **[📋 Engineering Blueprint](PROJECT.md)** - Complete technical specification
 - **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
 - **[🛡️ Security Policy](SECURITY.md)** - Vulnerability reporting

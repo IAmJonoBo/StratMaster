@@ -9,9 +9,40 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
+# TODO: Add scikit-learn as dependency to enable ML functionality
+# Currently using optional import due to environment constraints
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import Pipeline
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    # Create mock classes for when sklearn is not available
+    class TfidfVectorizer:
+        def __init__(self, **kwargs):
+            pass
+    
+    class LogisticRegression:
+        def __init__(self, **kwargs):
+            pass
+    
+    class Pipeline:
+        def __init__(self, steps):
+            pass
+        
+        def fit(self, X, y):
+            pass
+        
+        def predict(self, X):
+            return [0] * len(X)
+        
+        def predict_proba(self, X):
+            return [[0.5, 0.5]] * len(X)
+        
+        def score(self, X, y):
+            return 0.5
+    
+    SKLEARN_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +75,14 @@ class DebateLearningSystem:
     def __init__(self):
         self.outcomes: list[DebateOutcome] = []
         self.model: Pipeline | None = None
-        self.feature_extractor = TfidfVectorizer(max_features=1000, stop_words='english')
-        self.classifier = LogisticRegression(random_state=42)
+        
+        if SKLEARN_AVAILABLE:
+            self.feature_extractor = TfidfVectorizer(max_features=1000, stop_words='english')
+            self.classifier = LogisticRegression(random_state=42)
+        else:
+            self.feature_extractor = TfidfVectorizer(max_features=1000)
+            self.classifier = LogisticRegression(random_state=42)
+            
         self.is_trained = False
         self.training_threshold = 10  # Minimum outcomes needed for training
         
@@ -124,6 +161,10 @@ class DebateLearningSystem:
     
     def _retrain_model(self) -> None:
         """Retrain the ML model with accumulated outcomes."""
+        if not SKLEARN_AVAILABLE:
+            logger.warning("scikit-learn not available - ML training disabled")
+            return
+            
         if len(self.outcomes) < self.training_threshold:
             logger.info(f"Not enough data for training ({len(self.outcomes)} < {self.training_threshold})")
             return
@@ -167,6 +208,13 @@ class DebateLearningSystem:
     
     def predict_outcome(self, debate_data: dict[str, Any]) -> dict[str, Any]:
         """Predict likely outcome for a debate."""
+        if not SKLEARN_AVAILABLE:
+            return {
+                "prediction": "unknown",
+                "confidence": 0.5,
+                "recommendations": ["ML predictions disabled - scikit-learn dependency needed"]
+            }
+            
         if not self.is_trained:
             return {
                 "prediction": "unknown",
