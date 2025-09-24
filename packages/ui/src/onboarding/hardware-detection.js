@@ -241,7 +241,7 @@ class HardwareDetector {
             const latencyStart = performance.now();
             
             try {
-                await fetch('/healthz', { method: 'HEAD' });
+                await fetch('healthz', { method: 'HEAD' });
                 const latency = performance.now() - latencyStart;
                 
                 return {
