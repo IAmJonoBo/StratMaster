@@ -1,0 +1,142 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "productName": "StratMaster",
+  "version": "0.1.0",
+  "identifier": "com.stratmaster.app",
+  "build": {
+    "frontendDist": "../web/dist",
+    "devUrl": "http://localhost:3000"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "StratMaster",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "closable": true,
+        "center": true,
+        "decorations": true,
+        "fileDropEnabled": true,
+        "fullscreen": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "theme": "auto",
+        "titleBarStyle": "Visible"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:8080 ws://localhost:8080 https://api.openai.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "copyright": "Copyright © 2024 StratMaster",
+    "description": "AI-powered Brand Strategy platform",
+    "homepage": "https://github.com/IAmJonoBo/StratMaster",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "longDescription": "StratMaster is an AI-powered Brand Strategy platform that provides evidence-grounded research, strategic analysis, multi-agent validation, and expert evaluation for business and brand strategy development.",
+    "shortDescription": "AI-powered Brand Strategy platform",
+    "publisher": "StratMaster",
+    "createUpdaterArtifacts": "v1Compatible",
+    "linux": {
+      "deb": {
+        "depends": ["libgtk-3-0", "libwebkit2gtk-4.0-37"],
+        "section": "Office"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null,
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "10.13"
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "tsp": false,
+      "wix": {
+        "language": ["en-US"],
+        "template": "main.wxs"
+      },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser",
+        "languages": ["English"],
+        "template": "installer.nsi"
+      }
+    }
+  },
+  "plugins": {
+    "fs": {
+      "scope": {
+        "allow": ["$APPDATA/stratmaster/**", "$DOCUMENT/**"],
+        "deny": ["$APPDATA/stratmaster/secrets/**"]
+      }
+    },
+    "dialog": {
+      "all": false,
+      "ask": true,
+      "confirm": true,
+      "message": true,
+      "open": true,
+      "save": true
+    },
+    "http": {
+      "scope": {
+        "allow": [
+          "http://localhost:8080/**",
+          "https://api.openai.com/**",
+          "https://api.anthropic.com/**"
+        ]
+      }
+    },
+    "shell": {
+      "scope": {
+        "allow": [
+          {
+            "name": "docker",
+            "cmd": "docker",
+            "args": ["compose", "up", "-d"]
+          },
+          {
+            "name": "make-dev",
+            "cmd": "make",
+            "args": ["dev.up"]
+          }
+        ]
+      }
+    },
+    "notification": {
+      "all": true
+    },
+    "globalShortcut": {
+      "all": false
+    },
+    "clipboard": {
+      "all": false,
+      "writeText": true,
+      "readText": true
+    }
+  }
+}
