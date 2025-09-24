@@ -17,18 +17,15 @@ Features:
 - Token validation and refresh
 """
 
-import os
 import json
 import logging
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from urllib.parse import urlencode, urlparse
+import os
+from dataclasses import dataclass
+from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 import jwt
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.primitives import serialization
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -39,13 +36,13 @@ class SSOUser:
     """Represents a user from SSO provider."""
     user_id: str
     email: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    roles: List[str] = None
-    groups: List[str] = None
-    tenant_id: Optional[str] = None
-    provider: Optional[str] = None
-    attributes: Dict[str, Any] = None
+    first_name: str | None = None
+    last_name: str | None = None
+    roles: list[str] = None
+    groups: list[str] = None
+    tenant_id: str | None = None
+    provider: str | None = None
+    attributes: dict[str, Any] = None
     
     def __post_init__(self):
         if self.roles is None:
@@ -62,24 +59,24 @@ class SSOConfig:
     provider_type: str  # 'saml' or 'oidc'
     provider_name: str
     client_id: str
-    client_secret: Optional[str] = None
+    client_secret: str | None = None
     redirect_uri: str = None
-    discovery_url: Optional[str] = None
-    authorization_url: Optional[str] = None
-    token_url: Optional[str] = None
-    userinfo_url: Optional[str] = None
-    jwks_url: Optional[str] = None
-    issuer: Optional[str] = None
-    scopes: List[str] = None
+    discovery_url: str | None = None
+    authorization_url: str | None = None
+    token_url: str | None = None
+    userinfo_url: str | None = None
+    jwks_url: str | None = None
+    issuer: str | None = None
+    scopes: list[str] = None
     
     # SAML specific
-    saml_sso_url: Optional[str] = None
-    saml_slo_url: Optional[str] = None
-    saml_certificate: Optional[str] = None
+    saml_sso_url: str | None = None
+    saml_slo_url: str | None = None
+    saml_certificate: str | None = None
     
     # Additional configuration
-    role_mappings: Dict[str, str] = None
-    group_mappings: Dict[str, str] = None
+    role_mappings: dict[str, str] = None
+    group_mappings: dict[str, str] = None
     
     def __post_init__(self):
         if self.scopes is None:
@@ -114,7 +111,7 @@ class OIDCProvider:
         self._discovery_cache = {}
         self._jwks_cache = {}
         
-    async def get_discovery_document(self) -> Dict[str, Any]:
+    async def get_discovery_document(self) -> dict[str, Any]:
         """Fetch OIDC discovery document."""
         if self.config.discovery_url in self._discovery_cache:
             return self._discovery_cache[self.config.discovery_url]
@@ -128,7 +125,7 @@ class OIDCProvider:
         except httpx.RequestError as e:
             raise SSOError(f"Failed to fetch discovery document: {e}")
     
-    async def get_jwks(self) -> Dict[str, Any]:
+    async def get_jwks(self) -> dict[str, Any]:
         """Fetch JSON Web Key Set."""
         if not self.config.jwks_url:
             discovery = await self.get_discovery_document()
@@ -164,7 +161,7 @@ class OIDCProvider:
             
         return f"{self.config.authorization_url}?{urlencode(params)}"
     
-    async def exchange_code_for_tokens(self, code: str) -> Dict[str, Any]:
+    async def exchange_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
         data = {
             "grant_type": "authorization_code",
@@ -185,7 +182,7 @@ class OIDCProvider:
         except httpx.RequestError as e:
             raise SSOError(f"Token exchange failed: {e}")
     
-    async def validate_token(self, token: str) -> Dict[str, Any]:
+    async def validate_token(self, token: str) -> dict[str, Any]:
         """Validate JWT token."""
         try:
             # Decode header to get key ID
@@ -218,7 +215,7 @@ class OIDCProvider:
         except jwt.InvalidTokenError as e:
             raise TokenValidationError(f"Token validation failed: {e}")
     
-    async def get_user_info(self, access_token: str) -> Dict[str, Any]:
+    async def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information from userinfo endpoint."""
         try:
             headers = {"Authorization": f"Bearer {access_token}"}
@@ -250,7 +247,7 @@ class SAMLProvider:
             
         return url
     
-    def validate_saml_response(self, saml_response: str) -> Dict[str, Any]:
+    def validate_saml_response(self, saml_response: str) -> dict[str, Any]:
         """Validate SAML response (simplified implementation)."""
         # In a real implementation, you would use a proper SAML library
         # like python3-saml to validate the response, check signatures, etc.
@@ -295,7 +292,7 @@ class SSOManager:
             
         self.providers[provider_name] = provider
         
-    def get_provider(self, provider_name: str) -> Union[OIDCProvider, SAMLProvider]:
+    def get_provider(self, provider_name: str) -> OIDCProvider | SAMLProvider:
         """Get SSO provider by name."""
         if provider_name not in self.providers:
             raise SSOError(f"Provider not found: {provider_name}")
@@ -304,7 +301,7 @@ class SSOManager:
     def map_user_attributes(
         self, 
         provider_name: str, 
-        user_info: Dict[str, Any]
+        user_info: dict[str, Any]
     ) -> SSOUser:
         """Map provider user info to SSOUser object."""
         provider_config = self.providers[provider_name].config
@@ -353,7 +350,7 @@ class SSOManager:
     async def authenticate_user(
         self, 
         provider_name: str, 
-        auth_data: Dict[str, Any]
+        auth_data: dict[str, Any]
     ) -> SSOUser:
         """Authenticate user with SSO provider."""
         provider = self.get_provider(provider_name)
@@ -388,7 +385,7 @@ class SSOManager:
                 else:
                     raise SSOError("Missing SAML response")
             else:
-                raise SSOError(f"Unsupported provider type")
+                raise SSOError("Unsupported provider type")
             
             # Map to SSOUser
             user = self.map_user_attributes(provider_name, user_info)
@@ -402,7 +399,7 @@ class SSOManager:
             logger.error(f"Authentication failed for provider {provider_name}: {e}")
             raise SSOError(f"Authentication failed: {e}")
     
-    def get_cached_user(self, user_id: str) -> Optional[SSOUser]:
+    def get_cached_user(self, user_id: str) -> SSOUser | None:
         """Get cached user information."""
         return self.user_cache.get(user_id)
     
@@ -424,7 +421,7 @@ def initialize_sso_providers(config_path: str = None):
     import yaml
     
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config_data = yaml.safe_load(f)
         
         # Load provider configurations
@@ -444,7 +441,7 @@ def initialize_sso_providers(config_path: str = None):
 
 
 # Convenience functions for FastAPI integration
-async def authenticate_with_sso(provider: str, auth_data: Dict[str, Any]) -> SSOUser:
+async def authenticate_with_sso(provider: str, auth_data: dict[str, Any]) -> SSOUser:
     """Authenticate user with SSO provider (FastAPI integration)."""
     return await sso_manager.authenticate_user(provider, auth_data)
 
@@ -458,7 +455,7 @@ def get_authorization_url(provider: str, **kwargs) -> str:
     elif isinstance(sso_provider, SAMLProvider):
         return sso_provider.get_sso_url(**kwargs)
     else:
-        raise SSOError(f"Unsupported provider type")
+        raise SSOError("Unsupported provider type")
 
 
 # Initialize providers on module import

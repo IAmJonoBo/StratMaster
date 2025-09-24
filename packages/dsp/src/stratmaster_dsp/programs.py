@@ -141,7 +141,7 @@ class ResearchPlanner:
     def plan(self, query: str, telemetry: TelemetryRecorder | None = None) -> list[str]:
         """Generate research plan with telemetry tracking."""
         if telemetry:
-            trace_id = telemetry.start_trace(f"research_planning", query=query, program=self.program_name)
+            trace_id = telemetry.start_trace("research_planning", query=query, program=self.program_name)
             telemetry.record_generation(
                 name="plan_generation",
                 input_data={"query": query, "prompt": self.prompt},
@@ -212,7 +212,7 @@ class SynthesisPlanner:
     def synthesize(self, research_findings: list[str], telemetry: TelemetryRecorder | None = None) -> list[str]:
         """Synthesize research findings into strategic insights."""
         if telemetry:
-            trace_id = telemetry.start_trace(f"synthesis_planning", 
+            trace_id = telemetry.start_trace("synthesis_planning", 
                                            findings_count=len(research_findings), 
                                            program=self.program_name)
             telemetry.record_generation(
@@ -279,7 +279,7 @@ class StrategyPlanner:
     def strategize(self, insights: list[str], telemetry: TelemetryRecorder | None = None) -> list[str]:
         """Generate strategic recommendations from insights."""
         if telemetry:
-            trace_id = telemetry.start_trace(f"strategy_planning", 
+            trace_id = telemetry.start_trace("strategy_planning", 
                                            insights_count=len(insights), 
                                            program=self.program_name)
             telemetry.record_generation(

@@ -48,9 +48,9 @@ def test_ingest_csv_generates_table_chunks(coordinator: IngestionCoordinator) ->
 def test_low_confidence_triggers_clarification() -> None:
     payload = DocumentPayload(
         filename="scan.txt",
-        content="""XXXX 000 ???
+        content=b"""XXXX 000 ???
 @@@
-""".encode("utf-8"),
+""",
         tenant_id="tenant-a",
         mimetype="text/plain",
     )

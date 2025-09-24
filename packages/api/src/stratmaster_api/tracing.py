@@ -8,7 +8,7 @@ implementing the Sprint 0 requirement for visible traces.
 import os
 import uuid
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any
 
 from opentelemetry import trace
 
@@ -27,7 +27,7 @@ class TracingManager:
         self.tracer = trace.get_tracer(__name__)
         self.langfuse_client = self._init_langfuse() if LANGFUSE_AVAILABLE else None
     
-    def _init_langfuse(self) -> Optional[Any]:
+    def _init_langfuse(self) -> Any | None:
         """Initialize Langfuse client if configured."""
         if not LANGFUSE_AVAILABLE:
             return None
@@ -50,7 +50,7 @@ class TracingManager:
         return None
     
     @contextmanager
-    def trace_operation(self, operation_name: str, metadata: Optional[Dict[str, Any]] = None):
+    def trace_operation(self, operation_name: str, metadata: dict[str, Any] | None = None):
         """Create both OTEL and Langfuse spans for an operation."""
         metadata = metadata or {}
         trace_id = str(uuid.uuid4())
@@ -88,7 +88,7 @@ class TracingManager:
                     except Exception:
                         pass
     
-    def create_span(self, name: str, trace_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def create_span(self, name: str, trace_context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Create a named span within an existing trace context."""
         trace_context = trace_context or {}
         span_id = str(uuid.uuid4())
@@ -114,12 +114,12 @@ class TracingManager:
                 "langfuse_span": langfuse_span
             }
     
-    def log_agent_call(self, agent_name: str, input_data: Dict[str, Any], trace_context: Optional[Dict[str, Any]] = None):
+    def log_agent_call(self, agent_name: str, input_data: dict[str, Any], trace_context: dict[str, Any] | None = None):
         """Log an agent call with the standardized span name from Sprint 0."""
         with self.trace_operation(f"agent:call:{agent_name}", {"agent": agent_name, **input_data}) as context:
             return context
     
-    def log_debate_start(self, debate_id: str, participants: list, trace_context: Optional[Dict[str, Any]] = None):
+    def log_debate_start(self, debate_id: str, participants: list, trace_context: dict[str, Any] | None = None):
         """Log debate start with the standardized span name from Sprint 0."""
         with self.trace_operation("debate:start", {
             "debate_id": debate_id, 
@@ -127,7 +127,7 @@ class TracingManager:
         }) as context:
             return context
     
-    def log_retrieval_hybrid(self, query: str, sources: list, trace_context: Optional[Dict[str, Any]] = None):
+    def log_retrieval_hybrid(self, query: str, sources: list, trace_context: dict[str, Any] | None = None):
         """Log hybrid retrieval with the standardized span name from Sprint 0."""
         with self.trace_operation("retrieval:hybrid", {
             "query": query,
@@ -135,7 +135,7 @@ class TracingManager:
         }) as context:
             return context
     
-    def log_guard_evidence(self, evidence_id: str, result: str, trace_context: Optional[Dict[str, Any]] = None):
+    def log_guard_evidence(self, evidence_id: str, result: str, trace_context: dict[str, Any] | None = None):
         """Log evidence guard check with the standardized span name from Sprint 0."""
         with self.trace_operation("guard:evidence", {
             "evidence_id": evidence_id,
@@ -149,7 +149,7 @@ tracing_manager = TracingManager()
 
 
 # Convenience functions for common tracing operations
-def trace_agent_call(agent_name: str, input_data: Dict[str, Any]):
+def trace_agent_call(agent_name: str, input_data: dict[str, Any]):
     """Convenience function for tracing agent calls."""
     return tracing_manager.log_agent_call(agent_name, input_data)
 

@@ -10,20 +10,18 @@ This module provides advanced analytics capabilities including:
 - Performance monitoring
 """
 
-import os
+import asyncio
 import json
 import logging
-from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
+import os
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
 
-import asyncio
-from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry, push_to_gateway
 import asyncpg
 import redis.asyncio as aioredis
-from fastapi import FastAPI, BackgroundTasks
-import httpx
+from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +39,8 @@ class MetricDefinition:
     name: str
     metric_type: MetricType
     description: str
-    labels: List[str] = None
-    buckets: List[float] = None  # For histograms
+    labels: list[str] = None
+    buckets: list[float] = None  # For histograms
     
     def __post_init__(self):
         if self.labels is None:
@@ -53,8 +51,8 @@ class MetricDefinition:
 class MetricEvent:
     """Represents a metric event to be recorded."""
     metric_name: str
-    value: Union[int, float]
-    labels: Dict[str, str] = None
+    value: int | float
+    labels: dict[str, str] = None
     timestamp: datetime = None
     
     def __post_init__(self):
@@ -199,8 +197,8 @@ class AnalyticsCollector:
         metric_name: str,
         start_time: datetime = None,
         end_time: datetime = None,
-        labels_filter: Dict[str, str] = None
-    ) -> List[Dict[str, Any]]:
+        labels_filter: dict[str, str] = None
+    ) -> list[dict[str, Any]]:
         """Get metric data for analysis."""
         if not self.db_pool:
             logger.warning("Database not configured for metric retrieval")
@@ -435,7 +433,7 @@ class RealtimeDashboard:
     def __init__(self, collector: AnalyticsCollector):
         self.collector = collector
         
-    async def get_executive_summary(self, tenant_id: str = None) -> Dict[str, Any]:
+    async def get_executive_summary(self, tenant_id: str = None) -> dict[str, Any]:
         """Get executive summary metrics."""
         filter_labels = {"tenant_id": tenant_id} if tenant_id else None
         
@@ -483,7 +481,7 @@ class RealtimeDashboard:
             "timestamp": datetime.utcnow().isoformat()
         }
     
-    async def get_user_engagement_metrics(self, tenant_id: str = None) -> Dict[str, Any]:
+    async def get_user_engagement_metrics(self, tenant_id: str = None) -> dict[str, Any]:
         """Get user engagement metrics."""
         filter_labels = {"tenant_id": tenant_id} if tenant_id else None
         
@@ -540,7 +538,7 @@ async def initialize_analytics(config_path: str = None):
     import yaml
     
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config_data = yaml.safe_load(f)
         
         # Register custom metrics
@@ -601,7 +599,7 @@ async def track_user_activity(
     )
 
 
-async def get_dashboard_data(tenant_id: str = None) -> Dict[str, Any]:
+async def get_dashboard_data(tenant_id: str = None) -> dict[str, Any]:
     """Get comprehensive dashboard data."""
     executive_summary = await dashboard.get_executive_summary(tenant_id)
     engagement_metrics = await dashboard.get_user_engagement_metrics(tenant_id)

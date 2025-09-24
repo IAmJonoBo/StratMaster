@@ -6,14 +6,14 @@ This script validates that all enhancements are working correctly without
 requiring external dependencies.
 """
 
-import sys
 import ast
 from pathlib import Path
+
 
 def check_file_syntax(file_path: Path) -> tuple[bool, str]:
     """Check if a Python file has valid syntax."""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             source = f.read()
         ast.parse(source)
         return True, "OK"
@@ -27,7 +27,7 @@ def check_yaml_exists(file_path: Path) -> tuple[bool, str]:
     try:
         if not file_path.exists():
             return False, "File not found"
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
         if len(content.strip()) == 0:
             return False, "File is empty"
@@ -40,7 +40,7 @@ def check_typescript_syntax(file_path: Path) -> tuple[bool, str]:
     try:
         if not file_path.exists():
             return False, "File not found"
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
         # Basic checks for TypeScript structure
         if 'interface' in content or 'export' in content:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import uuid
 from dataclasses import dataclass
-
-import base64
 
 from .clarify import ClarificationService
 from .confidence import ConfidenceScorer

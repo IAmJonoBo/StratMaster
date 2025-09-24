@@ -8,15 +8,8 @@ This module tests the agent routing functionality including:
 - Edge cases and error handling
 """
 
-import pytest
-from typing import Dict, List
 
-from ..router_graph import (
-    AgentRouter,
-    AgentType, 
-    RouterInput,
-    RouterOutput
-)
+from ..router_graph import AgentRouter, AgentType, RouterInput, RouterOutput
 
 
 class TestAgentRouter:

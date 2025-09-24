@@ -4,6 +4,8 @@ from fastapi import APIRouter, FastAPI
 
 from .config import load_config
 from .models import (
+    AgentRouteRequest,
+    AgentRouteResponse,
     CompletionRequest,
     CompletionResponse,
     EmbeddingRequest,
@@ -11,8 +13,6 @@ from .models import (
     InfoResponse,
     RerankRequest,
     RerankResponse,
-    AgentRouteRequest,
-    AgentRouteResponse,
 )
 from .service import RouterService
 

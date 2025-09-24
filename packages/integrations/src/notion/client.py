@@ -9,12 +9,10 @@ Tactic → Database Row
 Status fields included
 """
 
-import json
-import time
 import hashlib
-from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -25,14 +23,14 @@ class NotionStrategy:
     """Strategy data structure for Notion export."""
     title: str
     description: str
-    objectives: List[str]
-    assumptions: List[str]
-    metrics: List[str]
+    objectives: list[str]
+    assumptions: list[str]
+    metrics: list[str]
     timeline: str
     status: str = "Draft"
     priority: str = "Medium"
-    owner: Optional[str] = None
-    tags: List[str] = None
+    owner: str | None = None
+    tags: list[str] = None
 
 
 @dataclass
@@ -41,13 +39,13 @@ class NotionTactic:
     title: str
     description: str
     strategy_id: str
-    deliverables: List[str]
+    deliverables: list[str]
     timeline: str
     effort_estimate: str
-    success_criteria: List[str]
+    success_criteria: list[str]
     status: str = "Not Started"
-    assignee: Optional[str] = None
-    dependencies: List[str] = None
+    assignee: str | None = None
+    dependencies: list[str] = None
 
 
 class NotionClient:
@@ -83,7 +81,7 @@ class NotionClient:
         if enabled:
             self.exported_items = []
     
-    def get_dry_run_preview(self) -> List[Dict[str, Any]]:
+    def get_dry_run_preview(self) -> list[dict[str, Any]]:
         """Get preview of what would be exported in dry-run mode."""
         return self.exported_items.copy()
     
@@ -91,7 +89,7 @@ class NotionClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10)
     )
-    def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> dict[str, Any]:
         """Make HTTP request with retry logic."""
         if self.dry_run:
             # Return mock response for dry-run
@@ -107,7 +105,7 @@ class NotionClient:
         response.raise_for_status()
         return response.json()
     
-    def create_database(self, parent_page_id: str, title: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+    def create_database(self, parent_page_id: str, title: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Create a new Notion database."""
         payload = {
             "parent": {"page_id": parent_page_id},
@@ -126,8 +124,8 @@ class NotionClient:
         
         return self._make_request("POST", "/databases", json=payload)
     
-    def create_page(self, parent_id: str, title: str, content: List[Dict[str, Any]], 
-                   properties: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def create_page(self, parent_id: str, title: str, content: list[dict[str, Any]], 
+                   properties: dict[str, Any] | None = None) -> dict[str, Any]:
         """Create a new Notion page."""
         payload = {
             "parent": {"database_id": parent_id} if properties else {"page_id": parent_id},
@@ -154,7 +152,7 @@ class NotionClient:
         
         return self._make_request("POST", "/pages", json=payload)
     
-    def update_page(self, page_id: str, properties: Dict[str, Any]) -> Dict[str, Any]:
+    def update_page(self, page_id: str, properties: dict[str, Any]) -> dict[str, Any]:
         """Update an existing Notion page."""
         payload = {"properties": properties}
         
@@ -168,7 +166,7 @@ class NotionClient:
         
         return self._make_request("PATCH", f"/pages/{page_id}", json=payload)
     
-    def find_page_by_title(self, database_id: str, title: str) -> Optional[Dict[str, Any]]:
+    def find_page_by_title(self, database_id: str, title: str) -> dict[str, Any] | None:
         """Find page by title in a database."""
         if self.dry_run:
             return None  # Assume not found in dry-run
@@ -185,7 +183,7 @@ class NotionClient:
         return results[0] if results else None
     
     def export_strategy(self, strategy: NotionStrategy, parent_page_id: str, 
-                       idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+                       idempotency_key: str | None = None) -> dict[str, Any]:
         """
         Export strategy as a Notion page with full content structure.
         
@@ -306,7 +304,7 @@ class NotionClient:
         }
     
     def export_tactic(self, tactic: NotionTactic, database_id: str,
-                     idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+                     idempotency_key: str | None = None) -> dict[str, Any]:
         """
         Export tactic as a database row with proper field mapping.
         
@@ -382,7 +380,7 @@ class NotionClient:
         }
     
     def _update_existing_tactic(self, page_id: str, tactic: NotionTactic, 
-                              idempotency_key: str) -> Dict[str, Any]:
+                              idempotency_key: str) -> dict[str, Any]:
         """Update existing tactic page."""
         properties = {
             "Description": {"rich_text": [{"type": "text", "text": {"content": tactic.description}}]},
@@ -404,7 +402,7 @@ class NotionClient:
             "updated_at": datetime.utcnow().isoformat()
         }
     
-    def create_tactics_database(self, parent_page_id: str, database_name: str = "Tactics") -> Dict[str, Any]:
+    def create_tactics_database(self, parent_page_id: str, database_name: str = "Tactics") -> dict[str, Any]:
         """Create a tactics database with proper schema."""
         schema = {
             "Name": {"title": {}},
@@ -441,8 +439,8 @@ class NotionClient:
         
         return self.create_database(parent_page_id, database_name, schema)
     
-    def export_full_strategy_with_tactics(self, strategy: NotionStrategy, tactics: List[NotionTactic],
-                                        parent_page_id: str) -> Dict[str, Any]:
+    def export_full_strategy_with_tactics(self, strategy: NotionStrategy, tactics: list[NotionTactic],
+                                        parent_page_id: str) -> dict[str, Any]:
         """
         Export complete strategy with all tactics in one operation.
         

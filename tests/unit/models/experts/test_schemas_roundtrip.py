@@ -1,7 +1,7 @@
 """Test schema generation and round-trip validation for Expert Council models."""
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 import pytest
 
 # Try to import from the local package structure first
@@ -26,7 +26,7 @@ def test_expert_profile_roundtrip():
         capabilities=["behavioral-analysis", "persuasion-risk"],
         weight_prior=0.75,
         calibration={"accuracy": 0.82, "confidence": 0.90},
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(UTC)
     )
     
     # Test serialization

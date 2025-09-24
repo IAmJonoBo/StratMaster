@@ -3,7 +3,6 @@
 import json
 from unittest.mock import patch
 
-import pytest
 
 from expertise_mcp.schemas import MEMO_SCHEMA, VOTE_SCHEMA
 from expertise_mcp.server import server
@@ -97,7 +96,7 @@ def test_evaluate_tool_call():
     
     with patch('expertise_mcp.tools._eval') as mock_eval:
         # Mock the evaluation function to return a simple memo
-        from packages.api.src.stratmaster_api.models.experts.memo import DisciplineMemo, Finding
+        from packages.api.src.stratmaster_api.models.experts.memo import DisciplineMemo
         
         mock_memo = DisciplineMemo(
             id="memo:psychology",

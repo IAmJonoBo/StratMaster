@@ -17,20 +17,17 @@ Usage:
 """
 
 import argparse
-import json
+import re
+import shutil
 import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-import shutil
-import re
 
 try:
-    import yaml
     import requests
+    import yaml
 except ImportError:
     print("Error: Missing dependencies. Install with: pip install PyYAML requests")
     sys.exit(1)
@@ -43,11 +40,11 @@ class DependencyUpdate:
     current_version: str
     latest_version: str
     update_type: str  # "major", "minor", "patch"
-    license: Optional[str]
+    license: str | None
     scope: str  # "python", "docker", "github-actions"
     file_path: str
     security_advisory: bool = False
-    breaking_changes: List[str] = None
+    breaking_changes: list[str] = None
     
     def __post_init__(self):
         if self.breaking_changes is None:
@@ -74,7 +71,7 @@ class DependencyUpgrader:
         if not dry_run:
             self.backup_dir.mkdir(exist_ok=True)
     
-    def _run_command(self, cmd: List[str], capture_output: bool = True) -> Tuple[bool, str]:
+    def _run_command(self, cmd: list[str], capture_output: bool = True) -> tuple[bool, str]:
         """Run a shell command safely."""
         try:
             result = subprocess.run(
@@ -87,7 +84,7 @@ class DependencyUpgrader:
         except Exception as e:
             return False, str(e)
     
-    def _backup_files(self, files: List[str]) -> str:
+    def _backup_files(self, files: list[str]) -> str:
         """Create backup of dependency files."""
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         backup_path = self.backup_dir / f"backup_{timestamp}"
@@ -107,14 +104,14 @@ class DependencyUpgrader:
         
         return str(backup_path)
     
-    def _get_python_dependencies(self) -> List[DependencyUpdate]:
+    def _get_python_dependencies(self) -> list[DependencyUpdate]:
         """Analyze Python dependencies for updates."""
         updates = []
         
         # Check requirements.txt
         req_file = self.project_root / "requirements.txt"
         if req_file.exists():
-            with open(req_file, 'r') as f:
+            with open(req_file) as f:
                 for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if not line or line.startswith('#'):
@@ -145,14 +142,14 @@ class DependencyUpgrader:
         
         return updates
     
-    def _get_docker_dependencies(self) -> List[DependencyUpdate]:
+    def _get_docker_dependencies(self) -> list[DependencyUpdate]:
         """Analyze Docker image dependencies for updates."""
         updates = []
         
         # Check docker-compose.yml
         compose_file = self.project_root / "docker-compose.yml"
         if compose_file.exists():
-            with open(compose_file, 'r') as f:
+            with open(compose_file) as f:
                 compose_data = yaml.safe_load(f)
             
             services = compose_data.get('services', {})
@@ -182,14 +179,14 @@ class DependencyUpgrader:
         
         return updates
     
-    def _get_github_action_dependencies(self) -> List[DependencyUpdate]:
+    def _get_github_action_dependencies(self) -> list[DependencyUpdate]:
         """Analyze GitHub Actions dependencies for updates."""
         updates = []
         
         workflows_dir = self.project_root / ".github" / "workflows"
         if workflows_dir.exists():
             for workflow_file in workflows_dir.glob("*.yml"):
-                with open(workflow_file, 'r') as f:
+                with open(workflow_file) as f:
                     try:
                         workflow_data = yaml.safe_load(f)
                         jobs = workflow_data.get('jobs', {})
@@ -224,7 +221,7 @@ class DependencyUpgrader:
         
         return updates
     
-    def _get_latest_pypi_version(self, package: str) -> Optional[str]:
+    def _get_latest_pypi_version(self, package: str) -> str | None:
         """Get latest version from PyPI."""
         try:
             response = requests.get(f"https://pypi.org/pypi/{package}/json", timeout=10)
@@ -235,7 +232,7 @@ class DependencyUpgrader:
             pass
         return None
     
-    def _get_package_license(self, package: str) -> Optional[str]:
+    def _get_package_license(self, package: str) -> str | None:
         """Get package license from PyPI."""
         try:
             response = requests.get(f"https://pypi.org/pypi/{package}/json", timeout=10)
@@ -246,7 +243,7 @@ class DependencyUpgrader:
             pass
         return None
     
-    def _get_latest_docker_tag(self, image_name: str, current_tag: str) -> Optional[str]:
+    def _get_latest_docker_tag(self, image_name: str, current_tag: str) -> str | None:
         """Get latest Docker tag for known images."""
         # This is simplified - in production you'd query Docker registries
         known_patterns = {
@@ -263,7 +260,7 @@ class DependencyUpgrader:
         
         return None
     
-    def _get_latest_github_action_version(self, action: str) -> Optional[str]:
+    def _get_latest_github_action_version(self, action: str) -> str | None:
         """Get latest GitHub Action version."""
         try:
             # Convert action name to API URL
@@ -320,14 +317,14 @@ class DependencyUpgrader:
             pass
         return False
     
-    def _check_license_compatibility(self, license_name: Optional[str]) -> bool:
+    def _check_license_compatibility(self, license_name: str | None) -> bool:
         """Check if license is compatible with project."""
         if not license_name:
             return True  # Unknown license - allow but warn
         
         return license_name in self.ALLOWED_LICENSES
     
-    def _run_tests(self) -> Tuple[bool, str]:
+    def _run_tests(self) -> tuple[bool, str]:
         """Run project tests to validate changes."""
         print("🧪 Running test suite...")
         
@@ -347,7 +344,7 @@ class DependencyUpgrader:
         
         return success, output
     
-    def _apply_python_updates(self, updates: List[DependencyUpdate]) -> bool:
+    def _apply_python_updates(self, updates: list[DependencyUpdate]) -> bool:
         """Apply Python dependency updates."""
         req_file = self.project_root / "requirements.txt"
         
@@ -358,7 +355,7 @@ class DependencyUpgrader:
             return True
         
         # Read current requirements
-        with open(req_file, 'r') as f:
+        with open(req_file) as f:
             lines = f.readlines()
         
         # Apply updates
@@ -420,7 +417,7 @@ class DependencyUpgrader:
             print("  ✅ All GitHub Actions up to date")
         
         # Summary
-        print(f"\n📊 Summary:")
+        print("\n📊 Summary:")
         print(f"Total updates available: {len(all_updates)}")
         
         update_types = {}
@@ -479,10 +476,10 @@ class DependencyUpgrader:
                         flag_str = f" [{', '.join(flags)}]" if flags else ""
                         print(f"    • {update.name}: {update.current_version} -> {update.latest_version}{flag_str}")
         
-        print(f"\nUpgrade Strategy:")
-        print(f"✅ Safe to auto-upgrade: Patch updates without license issues")
-        print(f"⚠️  Manual review needed: Minor updates, license changes, security advisories")
-        print(f"🚨 Careful review required: Major updates (not recommended for auto-upgrade)")
+        print("\nUpgrade Strategy:")
+        print("✅ Safe to auto-upgrade: Patch updates without license issues")
+        print("⚠️  Manual review needed: Minor updates, license changes, security advisories")
+        print("🚨 Careful review required: Major updates (not recommended for auto-upgrade)")
     
     def upgrade(self, scope: str = "python", update_type: str = "patch") -> bool:
         """Perform safe dependency upgrade."""
@@ -504,7 +501,7 @@ class DependencyUpgrader:
         # Check license compatibility
         license_issues = [u for u in filtered_updates if not self._check_license_compatibility(u.license)]
         if license_issues and not self.auto_approve:
-            print(f"⚠️  License compatibility issues found:")
+            print("⚠️  License compatibility issues found:")
             for update in license_issues:
                 print(f"  • {update.name}: {update.license}")
             
@@ -572,7 +569,7 @@ class DependencyUpgrader:
         print("✅ Rollback completed")
         return True
     
-    def _generate_change_summary(self, updates: List[DependencyUpdate]) -> None:
+    def _generate_change_summary(self, updates: list[DependencyUpdate]) -> None:
         """Generate a summary of changes made."""
         timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
         
@@ -584,17 +581,17 @@ class DependencyUpgrader:
         for update in updates:
             print(f"• {update.name}: {update.current_version} → {update.latest_version}")
             if update.security_advisory:
-                print(f"  🚨 Addresses security advisory")
+                print("  🚨 Addresses security advisory")
             if update.license:
                 print(f"  📜 License: {update.license}")
         
-        print(f"\nFiles modified:")
+        print("\nFiles modified:")
         files = set(u.file_path for u in updates)
         for file_path in files:
             print(f"• {file_path}")
         
-        print(f"\n✅ All tests passed")
-        print(f"🔐 Lock files updated")
+        print("\n✅ All tests passed")
+        print("🔐 Lock files updated")
 
 
 def main():

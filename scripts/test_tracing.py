@@ -6,9 +6,7 @@ This script tests that OTEL traces are being generated correctly for core API de
 """
 
 import asyncio
-import json
 import sys
-import time
 from pathlib import Path
 
 import httpx

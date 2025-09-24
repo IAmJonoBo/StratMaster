@@ -20,12 +20,12 @@ except ImportError:
 
 from ..dependencies import require_idempotency_key
 from ..models.ingestion import (
+    ClarificationPromptResponse,
     ClarificationRequest,
     ClarificationResponse,
-    ClarificationPromptResponse,
+    IngestionChunkResponse,
     IngestionDocumentRequest,
     IngestionResponse,
-    IngestionChunkResponse,
 )
 from ..services import orchestrator_stub
 

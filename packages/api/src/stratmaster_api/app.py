@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import yaml  # type: ignore[import-untyped]
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -22,6 +22,7 @@ try:
 except ImportError:
     OTEL_FASTAPI_AVAILABLE = False
 
+from .dependencies import require_idempotency_key
 from .models import RecommendationOutcome
 from .models.requests import (
     DebateRunRequest,
@@ -43,10 +44,8 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
-from .dependencies import require_idempotency_key
-from .routers import ingestion as ingestion_router
 from .routers import debate as debate_hitl_router
-from .tracing import tracing_manager
+from .routers import ingestion as ingestion_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -54,6 +53,7 @@ from .schemas import (
     RetrievalHybridConfig,
 )
 from .services import orchestrator_stub
+from .tracing import tracing_manager
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
 

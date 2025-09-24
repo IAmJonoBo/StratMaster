@@ -13,29 +13,26 @@ Key Features:
 - Integration with MLflow for experiment tracking
 """
 
-import os
-import yaml
 import json
 import logging
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+import os
+from dataclasses import asdict, dataclass
 
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
-from transformers import (
-    AutoTokenizer, 
-    AutoModelForSequenceClassification,
-    TrainingArguments, 
-    Trainer,
-    EarlyStoppingCallback
-)
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
 import mlflow
 import mlflow.pytorch
+import torch
+import torch.nn as nn
+import yaml
 from mlflow.tracking import MlflowClient
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
+from torch.utils.data import Dataset
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    EarlyStoppingCallback,
+    Trainer,
+    TrainingArguments,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -59,10 +56,10 @@ class TrainingConfig:
     early_stopping_threshold: float = 0.001
     
     # Categories for constitutional compliance
-    categories: List[str] = None
+    categories: list[str] = None
     
     # Evaluation thresholds
-    thresholds: Dict[str, float] = None
+    thresholds: dict[str, float] = None
     
     def __post_init__(self):
         if self.categories is None:
@@ -93,8 +90,8 @@ class ConstitutionalComplianceDataset(Dataset):
     
     def __init__(
         self,
-        texts: List[str],
-        labels: List[Dict[str, int]],
+        texts: list[str],
+        labels: list[dict[str, int]],
         tokenizer: AutoTokenizer,
         max_length: int = 512
     ):
@@ -110,7 +107,7 @@ class ConstitutionalComplianceDataset(Dataset):
     def __len__(self) -> int:
         return len(self.texts)
     
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         text = str(self.texts[idx])
         labels = self.labels[idx]
         
@@ -186,12 +183,12 @@ class ConstitutionalTrainer:
         
         self.mlflow_client = MlflowClient()
         
-    def load_data(self, data_path: str) -> Tuple[List[str], List[Dict[str, int]]]:
+    def load_data(self, data_path: str) -> tuple[list[str], list[dict[str, int]]]:
         """Load training data from file."""
         texts = []
         labels = []
         
-        with open(data_path, 'r') as f:
+        with open(data_path) as f:
             for line in f:
                 data = json.loads(line)
                 texts.append(data['text'])
@@ -213,11 +210,11 @@ class ConstitutionalTrainer:
     
     def prepare_datasets(
         self,
-        texts: List[str],
-        labels: List[Dict[str, int]],
+        texts: list[str],
+        labels: list[dict[str, int]],
         train_split: float = 0.8,
         val_split: float = 0.1
-    ) -> Tuple[ConstitutionalComplianceDataset, ConstitutionalComplianceDataset, ConstitutionalComplianceDataset]:
+    ) -> tuple[ConstitutionalComplianceDataset, ConstitutionalComplianceDataset, ConstitutionalComplianceDataset]:
         """Split data and create datasets."""
         
         # Calculate split indices
@@ -396,7 +393,7 @@ def main():
     # Load configuration
     config_path = os.getenv('ML_CONFIG_PATH', 'configs/ml-training/training-config.yaml')
     
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         config_data = yaml.safe_load(f)
     
     # Extract training config

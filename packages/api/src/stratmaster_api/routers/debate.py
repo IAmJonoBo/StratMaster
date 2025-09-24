@@ -8,7 +8,8 @@ This module implements endpoints for human intervention in debates:
 - POST /debate/{debate_id}/pause - Pause for human input
 """
 
-from typing import Optional, Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -24,8 +25,8 @@ class DebateEscalateRequest(BaseModel):
     debate_id: str
     tenant_id: str
     escalation_reason: str = Field(description="Reason for escalation")
-    specialist_domain: Optional[str] = Field(default=None, description="Preferred specialist domain")
-    additional_context: Dict[str, Any] = Field(default_factory=dict)
+    specialist_domain: str | None = Field(default=None, description="Preferred specialist domain")
+    additional_context: dict[str, Any] = Field(default_factory=dict)
 
 
 class DebateEscalateResponse(BaseModel):
@@ -33,8 +34,8 @@ class DebateEscalateResponse(BaseModel):
     escalation_id: str
     debate_id: str
     status: str = Field(description="Status after escalation")
-    specialist_assigned: Optional[str] = Field(default=None)
-    estimated_response_time: Optional[int] = Field(default=None, description="Estimated response time in minutes")
+    specialist_assigned: str | None = Field(default=None)
+    estimated_response_time: int | None = Field(default=None, description="Estimated response time in minutes")
 
 
 class DebateAcceptRequest(BaseModel):
@@ -42,9 +43,9 @@ class DebateAcceptRequest(BaseModel):
     debate_id: str
     tenant_id: str
     acceptance_type: str = Field(description="Type of acceptance: full, partial, conditional")
-    notes: Optional[str] = Field(default=None, description="Additional notes or modifications")
-    action_items: List[str] = Field(default_factory=list, description="Extracted action items")
-    quality_rating: Optional[int] = Field(default=None, ge=1, le=5, description="Quality rating 1-5")
+    notes: str | None = Field(default=None, description="Additional notes or modifications")
+    action_items: list[str] = Field(default_factory=list, description="Extracted action items")
+    quality_rating: int | None = Field(default=None, ge=1, le=5, description="Quality rating 1-5")
 
 
 class DebateAcceptResponse(BaseModel):
@@ -52,8 +53,8 @@ class DebateAcceptResponse(BaseModel):
     acceptance_id: str
     debate_id: str
     status: str
-    exported_artifacts: List[str] = Field(default_factory=list, description="Generated artifacts")
-    next_steps: List[str] = Field(default_factory=list)
+    exported_artifacts: list[str] = Field(default_factory=list, description="Generated artifacts")
+    next_steps: list[str] = Field(default_factory=list)
 
 
 class DebateStatusResponse(BaseModel):
@@ -61,12 +62,12 @@ class DebateStatusResponse(BaseModel):
     debate_id: str
     tenant_id: str
     status: str = Field(description="Current debate status")
-    participants: List[str] = Field(description="List of participating agents")
+    participants: list[str] = Field(description="List of participating agents")
     current_turn: int = Field(description="Current turn number")
     total_turns: int = Field(description="Total planned turns")
     human_input_required: bool = Field(description="Whether human input is needed")
-    pending_actions: List[str] = Field(default_factory=list)
-    evidence_summary: Dict[str, Any] = Field(default_factory=dict)
+    pending_actions: list[str] = Field(default_factory=list)
+    evidence_summary: dict[str, Any] = Field(default_factory=dict)
     last_updated: str = Field(description="ISO timestamp of last update")
 
 
@@ -75,7 +76,7 @@ class DebatePauseRequest(BaseModel):
     debate_id: str
     tenant_id: str
     pause_reason: str = Field(description="Reason for pausing")
-    timeout_minutes: Optional[int] = Field(default=30, description="Timeout for human response")
+    timeout_minutes: int | None = Field(default=30, description="Timeout for human response")
     required_input_type: str = Field(description="Type of input needed: decision, clarification, approval")
 
 
@@ -267,7 +268,7 @@ class DebateService:
         
         return base_time
     
-    def _generate_artifacts(self, request: DebateAcceptRequest) -> List[str]:
+    def _generate_artifacts(self, request: DebateAcceptRequest) -> list[str]:
         """Generate artifacts based on acceptance."""
         artifacts = []
         
@@ -284,7 +285,7 @@ class DebateService:
         
         return artifacts
     
-    def _extract_next_steps(self, request: DebateAcceptRequest) -> List[str]:
+    def _extract_next_steps(self, request: DebateAcceptRequest) -> list[str]:
         """Extract next steps from acceptance."""
         next_steps = []
         

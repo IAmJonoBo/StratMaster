@@ -1,6 +1,7 @@
 """Expert profile model for the Expert Council system."""
 
 from pydantic import Field
+
 from .base import WithMeta
 
 

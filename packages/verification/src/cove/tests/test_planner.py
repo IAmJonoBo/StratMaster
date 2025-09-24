@@ -4,7 +4,6 @@ from stratmaster_api.models import (
     RetrievalRecord,
     RetrievalScore,
 )
-
 from stratmaster_cove import CoVeVerifier, VerificationStatus, run_cove
 
 

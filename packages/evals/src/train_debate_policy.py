@@ -17,19 +17,18 @@ Features extracted from debate outcomes:
 - Latency vs quality trade-offs
 """
 
-import pickle
 import json
+import pickle
 import sqlite3
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
@@ -49,7 +48,7 @@ class DebateFeatures:
     tenant_avg_single_agent_quality: float
     
     # Agent features
-    preferred_agents: List[str]
+    preferred_agents: list[str]
     agent_compatibility_score: float  # How well these agents work together
     
     # Context features
@@ -63,7 +62,7 @@ class DebateOutcomeRecord:
     
     task_id: str
     tenant_id: str
-    agents: List[str]
+    agents: list[str]
     evidence_count: int
     citations_ok: bool
     critique_count: int
@@ -89,7 +88,7 @@ class DebatePolicyTrainer:
     Produces a lightweight model for real-time inference during routing.
     """
     
-    def __init__(self, data_path: Optional[Path] = None):
+    def __init__(self, data_path: Path | None = None):
         self.data_path = data_path or Path("data/debate_outcomes.db")
         self.model_path = Path("models/debate_policy.pkl")
         self.scaler_path = Path("models/debate_scaler.pkl")
@@ -106,7 +105,7 @@ class DebatePolicyTrainer:
         )
         self.scaler = StandardScaler()
         
-    def load_debate_outcomes(self) -> List[DebateOutcomeRecord]:
+    def load_debate_outcomes(self) -> list[DebateOutcomeRecord]:
         """Load debate outcomes from SQLite database."""
         if not self.data_path.exists():
             print(f"No data file found at {self.data_path}. Generating synthetic data for demo.")
@@ -157,7 +156,7 @@ class DebatePolicyTrainer:
         
         return outcomes
     
-    def _generate_synthetic_data(self) -> List[DebateOutcomeRecord]:
+    def _generate_synthetic_data(self) -> list[DebateOutcomeRecord]:
         """Generate synthetic debate outcomes for demonstration."""
         print("Generating 1000 synthetic debate outcomes for training...")
         
@@ -243,7 +242,7 @@ class DebatePolicyTrainer:
         else:
             return 2  # Balanced approach
     
-    def extract_features(self, outcomes: List[DebateOutcomeRecord]) -> Tuple[np.ndarray, np.ndarray]:
+    def extract_features(self, outcomes: list[DebateOutcomeRecord]) -> tuple[np.ndarray, np.ndarray]:
         """Extract feature matrix and labels from outcomes."""
         features = []
         labels = []
@@ -286,7 +285,7 @@ class DebatePolicyTrainer:
         
         return np.array(features), np.array(labels)
     
-    def _compute_tenant_stats(self, outcomes: List[DebateOutcomeRecord]) -> Dict[str, Dict[str, float]]:
+    def _compute_tenant_stats(self, outcomes: list[DebateOutcomeRecord]) -> dict[str, dict[str, float]]:
         """Compute historical statistics per tenant."""
         tenant_data = {}
         
@@ -316,7 +315,7 @@ class DebatePolicyTrainer:
         
         return tenant_stats
     
-    def train(self) -> Dict[str, float]:
+    def train(self) -> dict[str, float]:
         """Train the debate policy model."""
         print("Loading debate outcomes...")
         outcomes = self.load_debate_outcomes()
@@ -365,7 +364,7 @@ class DebatePolicyTrainer:
             "has_research", "has_strategy", "has_brand"
         ]
         
-        feature_importance = list(zip(feature_names, self.classifier.feature_importances_))
+        feature_importance = list(zip(feature_names, self.classifier.feature_importances_, strict=False))
         feature_importance.sort(key=lambda x: x[1], reverse=True)
         
         print("\nTop 5 Most Important Features:")
@@ -389,7 +388,7 @@ class DebatePolicyTrainer:
             "n_features": X.shape[1]
         }
     
-    def predict(self, features: DebateFeatures) -> Dict[str, Any]:
+    def predict(self, features: DebateFeatures) -> dict[str, Any]:
         """Make a prediction for a new debate request."""
         if not self.model_path.exists():
             raise FileNotFoundError(f"Model not found at {self.model_path}. Run train() first.")

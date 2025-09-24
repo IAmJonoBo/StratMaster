@@ -1,6 +1,7 @@
 """Doctrine models for rubrics and checklists in the Expert Council system."""
 
 from pydantic import Field
+
 from .base import WithMeta
 
 

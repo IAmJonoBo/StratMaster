@@ -1,6 +1,6 @@
 """Client implementations for external services."""
 
-from .mcp_client import MCPClient
 from .cache_client import CacheClient
+from .mcp_client import MCPClient
 
 __all__ = ["MCPClient", "CacheClient"]

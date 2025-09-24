@@ -10,7 +10,7 @@ from typing import Any
 # Note: Using a simplified MCP server implementation since the full MCP SDK may not be available
 # This would normally import from mcp.server import Server
 
-from .schemas import MEMO_SCHEMA, VOTE_SCHEMA
+from .schemas import MEMO_SCHEMA
 from .tools import evaluate as _eval, vote as _vote
 
 logger = logging.getLogger(__name__)

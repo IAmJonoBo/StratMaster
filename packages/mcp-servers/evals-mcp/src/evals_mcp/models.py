@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Literal, Any, Optional
 from datetime import datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 

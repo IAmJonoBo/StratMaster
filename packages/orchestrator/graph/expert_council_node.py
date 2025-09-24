@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 # This would normally import from langgraph but we'll keep it simple for now
 # from langgraph.checkpoint import MemorySaver
@@ -29,7 +29,7 @@ class ExpertCouncilNode:
             "brand_science": 0.2
         }
     
-    async def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
         """Execute the Expert Council evaluation stage.
         
         Args:
@@ -97,7 +97,7 @@ class ExpertCouncilNode:
         logger.info("Expert Council evaluation complete")
         return state
     
-    def _stub_evaluation(self, strategy: Dict[str, Any], disciplines: list[str]) -> list[Dict[str, Any]]:
+    def _stub_evaluation(self, strategy: dict[str, Any], disciplines: list[str]) -> list[dict[str, Any]]:
         """Stub evaluation for when MCP client is unavailable."""
         memos = []
         for discipline in disciplines:
@@ -117,7 +117,7 @@ class ExpertCouncilNode:
             memos.append(memo)
         return memos
     
-    def _stub_vote(self, strategy_id: str, weights: Dict[str, float], memos: list[Dict[str, Any]]) -> Dict[str, Any]:
+    def _stub_vote(self, strategy_id: str, weights: dict[str, float], memos: list[dict[str, Any]]) -> dict[str, Any]:
         """Stub vote aggregation for when MCP client is unavailable."""
         votes = []
         total_score = 0.0

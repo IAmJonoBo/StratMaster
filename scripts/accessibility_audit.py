@@ -23,12 +23,10 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-import math
 
 try:
-    from bs4 import BeautifulSoup
     import requests
+    from bs4 import BeautifulSoup
 except ImportError:
     print("Error: Missing dependencies. Install with: pip install beautifulsoup4 requests")
     sys.exit(1)
@@ -42,9 +40,9 @@ class AccessibilityIssue:
     issue_type: str
     severity: str  # "critical", "serious", "moderate", "minor"
     description: str
-    wcag_criteria: List[str]
+    wcag_criteria: list[str]
     suggested_fix: str
-    code_snippet: Optional[str] = None
+    code_snippet: str | None = None
 
 
 @dataclass 
@@ -55,7 +53,7 @@ class ContrastResult:
     ratio: float
     passes_aa: bool
     passes_aaa: bool
-    recommended_colors: Optional[Tuple[str, str]] = None
+    recommended_colors: tuple[str, str] | None = None
 
 
 class AccessibilityAuditor:
@@ -70,7 +68,7 @@ class AccessibilityAuditor:
     def __init__(self, project_root: str = ".", dry_run: bool = False):
         self.project_root = Path(project_root)
         self.dry_run = dry_run
-        self.issues: List[AccessibilityIssue] = []
+        self.issues: list[AccessibilityIssue] = []
         
         # Common accessibility patterns
         self.required_aria_labels = {
@@ -85,7 +83,7 @@ class AccessibilityAuditor:
             'details', 'summary', '[tabindex]'
         ]
     
-    def _hex_to_rgb(self, hex_color: str) -> Tuple[int, int, int]:
+    def _hex_to_rgb(self, hex_color: str) -> tuple[int, int, int]:
         """Convert hex color to RGB values."""
         hex_color = hex_color.lstrip('#')
         if len(hex_color) == 3:
@@ -96,7 +94,7 @@ class AccessibilityAuditor:
         except ValueError:
             return (0, 0, 0)  # Default to black for invalid colors
     
-    def _get_relative_luminance(self, rgb: Tuple[int, int, int]) -> float:
+    def _get_relative_luminance(self, rgb: tuple[int, int, int]) -> float:
         """Calculate relative luminance for contrast ratio."""
         def get_channel_luminance(channel):
             s = channel / 255.0
@@ -124,7 +122,7 @@ class AccessibilityAuditor:
         
         return (lighter + 0.05) / (darker + 0.05)
     
-    def _suggest_better_colors(self, fg_color: str, bg_color: str) -> Tuple[str, str]:
+    def _suggest_better_colors(self, fg_color: str, bg_color: str) -> tuple[str, str]:
         """Suggest colors that meet WCAG AA contrast requirements."""
         fg_rgb = self._hex_to_rgb(fg_color)
         bg_rgb = self._hex_to_rgb(bg_color)
@@ -146,7 +144,7 @@ class AccessibilityAuditor:
         
         return "#000000", "#ffffff"  # Fallback to black on white
     
-    def _check_color_contrast(self, file_path: Path) -> List[AccessibilityIssue]:
+    def _check_color_contrast(self, file_path: Path) -> list[AccessibilityIssue]:
         """Check color contrast in CSS and HTML files."""
         issues = []
         
@@ -202,7 +200,7 @@ class AccessibilityAuditor:
         
         return issues
     
-    def _check_semantic_structure(self, file_path: Path) -> List[AccessibilityIssue]:
+    def _check_semantic_structure(self, file_path: Path) -> list[AccessibilityIssue]:
         """Check semantic HTML structure and ARIA usage."""
         issues = []
         
@@ -248,7 +246,7 @@ class AccessibilityAuditor:
                         line_number=1,
                         issue_type="unlabeled_input",
                         severity="serious", 
-                        description=f"Input field missing accessible label",
+                        description="Input field missing accessible label",
                         wcag_criteria=["1.3.1", "4.1.2"],
                         suggested_fix="Add aria-label, aria-labelledby, or associated label element",
                         code_snippet=str(input_elem)
@@ -274,7 +272,7 @@ class AccessibilityAuditor:
         
         return issues
     
-    def _check_react_accessibility(self, file_path: Path, content: str) -> List[AccessibilityIssue]:
+    def _check_react_accessibility(self, file_path: Path, content: str) -> list[AccessibilityIssue]:
         """Check React/TSX components for accessibility issues."""
         issues = []
         lines = content.split('\n')
@@ -323,7 +321,7 @@ class AccessibilityAuditor:
         
         return issues
     
-    def _check_keyboard_navigation(self, file_path: Path) -> List[AccessibilityIssue]:
+    def _check_keyboard_navigation(self, file_path: Path) -> list[AccessibilityIssue]:
         """Check for keyboard navigation support."""
         issues = []
         
@@ -423,7 +421,7 @@ class AccessibilityAuditor:
                 print("  ✅ No accessibility issues found")
         
         # Summary report
-        print(f"\n📊 Accessibility Audit Summary")
+        print("\n📊 Accessibility Audit Summary")
         print("=" * 50)
         print(f"Files scanned: {len(ui_files)}")
         print(f"Total issues: {total_issues}")
@@ -535,7 +533,7 @@ class AccessibilityAuditor:
                             content = new_content
                             modified = True
                             fixed_count += 1
-                            print(f"  ✅ Added alt text placeholder to images")
+                            print("  ✅ Added alt text placeholder to images")
                     
                     elif issue.issue_type == "clickable_div":
                         # Add role and tabIndex to clickable divs
@@ -553,7 +551,7 @@ class AccessibilityAuditor:
                             content = new_content
                             modified = True
                             fixed_count += 1
-                            print(f"  ✅ Added accessibility attributes to clickable div")
+                            print("  ✅ Added accessibility attributes to clickable div")
                 
                 # Save modified content
                 if modified and not self.dry_run:
@@ -565,7 +563,7 @@ class AccessibilityAuditor:
             except Exception as e:
                 print(f"  ❌ Error fixing {file_path}: {e}")
         
-        print(f"\n📊 Fix Summary")
+        print("\n📊 Fix Summary")
         print(f"Issues addressed: {fixed_count}")
         if self.dry_run:
             print("🔍 Dry run - no files were modified")
