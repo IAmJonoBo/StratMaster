@@ -101,10 +101,10 @@ class AgentRouter:
             score = 0.0
             for pattern in patterns:
                 matches = len(re.findall(pattern, query_lower))
-                score += matches * 0.1  # Each match adds 0.1 to score
+                score += matches * 0.3  # Each match adds 0.3 to score (increased from 0.1)
             
-            # Normalize score by query length
-            normalized_score = min(1.0, score / max(1, len(query.split()) * 0.05))
+            # Normalize score by query length (less aggressive normalization)
+            normalized_score = min(1.0, score / max(1, len(query.split()) * 0.02))  # Changed from 0.05 to 0.02
             scores[agent_type] = normalized_score
         
         return scores
@@ -191,17 +191,18 @@ class AgentRouter:
         # Step 4: Apply policy flags
         final_scores = self._apply_policy_flags(combined_scores, router_input.policy_flags or {})
         
-        # Step 5: Select agents (threshold of 0.2 minimum)
-        threshold = 0.2
+        # Step 5: Select agents (threshold of 0.1 minimum)
+        threshold = 0.1
         selected_agents = [
             agent_type for agent_type, score in final_scores.items() 
             if score >= threshold
         ]
         
-        # Ensure at least one agent is selected (default to knowledge)
+        # Ensure at least one agent is selected (select highest scoring)
         if not selected_agents:
-            selected_agents = [AgentType.KNOWLEDGE]
-            final_scores[AgentType.KNOWLEDGE] = 0.5  # Default confidence
+            max_agent = max(final_scores.keys(), key=lambda k: final_scores[k])
+            selected_agents = [max_agent]
+            # Don't override the actual score
         
         # Step 6: Calculate overall confidence
         max_score = max(final_scores.values()) if final_scores else 0.5
