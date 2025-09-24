@@ -52,6 +52,9 @@
 - **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
 - **[🛡️ Security Policy](SECURITY.md)** - Vulnerability reporting
 - **[📊 Project Changelog](docs/changelog.md)** - Version history and updates
+- **[🔍 Frontier Gap Analysis](GAP_ANALYSIS.md)** - Evidence-backed assessment of delivery, reliability, performance, and security gaps
+- **[🛠️ Frontier Implementation Plan](IMPLEMENTATION_PLAN.md)** - Sequenced backlog aligning open issues with the audit
+- **[📈 Operational Diagrams](docs/diagrams/)** - Mermaid diagrams for request flow, data lineage, error handling, and CI/CD
 
 ## Key Features
 

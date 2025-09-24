@@ -135,6 +135,12 @@ This is the initial release, so no migration is required. Future releases will i
 
 ### 🎯 What's Next
 
+**Frontier audit alignment**
+
+- Published [GAP_ANALYSIS.md](GAP_ANALYSIS.md) capturing delivery, reliability, performance, security, AI, and documentation gaps with evidence for each frontier target.【F:GAP_ANALYSIS.md†L1-L33】
+- Updated [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) to sequence Now/Next/Later workstreams aligned with open roadmap issues and new telemetry/SLO initiatives.【F:IMPLEMENTATION_PLAN.md†L1-L78】
+- Added Mermaid diagrams under `docs/diagrams/` to aid incident response, data lineage reviews, and CI/CD discussions.【F:docs/diagrams/ci-cd.md†L1-L19】【F:docs/diagrams/error-handling.md†L1-L24】
+
 #### Planned for v0.2.0
 - **Real-time Collaboration**: Multi-user workspace features
 - **Advanced Analytics**: Custom business intelligence dashboards
