@@ -1,5 +1,5 @@
 """
-Integration tests for StratMaster Phase 3 features.
+Integration tests for StratMaster advanced features.
 Tests analytics, approval workflows, ML experiments, and system configuration.
 """
 

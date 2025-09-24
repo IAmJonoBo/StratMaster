@@ -79,7 +79,7 @@ Results appear in Langfuse dashboards (spans) and Grafana (metrics). Ensure kill
 
 ## 5. Offline / Low-Spec Mode
 
-Planned enhancements (Sprint 5) introduce a toggleable offline profile.
+Planned enhancements introduce a toggleable offline profile.
 
 ```bash
 # Start CPU-only stack using Ollama + gguf models

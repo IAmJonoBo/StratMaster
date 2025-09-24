@@ -215,7 +215,7 @@ PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests/ -q
 
 | Component | Status | Implementation |
 |-----------|--------|----------------|
-| **Metrics** | ✅ Active | Prometheus + Grafana (Phase 2) |
+| **Metrics** | ✅ Active | Prometheus + Grafana |
 | **Tracing** | ✅ Configured | OpenTelemetry collector setup |
 | **Logging** | ⚠️ Basic | Standard container logging |
 | **LLM Observability** | ✅ Advanced | Langfuse integration |
