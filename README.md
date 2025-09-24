@@ -12,23 +12,41 @@
 
 **Quick Start**: Jump to [Quick Start](#quick-start) for immediate setup
 
-**Comprehensive Guides**:
+**Comprehensive Documentation**: [📚 Full Documentation](docs/README.md)
 
-- **[🏗️ Architecture Overview](docs/architecture.md)** - System design, components, and data flow
-- **[💻 Development Guide](docs/development.md)** - Setup, coding, testing, and contribution workflows
-- **[🚀 Deployment Guide](docs/deployment.md)** - Local, staging, and production deployment
-- **[🔧 Infrastructure Guide](docs/infrastructure.md)** - All 12+ backing services configuration
-- **[🔒 Security Guide](docs/security.md)** - Security architecture and best practices
-- **[🩺 Troubleshooting Guide](docs/troubleshooting.md)** - Common issues and solutions
+<div class="grid grid-2col">
+
+### 🎯 [Tutorials](docs/tutorials/)
+**Perfect for newcomers** - Step-by-step guides:
+- [Quick Start Tutorial](docs/tutorials/quickstart.md) - 10-minute setup
+- [Your First Analysis](docs/tutorials/first-analysis.md) - Complete walkthrough
+
+### 🔧 [How-to Guides](docs/how-to/)  
+**Problem-solving recipes** - Get things done:
+- [Development Setup](docs/how-to/development-setup.md) - Dev environment
+- [Deployment Guide](docs/how-to/deployment.md) - All environments
+- [Troubleshooting](docs/how-to/troubleshooting.md) - Fix common issues
+
+### 📚 [Reference](docs/reference/)
+**Technical specifications** - Complete API docs:
+- [API Reference](docs/reference/api/) - All endpoints with examples  
+- [CLI Reference](docs/reference/cli/) - Command-line tools
+- [Configuration](docs/reference/configuration/) - All settings
+
+### 💡 [Explanation](docs/explanation/)
+**Deep understanding** - System concepts:
+- [Architecture](docs/explanation/architecture.md) - System design
+- [Multi-Agent Debate](docs/explanation/multi-agent-debate.md) - AI approach
+- [Security Model](docs/explanation/security.md) - Security architecture
+
+</div>
 
 **Additional Documentation**:
 
 - **[📋 Engineering Blueprint](PROJECT.md)** - Complete technical specification
-- **[📊 Project Backlog](docs/backlog.md)** - Development roadmap and status
 - **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
 - **[🛡️ Security Policy](SECURITY.md)** - Vulnerability reporting
-- **[📋 Operations Guide](docs/operations-guide.md)** - Production operations and troubleshooting
-- **[📊 Implementation Analysis](GAP_ANALYSIS.md)** - Enterprise features and gap analysis
+- **[📊 Project Changelog](docs/changelog.md)** - Version history and updates
 
 ## Key Features
 

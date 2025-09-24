@@ -142,7 +142,7 @@ The system includes domain expertise through:
 - **Regulatory Awareness**: Built-in compliance and regulatory knowledge
 
 ### Can multiple people collaborate on an analysis?
-**Yes**, Phase 2 includes collaboration features:
+**Yes**, planned for v0.2.0 collaboration features:
 - **Real-time Collaboration**: WebSocket-based shared workspaces
 - **Role-based Access**: Different permissions for analysts, reviewers, stakeholders
 - **Approval Workflows**: Multi-stage review and approval processes

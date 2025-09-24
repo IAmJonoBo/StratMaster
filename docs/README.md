@@ -20,25 +20,25 @@ Welcome to the comprehensive documentation for **StratMaster**, an AI-powered Br
 Step-by-step guides to get you productive quickly:
 - [Quick Start Tutorial](tutorials/quickstart.md) - Get up and running in 10 minutes
 - [Your First Strategy Analysis](tutorials/first-analysis.md) - Build your first analysis
-- [Production Deployment](tutorials/production-deployment.md) - Deploy to production
 
 ### 🔧 [How-to Guides](how-to/)
 Problem-oriented recipes for common tasks:
 - [Development Setup](how-to/development-setup.md) - Set up your dev environment
-- [Configuration Management](how-to/configuration.md) - Manage configs effectively
+- [Deployment Guide](how-to/deployment.md) - Deploy to different environments
 - [Troubleshooting](how-to/troubleshooting.md) - Solve common problems
+- [FAQ](how-to/faq.md) - Frequently asked questions
 
 ### 📚 [Reference](reference/)
 Complete technical reference for APIs and CLIs:
 - [API Reference](reference/api/) - All endpoints with examples
-- [CLI Reference](reference/cli/) - Command-line tools
-- [Configuration Reference](reference/configuration/) - All settings
+- [CLI Reference](reference/cli/) - Command-line tools and make targets
+- [Configuration Reference](reference/configuration/) - All settings and options
 
 ### 💡 [Explanation](explanation/)
 In-depth understanding of system design and concepts:
 - [Architecture Overview](explanation/architecture.md) - System design
 - [Multi-Agent Debate](explanation/multi-agent-debate.md) - Core AI approach
-- [Security Model](explanation/security-model.md) - Security architecture
+- [Security Model](explanation/security.md) - Security architecture
 
 </div>
 
