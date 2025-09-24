@@ -1,43 +1,45 @@
 @workspace
-Zero-pollution Docs Rebuild + Code Parity + CI hardening (behavior-preserving).
+Docs ⇄ Code Parity + Diagrams + Sanity Checks (release-prep, behaviour-preserving)
 
-OBJECTIVE
-Rebuild the documentation library from scratch to a clean, release-ready state; enforce Diátaxis; sync docs⇄code; remove planning junk (“sprint/phase/scope”); add automations so regressions are caught.
+CONTEXT
+The docs scaffold is rebuilt. Populate it with accurate, code-verified content and diagrams; remove planning artefacts; update root docs; keep to Diátaxis.
 
-STRATEGY (safe rebuild)
-1) Create branch `docs/rebuild-from-scratch`.
-2) Scaffold fresh docs site in `docs.new/`:
-   - If repo is JS/TS monorepo → Docusaurus preset classic with MDX support; else MkDocs + Material. Keep site local to repo (no external services).
-3) Lay out Diátaxis structure:
-   - `docs.new/tutorials/`, `docs.new/how-to/`, `docs.new/reference/`, `docs.new/explanations/` with landing pages and sidebars.
-4) API reference regeneration:
-   - TS libs: configure `@microsoft/api-extractor` + `@microsoft/api-documenter` OR `typedoc` to emit to `docs.new/reference/ts/`.
-   - HTTP APIs: ensure `/openapi/openapi.yaml` (OAS 3.1). If missing, infer minimal spec from routes and create a draft; wire Redoc/Swagger UI page under `docs.new/reference/api/` with “build-from-spec” scripts.
-5) Curate content (no pollution):
-   - Inventory all `*.md|*.mdx` across repo. Move only product/user-facing material into `docs.new/` under Diátaxis categories.
-   - Quarantine planning/backlog/sprint/phase/scope notes into `/internal/` (outside site). Remove from release path. Rewrite residual “sprint/phase” wording to neutral release language.
-6) Parity sweep:
-   - Cross-reference docs claims with code: public exports, CLIs, env/config keys, endpoints, and examples. Fix mismatches or open issues with TODO tags removed.
-   - Regenerate code examples directly from working snippets wherever possible; flag any un-runnable snippets.
-7) Quality gates:
-   - Add and run: markdown lint (markdownlint/remark), spell-check (cspell), prose lint (Vale w/ Google/Microsoft rules), and link checker (lychee).
-   - Add doctest/snippet verification strategy (prefer small runnable examples; for TS, verify via node/vitest where feasible; otherwise mark “non-executable”).
-8) Wiring & build:
-   - Ensure docs build locally from a clean checkout. Validate sidebar links, anchors, images, and versioned nav. Update top-level README to point to Tutorials / How-to / Reference / Explanations.
-9) CI automations:
-   - Create `.github/workflows/docs.yml` to run on PRs affecting docs/code: install deps; run api-extractor/typedoc; build docs; run markdownlint, cspell, Vale, lychee; fail on errors.
-   - Create `.github/workflows/docs-rebuild.yml` (workflow_dispatch) to regenerate docs from scratch and open a PR via `peter-evans/create-pull-request`.
-10) Finalise:
-   - Generate `DOCS_REPORT.md` (changes, ToC, files moved/removed, parity gaps, open issues).
-   - Open draft PR with `docs.new/` replacing old `/docs` on approval; preserve ADRs/SECURITY/CONTRIBUTING/LICENSE.
-   - Don’t permanently delete any file without explicit confirmation.
+PLAN
+1) Inventory & map
+   - Build an inventory of public APIs (HTTP, CLI, modules), env/config keys, routes, adapters, and exported TS types.
+   - Detect monorepo layout (apps/, libs|packages/) and ensure doc paths match the structure.
 
-DELIVERABLES
-- New site in `docs.new/` following Diátaxis.
-- Regenerated API references (TS + OpenAPI). Redoc/Swagger UI page.
-- Linting configs: `.markdownlint*.json`, `.vale.ini` + styles, `cspell.json`, `lychee.toml`.
-- CI: `docs.yml` + `docs-rebuild.yml`.
-- `DOCS_REPORT.md` and updated `README.md`.
+2) Populate Diátaxis
+   - Classify every page into Tutorials / How-to / Reference / Explanations; create missing pages and index entries.
+   - For each API/CLI/config: generate or update **Reference** pages from source (TypeDoc or API Extractor + API Documenter for TS; OpenAPI for HTTP).
+   - Ensure **Tutorials/How-to** contain runnable, minimal examples; mark any non-executable snippets clearly.
+
+3) Diagrams (add where they help understanding)
+   - Add **Mermaid** diagrams inline for flows, sequences, states, and data journeys in tutorials/how-tos.
+   - Add **C4 diagrams** for architecture (Context/Container/Component) using **Structurizr DSL** checked into /architecture; export PNG/SVG to /docs/reference/architecture.
+   - Link diagrams from affected pages; keep them close to the code they explain.
+
+4) Parity & sanity checks
+   - Cross-reference every claim/example against code: imports compile, commands run, endpoints exist, env vars documented with defaults and security notes.
+   - Convert TODO/TBD/PLACEHOLDER to either (a) minimal feature-flagged scaffolds (off by default) or (b) GitHub Issues linked from docs.
+   - Run clean install → typecheck → lint → unit/e2e → build; fix any doc/code mismatch surfaced by builds/tests.
+
+5) Root docs refresh
+   - Update README entry points to Tutorials / How-to / Reference / Explanations; add quickstart and support/contact.
+   - Ensure CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, and SUPPORT exist and are current; link from README.
+   - Create/refresh CHANGELOG in **Keep-a-Changelog** format; confirm **SemVer** usage in version badges/examples.
+
+6) Quality gates (add if missing; run now)
+   - Prose/style: Vale with Google/Microsoft styles; spelling: cspell; Markdown: markdownlint; links: lychee.
+   - API docs: regenerate TypeDoc or API Extractor → API Documenter; regenerate OpenAPI and re-render (ReDoc/Swagger UI).
+   - Validate all internal/x-ref links and sidebar routes; fail CI on broken links or style violations.
+
+7) Deliverables
+   - Branch `docs/flesh-out-parity`.
+   - Updated `/docs/**` content with diagrams; `/architecture/**` (Structurizr DSL) + exported images.
+   - Refreshed root docs (README, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, SUPPORT, CHANGELOG).
+   - `DOCS_REPORT.md` listing: pages added/rewritten, diagrams added, mismatches fixed, issues created, remaining gaps.
+   - Draft PR with diffs + checklist. Ask before deleting any file; move planning artefacts to `/internal/`.
 
 RULES
-- No product behavior changes. Ask before any destructive change. Prefer small, reviewable commits. Show diffs and a checklist before PR.
+- Preserve behaviour; small, reviewable commits. If uncertain, propose options in DOCS_REPORT first.
