@@ -224,3 +224,24 @@ jobs:
             /tmp/sbom-${{ matrix.python-version }}.json
             /tmp/slsa-provenance-${{ matrix.python-version }}.json
           retention-days: 90
+          
+      - name: Run mutation testing (sample)
+        if: matrix.python-version == '3.13'
+        run: |
+          # Run mutation testing on a small sample for CI performance
+          python scripts/mutation_testing.py \
+            --source-dir packages/api/src/stratmaster_api \
+            --test-command "python -m pytest packages/api/tests/ -x --tb=short" \
+            --max-mutants 10 \
+            --timeout 30 \
+            --output /tmp/mutation-results.json \
+            --quality-gates
+        continue-on-error: true  # Don't fail CI on mutation testing issues
+        
+      - name: Upload mutation testing results
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-testing-results
+          path: /tmp/mutation-results.json
+          retention-days: 30
