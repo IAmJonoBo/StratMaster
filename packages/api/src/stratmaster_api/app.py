@@ -374,6 +374,14 @@ def create_app() -> FastAPI:
     from .routers.experts import router as experts_router
     app.include_router(experts_router)
 
+    # Include analytics router
+    from .routers.analytics import router as analytics_router
+    app.include_router(analytics_router)
+
+    # Include verification router
+    from .routers.verification import router as verification_router
+    app.include_router(verification_router)
+
     # Add collaboration WebSocket endpoint if enabled
     from .collaboration import is_collaboration_enabled
     if is_collaboration_enabled():
