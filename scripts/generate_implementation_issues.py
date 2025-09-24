@@ -7,7 +7,7 @@ for tracking the remaining 1% of implementation work.
 """
 
 import json
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 ISSUES_DATA = [
     {
