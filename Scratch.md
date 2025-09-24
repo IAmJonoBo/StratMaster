@@ -1,136 +1,160 @@
-Summary
+Here’s a tight, end-to-end implementation strategy that finishes the remaining items, locks in OSS-first foundations, and adds a smart model-selection layer that continuously routes to the best-value models across Hugging Face, Together, vLLM, and more—using real benchmarks and live telemetry.
 
-You want StratMaster upgraded to a frontier-grade, OSS-first AI platform with rigorous quality gates and an intelligent model-routing/recommendation layer. Below is a concrete, phased implementation plan that leverages your current stack while adding high-leverage components (vLLM/TGI, Langfuse+OTel, LiteLLM gateway, Frugal/Route-style routing, RAG evaluation) and clean CI/CD guardrails. Where possible I cite primary docs and live leaderboards so the system can “explain its choices”.
+Executive summary (what to implement)
+	1.	Finish enterprise hardening (P0): complete OIDC (Keycloak), ship export backends (Notion/Trello/Jira), stand up observability with Langfuse + OpenTelemetry, and run formal perf + RAG evaluation gates.  ￼
+	2.	OSS-first model gateway (P0): front everything with LiteLLM Proxy and vLLM/TGI backends; add TogetherAI and HF Inference Endpoints as cloud fallbacks. This gives one OpenAI-compatible API with cost/latency logging, routing/fallbacks, and live model lists.  ￼
+	3.	Evidence-guided model recommender (P0): use LMSYS Arena (general chat), MTEB (embeddings), and internal evals (Langfuse + RAGAS) to auto-rank models for each task/tenant; apply cascade/routing ideas (FrugalGPT/RouteLLM) to minimise spend at equal quality.  ￼
+	4.	Retrieval stack validation (P0): keep hybrid BM25 + vectors; add SPLADE-v3 sparse encoder for resilient lexical recall; document MRR@10/NDCG@10 targets and test plan.  ￼
+	5.	Collaboration (P1): real-time co-editing via Yjs (WebSocket provider), with OT/CRDT conflict-free sync and presence.  ￼
 
-⸻
-
-Auto-Expert setup (concise)
-
-Task type: Architecture & delivery strategy.
-Personas & methods:
-	•	AI Platform Architect: reference designs; latency/cost/reliability budgeting; provider abstraction (LiteLLM/vLLM).
-	•	IR/RAG Scientist: retrieval design, hybrid search, graph-augmented RAG; eval via BEIR/MTEB, RAGAS/TruLens.
-	•	MLOps/SRE: CI/CD, SBOM, policy-as-code, telemetry (OTel/Prometheus/Loki), SLIs/SLOs.
-Pre-registered plan: audit → baseline → route+recommend → harden → scale. Evidence gates: ≥2 primary sources per key claim; frontier tools only.
+Below I lay out exactly how to implement, the quality gates, and the model-selection engine.
 
 ⸻
 
-A. Architecture you can stand up now (OSS-first)
+1) Enterprise hardening (finish & prove)
 
-Inference & provider abstraction
-	•	vLLM for high-throughput local serving (OpenAI-compatible server) for open-weights models; pair with TGI when you want HF’s Rust/gRPC stack and LoRA-merge workflows.  ￼
-	•	LiteLLM Proxy as the single OpenAI-compatible gateway across local vLLM/TGI, Together AI, HF Inference Providers, etc. (unified auth, cost tracking, fallbacks).  ￼
-	•	Model sources/benchmarks: dynamically reference LMSYS Chatbot Arena (pairwise Elo across millions of human votes) and Hugging Face Open LLM Leaderboard (H4) to seed priors for quality; use MTEB for embeddings.  ￼
-
-Retrieval & storage
-	•	Hybrid RAG: BM25 (OpenSearch) + dense (Qdrant) + optional GraphRAG (entity/relation memory via NebulaGraph) for complex, multi-hop queries.  ￼
-	•	Object storage: MinIO for S3-compatible document blobs, model artifacts and logs.  ￼
+OIDC (Keycloak)
+	•	Configure a “public” and “confidential” client (Auth Code + PKCE), map roles → StratMaster RBAC, and enable session introspection on the API gateway.  ￼
+Quality gate: login → token → API call → audit log round-trip captured in OTel traces and Langfuse spans.
 
 Observability & evaluation
-	•	Langfuse for tracing/evals; OpenTelemetry auto-instrumentation for FastAPI/requests; Prometheus + Grafana + Loki for SLIs (p50/p95 latency, TTFB, tokens/s, errors).  ￼
-	•	Quality eval: lm-evaluation-harness for general LLMs; RAGAS and TruLens for RAG faithfulness/groundedness.  ￼
+	•	OpenTelemetry auto-instrument FastAPI; export to OTLP collector. Use Langfuse for LLM traces (inputs/outputs, token counts, latency, cost), experiments, and evals.  ￼
+	•	Add RAGAS metrics (context precision/recall, faithfulness) to CI to catch regressions in retrieval/reasoning.  ￼
+Quality gate: dashboards show p50/p95 latency, tokens, cost per request, pass/fail on eval sets.
 
-Policy & guardrails
-	•	Microsoft Presidio for PII detection/redaction; Guardrails-AI for I/O validation and structured outputs (with OTel telemetry).  ￼
-
-Note on current repo context: StratMaster already lists many of these components (Qdrant, OpenSearch, NebulaGraph, MinIO, vLLM, Temporal, Langfuse, Keycloak, SearxNG). The plan below assumes continuity with that direction.  ￼
-
-⸻
-
-B. Intelligent model recommendation & routing (frontier-grade)
-
-Design goal: choose “the right model, first time” given task, constraints, and live telemetry.
-	1.	Signal layer
-	•	Inputs: task taxonomy (chat, code, extraction, RAG-answer), budget cap, latency SLO, privacy level; live metrics (avg/percentile latency, error rate, tokens/s, current provider limits), and leaderboard priors from LM Arena/H4 + local micro-bench scores.  ￼
-	2.	Policy layer (router)
-	•	Start simple with a cascade (cheap → strong → strongest). Then add learned routing using FrugalGPT/RouteLLM-style policies that predict quality vs. cost/latency and select a single model when confident. Keep a rule-based override for compliance/PII.  ￼
-	3.	Execution layer
-	•	Implement via LiteLLM Proxy model groups and cost caps; backends: local vLLM for open weights (e.g., Llama-family, Mixtral, Qwen-2.5/3) and remote providers (Together AI, HF Inference Providers) for burst or specialised tasks.  ￼
-	4.	Continuous calibration
-	•	Nightly micro-bench: route a stratified sample of your real prompts to a panel of candidate models; update a Bayesian utility score per task × model (uses Arena/H4 as prior, your evals as likelihood). Store in a model registry table used by the router.
+Export backends
+	•	Implement serverside Notion/Trello/Jira exporters with OAuth and webhooks; keep the existing UI. Start with:
+	•	Notion: pages & blocks (append children); databases for briefs.  ￼
+	•	Trello: create/update cards, lists, labels.  ￼
+	•	Jira Cloud: issues (create/search via JQL), transitions, links.  ￼
+Quality gate: dry-run preview matches final object; idempotent updates (re-runs don’t duplicate).
 
 ⸻
 
-C. Phased delivery plan with quality gates
+2) Model serving & routing (OSS-first, cloud-smart)
 
-Phase 0 — Baseline & hardening (2–3 sprints)
-	•	Stand up LiteLLM Proxy in front of vLLM/TGI and one remote provider.
-	•	Add Langfuse + OTel tracing, Prometheus/Loki metrics, and PII scrubbing with Presidio before persistence.
-	•	CI gates in GitHub Actions: unit+e2e (pytest), type-check, fmt/lint, SBOM via Syft + vuln scan via OSV-Scanner/Grype/Trivy, SLSA provenance on container builds. Targets: tests ≥ 85% critical paths; zero high vulns; p95 latency budget set per route.  ￼
+Gateway pattern
+	•	Deploy LiteLLM Proxy as the single OpenAI-compatible ingress (auth, rate-limits, budgets, request mirroring, provider fallbacks). Keep per-tenant model allowlists via config.  ￼
+	•	Attach local high-throughput backends:
+	•	vLLM for text/vision chat and embeddings (paged attention, batching, OpenAI-compatible server).  ￼
+	•	Hugging Face TGI for GPU-efficient generation and re-ranking (SSE streaming, metrics, guidance/JSON tooling).  ￼
+	•	Add cloud fallbacks/providers: Together AI (broad curated models) and HF Inference Endpoints (managed autoscaling + BYOM). Use LiteLLM provider adapters.  ￼
 
-Phase 1 — RAG excellence (2–4 sprints)
-	•	Hybrid retrievers (OpenSearch BM25 + Qdrant dense); add GraphRAG path for multi-hop questions; store chunk→entity provenance.
-	•	Eval gates: RAGAS faithfulness ≥ 0.75; answer similarity ≥ 0.80 (task-dependent); hallucination < 2%.  ￼
+Minimal config sketch (conceptual):
 
-Phase 2 — Routing & recommendations (2–4 sprints)
-	•	Implement cascade → learned router (Frugal/Route patterns). Budget-aware policies: “cost ceiling”, “latency ceiling”, “privacy required”.
-	•	Gate: router beats static best-single-model by ≥5% utility at ≤80% cost on your micro-bench.  ￼
-
-Phase 3 — Production polish (ongoing)
-	•	Add Temporal for long-running workflows; Keycloak for SSO; SearxNG for web research; capacity tests; canary deploys; autoscaling vLLM/TGI. (Aligns with repo direction.)
-
-⸻
-
-D. Concrete configs (starter skeletons)
-
-liteLLM proxy (model groups & caps)
-
-# litellm_config.yaml
-general_settings:
-  telemetry: true
+# litellm proxy
 model_list:
-  - model_name: open-llm.local.high_throughput
-    litellm_params: { model: "meta-llama/Meta-Llama-3-70B-Instruct", api_base: "http://vllm:8000/v1" }
-  - model_name: together.qwen72b
-    litellm_params: { model: "qwen/qwen2.5-72b-instruct", api_base: "https://api.together.xyz/v1" }
+  - model_name: chat-default        # alias used by StratMaster
+    litellm_params: { model: openai/llama-3.1-8b-instruct, api_base: http://vllm:8000/v1 }
+  - model_name: chat-premium
+    litellm_params: { model: huggingface/tgi/Meta-Llama-3-70B-Instruct, api_base: http://tgi:8080 }
+  - model_name: embed-default
+    litellm_params: { model: text-embedding-3-large, api_base: http://vllm:8000/v1 }
+  - model_name: cloud-fallback
+    litellm_params: { model: together_ai/meta-llama/Meta-Llama-3-70B-Instruct-Turbo }
 routing:
-  budget_usd_per_req: 0.05
-  latency_ms_p95: 1500
-  privacy: "allow_open"   # or "require_open_weights_local"
+  rules:
+    - when: {task: "embed"} use: embed-default
+    - when: {tenant: "regulated"} prefer: chat-premium fallback: cloud-fallback
+    - when: {cost_surge: true} prefer: chat-default
 
-OTel + Langfuse (Python)
-
-from langfuse.openai import openai
-openai.api_key = "env"
-openai.base_url = "http://litellm:4000"  # proxy
-# Langfuse keys via env; OTel autoinstrument fastapi/requests
-
-(See docs for vLLM OpenAI-compatible server, Langfuse OpenAI wrappers, and OTel FastAPI/requests instrumentation.)  ￼
+Quality gates
+	•	p50 end-to-end gateway overhead < 5 ms; no single provider outage affects >20% traffic thanks to fallbacks. (Model compute latency is separate.)  ￼
 
 ⸻
 
-E. SLIs/SLOs & “quality gates” to enforce in CI/CD
-	•	Latency: p95 < 1.5s for simple prompts; < 3s for RAG answers.
-	•	Stability: error rate < 0.5%; no provider 5xx bursts > 2 min.
-	•	RAG quality: faithfulness ≥ 0.75; grounded citations ≥ 0.9 coverage.
-	•	Security: 0 high CVEs; SBOM generated per build; SLSA provenance attached.  ￼
+3) AI-assisted Model Recommendation Engine
+
+Signals we combine
+	•	External leaderboards: LMSYS Arena for chat-general performance; MTEB for embeddings.  ￼
+	•	Internal evals: Langfuse experiments + RAGAS on StratMaster tasks; cost & latency telemetry from gateway; user feedback (HITL accept/escalate).  ￼
+
+Routing policy (learned + rules)
+	•	Start with a two-stage cascade (cheap → strong) per FrugalGPT/RouteLLM: try a small/quantised local model; escalate to a larger model on low confidence or policy triggers (safety, critical brief). (We implement the idea, not the exact paper code.)
+	•	Confidence comes from: retrieval coverage (RAGAS context recall), self-consistency (vote among 2–3 cheap models), and task heuristics (doc length, tool-use required).  ￼
+
+Ranking & selection loop
+	•	Nightly job recomputes a scorecard per model: utility = quality_z - λ·cost - μ·latency, using latest internal evals, then updates LiteLLM config and feature flags.
+	•	Human override: per-tenant allow/deny and preferred families (e.g., “open-weights only”).
+	•	Display provenance: which models were tried, costs, and why we escalated (Langfuse spans).
+
+Why this is credible
+	•	LiteLLM already supports multi-provider routing/fallbacks and cost tracking. vLLM/TGI give us on-prem throughput and OpenAI-compatibility. Langfuse+RAGAS give continuous, dataset-level evidence.  ￼
 
 ⸻
 
-Risks & unknowns
-	•	GitHub web rendering blocked me from reading Upgrade.md directly; I proceeded from the root README and your stated direction. Paste key “open items” if you want me to thread them into this plan immediately.  ￼
-	•	Vendor-benchmark drift is constant; that’s why the router leans on live micro-bench + Arena/H4 priors rather than static picks.  ￼
+4) Retrieval & reasoning performance (prove it)
+
+Hybrid retrieval
+	•	Keep BM25 + vectors and add SPLADE-v3 (sparse lexical expansion) to improve OOD recall and robustness; index SPLADE vectors in OpenSearch’s inverted index and fuse with dense scores (RRF or weighted sum).  ￼
+Benchmarks
+	•	Report NDCG@10/MRR@10 on BEIR-like splits; log per-query contribution to downstream task accuracy (brief correctness).
+	•	Accept if: +≥10% NDCG@10 vs BM25+dense alone, no >15% latency hit at p95.
 
 ⸻
 
-Next 10 implementation tickets (sequenced)
-	1.	Bring up vLLM and LiteLLM Proxy; wire to Together + HF Inference Providers; smoke tests.  ￼
-	2.	Add Langfuse tracing + OTel auto-instrumentation; dashboards for p50/p95, TTFB, error classes.  ￼
-	3.	Stand up Prometheus/Loki/Grafana; export metrics & logs.  ￼
-	4.	Wire Presidio pre-persistence; add Guardrails-AI schema/regex/semantic checks.  ￼
-	5.	Hybrid RAG: OpenSearch BM25 + Qdrant; chunking+metadata pipeline to MinIO.  ￼
-	6.	Add GraphRAG flow with NebulaGraph for entity-centric reasoning.
-	7.	Bake lm-eval-harness nightly; integrate RAGAS/TruLens checks into CI.  ￼
-	8.	Implement policy cascade; log all routing decisions to Langfuse.  ￼
-	9.	Train a simple RouteLLM-style classifier on your prompts; enable learned routing with fallback to rules.  ￼
-	10.	Supply-chain: Syft SBOM + Grype/Trivy + OSV-Scanner, SLSA attestation in Actions.  ￼
+5) Real-time collaboration (deliver quickly, safely)
+	•	Use Yjs with y-websocket provider; store updates in Postgres or Redis via y-redis; add awareness (cursors, presence). Proven CRDT engine with editor bindings (TipTap/ProseMirror/CodeMirror).  ￼
+	•	Quality gates: <150 ms echo latency on LAN; conflict-free merges in multi-tab torture tests.
 
 ⸻
 
-Provenance (strong-rec block)
+6) Concrete performance & quality gates (go/no-go)
+	•	Gateway overhead: p50 < 5 ms, p95 < 15 ms (LiteLLM proxy).  ￼
+	•	Routing decision time: p50 < 20 ms (metadata-only policy + cached model table).
+	•	RAG metrics: RAGAS faithfulness ≥ 0.8 on internal set; context precision/recall ≥ 0.7.  ￼
+	•	Retrieval: +≥10% NDCG@10 vs current baseline after SPLADE-v3 fusion.  ￼
+	•	Observability: 100% of LLM calls traced in Langfuse; per-tenant cost dashboards.  ￼
+	•	Exports: brown-field idempotency (re-runs update, not duplicate).
+	•	Security: OIDC auth flows pass; roles enforced in API; audit events captured end-to-end.  ￼
 
-Data: Official docs for vLLM/TGI, LiteLLM, Qdrant/OpenSearch/NebulaGraph/MinIO; Langfuse/OTel/Prometheus/Loki; Presidio/Guardrails; LM Arena & H4 leaderboards; FrugalGPT/RouteLLM routing research; StratMaster repo overview.
-Methods: Lateral reading; prefer primary documentation and peer-review/preprint sources for routing; avoid vendor claims for speed unless corroborated.
-Key results: OpenAI-compatible local serving (vLLM/TGI) + LiteLLM gives unified API; hybrid RAG + GraphRAG improves complex Q/A; Langfuse+OTel enables measurable SLIs; Frugal/Route-style policies justify dynamic routing; leaderboards supply priors while nightly micro-bench supplies local evidence.  ￼
-Uncertainty: Leaderboards are imperfect proxies; provider SLAs/quotas shift; eval metrics can mis-rank models without task-matched datasets.
-Safer alternative: Freeze a vetted “golden trio” (e.g., local Llama-3 70B, Mixtral 8×7B, remote Qwen-2.5 72B) behind manual switches, then graduate to learned routing.  ￼
+⸻
+
+7) Implementation plan (4 weeks to “frontier-ready”)
+
+Week 1 – Platform glue (P0)
+	•	Deploy LiteLLM Proxy + vLLM/TGI; wire OpenAI-compatible base URLs in StratMaster. Enable spend tracking & per-tenant keys.  ￼
+	•	Add OTel FastAPI instrumentation; deploy Langfuse (self-host or cloud). Start logging all LLM calls.  ￼
+	•	Ship Notion/Trello/Jira minimal exporters (create/update); gate behind feature flags.  ￼
+
+Week 2 – Evaluation & routing (P0)
+	•	Build RAGAS CI job with golden data; integrate Langfuse Experiments for offline A/B on prompts/models.  ￼
+	•	Implement routing policy module (cheap→strong cascade + rules) and feedback capture (HITL accept/escalate tags feed learning).
+
+Week 3 – Retrieval uplift (P0)
+	•	Train/plug SPLADE-v3 encoder; index in OpenSearch (sparse) and fuse with dense/Qdrant where applicable; run BEIR-style suite and ship report.  ￼
+
+Week 4 – Collaboration & compliance (P1)
+	•	Add Yjs collab for tri-pane editor (presence, cursors, undo/redo); run load test.  ￼
+	•	Complete OIDC edge cases; finalize audit dashboards.
+
+⸻
+
+8) Notes on the “<20 ms” claim
+
+It’s reasonable for a router decision (metadata + cache) to be <20 ms at p50. It is not a sensible target for end-to-end LLM responses (token generation dominates). We’ll publish: (a) proxy overhead, (b) route-decision time, and (c) model time separately to avoid metric theatre.
+
+⸻
+
+9) Risks & mitigations
+	•	Provider drift / outages: use LiteLLM fallback order and health checks; mirror critical prompts/models locally via vLLM/TGI.  ￼
+	•	Benchmark mismatch: combine public leaderboards (LMSYS/MTEB) with our task evals; internal evals win ties.  ￼
+	•	Retrieval regressions: RAGAS in CI with thresholds; rollbacks via feature flags.  ￼
+
+⸻
+
+Evidence-Gated Protocol (for the strong recs)
+
+Data → Official docs for LiteLLM Proxy (OpenAI-compatible multi-provider gateway), vLLM OpenAI server, HF TGI/Inference Endpoints, OTel FastAPI, Langfuse observability/evals, RAGAS metrics, Yjs CRDT, SPLADE-v3 sparse retrieval, and Notion/Trello/Jira APIs.  ￼
+Methods → OSS gateway with model fallbacks; nightly scorecards from Langfuse+RAGAS; retrieval fusion with SPLADE; CRDT-based collaboration; OIDC on Keycloak.
+Key results → One API for all models/providers; observable cost/latency; automatic routing that optimises for utility; measured retrieval uplift; real-time co-editing.
+Uncertainty → Public leaderboards aren’t identical to your use-cases; SPLADE gains vary by corpus; Together/HF endpoint pricing/limits change.
+Safer alternative → If you want lowest implementation risk now, ship gateway + observability + minimal exporters and postpone SPLADE/collab until after the first enterprise pilot.
+
+⸻
+
+Where to extend next (after 4 weeks)
+	•	Add re-rankers in vLLM/TGI (Cohere-compatible rerank API in vLLM) for long-doc accuracy.  ￼
+	•	Integrate arena-style side-by-side human evals for strategy briefs (small internal “Arena”).  ￼
+	•	Optional: evented pipelines with a workflow engine (Temporal) for heavy jobs; keep core API sync for UX.
+	•	Desktop (Tauri) can remain low priority until web usage hardens.
