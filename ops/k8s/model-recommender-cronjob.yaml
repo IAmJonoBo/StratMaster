@@ -1,0 +1,120 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: model-recommender-refresh
+  namespace: stratmaster
+  labels:
+    app: stratmaster
+    component: model-recommender
+    version: v2
+spec:
+  # Run every night at 2:00 AM UTC
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: stratmaster
+            component: model-recommender-job
+            version: v2
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: model-recommender-refresh
+            image: stratmaster/router-mcp:latest
+            imagePullPolicy: IfNotPresent
+            command:
+            - python
+            - -m
+            - router_mcp.refresh_models
+            env:
+            - name: ENABLE_MODEL_RECOMMENDER_V2
+              value: "true"
+            - name: LOG_LEVEL
+              value: "INFO"
+            # Add secrets for external APIs if needed
+            - name: LMSYS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: model-recommender-secrets
+                  key: lmsys-api-key
+                  optional: true
+            - name: HUGGINGFACE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: model-recommender-secrets
+                  key: huggingface-api-key
+                  optional: true
+            - name: LANGFUSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: public-key
+                  optional: true
+            - name: LANGFUSE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secrets
+                  key: secret-key
+                  optional: true
+            - name: LANGFUSE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: stratmaster-config
+                  key: langfuse-host
+                  optional: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+            # Liveness probe to ensure job doesn't hang
+            livenessProbe:
+              exec:
+                command:
+                - /bin/sh
+                - -c
+                - "ps aux | grep '[p]ython.*refresh_models' || exit 1"
+              initialDelaySeconds: 30
+              periodSeconds: 60
+              timeoutSeconds: 10
+              failureThreshold: 3
+          # Cleanup completed jobs after 3 days
+          activeDeadlineSeconds: 3600  # 1 hour timeout
+  # Keep last 3 successful and 1 failed job
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: model-recommender-secrets
+  namespace: stratmaster
+  labels:
+    app: stratmaster
+    component: model-recommender
+type: Opaque
+data:
+  # Base64 encoded secrets - replace with actual values
+  # lmsys-api-key: <base64-encoded-key>
+  # huggingface-api-key: <base64-encoded-key>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-recommender-config
+  namespace: stratmaster
+  labels:
+    app: stratmaster
+    component: model-recommender
+data:
+  refresh-schedule: "0 2 * * *"
+  cache-ttl-hours: "24"
+  timeout-seconds: "300"
+  max-retries: "3"
+  # External API endpoints
+  lmsys-arena-url: "https://raw.githubusercontent.com/lm-sys/FastChat/main/fastchat/serve/monitor/elo_results_20240101.json"
+  mteb-leaderboard-url: "https://huggingface.co/api/datasets/mteb/results/parquet/default/train/0.parquet"

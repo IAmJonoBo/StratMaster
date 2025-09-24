@@ -23,6 +23,7 @@ from .models import (
     RerankResult,
 )
 from .providers import ProviderAdapter
+from .model_recommender import ModelRecommender, is_model_recommender_v2_enabled
 
 
 class RouterService:
@@ -31,6 +32,21 @@ class RouterService:
         self.policy = config.policy
         self.decoding_cfg = config.structured_decoding
         self._provider_cache: dict[tuple[str, str, str, str], ProviderAdapter] = {}
+        
+        # Initialize model recommender if V2 is enabled
+        self.model_recommender = None
+        if is_model_recommender_v2_enabled():
+            try:
+                self.model_recommender = ModelRecommender()
+            except Exception as e:
+                # Log but don't fail startup if recommender fails to initialize
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to initialize model recommender: {e}")
+    
+    def get_model_recommender(self) -> ModelRecommender | None:
+        """Get the model recommender instance."""
+        return self.model_recommender
 
     # ------------------------------------------------------------------
     # Public API
