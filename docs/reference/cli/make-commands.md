@@ -301,13 +301,13 @@ make dev.logs
 - Real-time log streaming
 - Use Ctrl+C to exit
 
-### Phase 2 Production Features
+### Monitoring & Telemetry Services
 
-#### `make phase2.up`
-Start Phase 2 monitoring services.
+#### `make monitoring.up`
+Start monitoring services (Prometheus, Grafana).
 
 ```bash
-make phase2.up
+make monitoring.up
 ```
 
 **What it does:**
@@ -319,11 +319,11 @@ make phase2.up
 - **Grafana**: http://localhost:3001 (admin/admin)
 - **Prometheus**: http://localhost:9090
 
-#### `make phase2.full`
-Start complete Phase 2 stack.
+#### `make monitoring.full`
+Start complete monitoring stack with collaboration and ML services.
 
 ```bash
-make phase2.full
+make monitoring.full
 ```
 
 **What it does:**
@@ -335,23 +335,23 @@ make phase2.full
 - **Real-time collaboration**: ws://localhost:8084/ws
 - **Constitutional ML API**: http://localhost:8085
 
-#### `make phase2.down`
-Stop Phase 2 services.
+#### `make monitoring.down`
+Stop monitoring services.
 
 ```bash
-make phase2.down
+make monitoring.down
 ```
 
-#### `make phase2.status`
-Check Phase 2 service status.
+#### `make monitoring.status`
+Check monitoring service status.
 
 ```bash
-make phase2.status
+make monitoring.status
 ```
 
 **Example output:**
 ```
-📊 Phase 2 Service Status
+📊 Monitoring Service Status
 ========================
 NAME                  COMMAND              STATUS
 prometheus            /bin/prometheus      Up 2 minutes
@@ -381,21 +381,21 @@ Start ML training and constitutional AI services.
 make ml.up
 ```
 
-#### `make dev.phase2`
-Complete development environment with Phase 2 features.
+#### `make dev.monitoring`
+Complete development environment with monitoring features.
 
 ```bash
-make dev.phase2
+make dev.monitoring
 ```
 
 **What it does:**
-- Combines `dev.up` and `phase2.up`
+- Combines `dev.up` and `monitoring.up`
 - Provides comprehensive development environment
 - Shows service URLs and credentials
 
 **Example output:**
 ```
-🎉 Full development environment with Phase 2 features ready!
+🎉 Full development environment with monitoring features ready!
 
 Available services:
   - API: http://localhost:8080
@@ -761,7 +761,7 @@ make test.load.dry        # Simulate load testing
 | **Environment** | `bootstrap`, `clean`, `setup` | Setup and cleanup |
 | **Testing** | `test`, `test-fast`, `test-docker`, `test.*` | Quality assurance |
 | **Development** | `api.run`, `*-mcp.run`, `lint`, `format` | Active development |
-| **Infrastructure** | `dev.up/down`, `phase2.*`, `health-check` | Service management |
+| **Infrastructure** | `dev.up/down`, `monitoring.*`, `health-check` | Service management |
 | **Dependencies** | `lock`, `deps.*`, `assets.*` | Dependency management |
 | **Security** | `security.*`, `accessibility.*` | Security and compliance |
 | **Indexing** | `index.colbert`, `index.splade` | Search index building |
@@ -772,7 +772,7 @@ make test.load.dry        # Simulate load testing
 ```bash
 # Start development session
 make bootstrap          # First time only
-make dev.phase2        # Start full environment
+make dev.monitoring        # Start full environment
 make test              # Validate current state
 
 # During development

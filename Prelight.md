@@ -4,7 +4,7 @@ You are Codex working inside the StratMaster monorepo.
 Your job is to: (1) inventory the current state, (2) perform a repository-aware gap analysis against frontier standards, (3) generate precise PRs to close gaps, and (4) scaffold tests, evals, and UX so the system produces insightful, usable, decision-grade strategies on/offline with zero-cost OSS defaults.
 
 1) Grounding (read these first, then explore code)
-	•	Root docs: README.md, PROJECT.md (engineering blueprint), ALPHA_READINESS_SUMMARY.md, IMPLEMENTATION_SUMMARY.md, PHASE3_GAP_ANALYSIS.md, ENHANCED_IMPLEMENTATION.md, EXPERTISE_MCP_IMPLEMENTATION.md.  ￼
+	•	Root docs: README.md, PROJECT.md (engineering blueprint), ALPHA_READINESS_SUMMARY.md, IMPLEMENTATION_SUMMARY.md, GAP_ANALYSIS.md, ENHANCED_IMPLEMENTATION.md, EXPERTISE_MCP_IMPLEMENTATION.md.  ￼
 	•	Source layout hints: apps/web, packages/* (api, orchestrator, agents, research, knowledge, evals, mcp-servers, providers), helm/, docker/, ops/, infra/, configs/*, tests/*, seeds/*.  ￼
 	•	Quick-start & service map are defined in root docs (compose + URLs). Use them when running local checks.  ￼
 
@@ -25,8 +25,8 @@ Your job is to: (1) inventory the current state, (2) perform a repository-aware 
 	1.	Repo-aware Gap Analysis → docs/gap-analysis.md
 	•	Sections: Ingestion/Research, Knowledge Fabric, Retrieval, Reasoning, Orchestration, Evals/Obs, Security/Compliance, UX/UI/UID, DX/Ops, Offline/Edge.
 	•	For each: current state → gap → OSS-first fix → acceptance criteria → risks/mitigations.
-	2.	Upgrade Plan & Sprints → docs/upgrade-plan.md
-	•	90-day roadmap split into Sprints 0–5 with DoD/quality gates, risk burn-down, and rollback.
+	2.	Upgrade Plan & Milestones → docs/upgrade-plan.md
+	•	90-day roadmap split into Milestones 1–6 with DoD/quality gates, risk burn-down, and rollback.
 	•	Include a low-spec mode (CPU-only, quantised models) and self-contained offline seed.
 	3.	PR-ready diffs (as fenced diff blocks + file paths):
 	•	PR-A Ingestion+Parsing: OCR & multi-format pipeline (Unstructured, Tika, pdfplumber, docTR/Tesseract, Camelot, tablib) + “Confidence & Clarify” pass (ask questions when confidence < 0.7).

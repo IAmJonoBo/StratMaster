@@ -463,14 +463,14 @@ PR checklist (reviewers/Gate):
 
 ---
 
-## 21) Roadmap checkpoints (initial sprints)
+## 21) Roadmap checkpoints (development milestones)
 
-- Sprint 0: Scaffold repo, compose stack, Helm skeleton, configs stubs
-- Sprint 1: API contracts + research-mcp + crawler + provenance
-- Sprint 2: Knowledge fabric (Qdrant/OpenSearch/NebulaGraph) + hybrid orchestrator + ColBERT/SPLADE indexing + BGE reranking
-- Sprint 3: Agents (LangGraph) + debate/constitution + eval gates wiring + CoVe verification + DSPy compilation
-- Sprint 4: UI tri‑pane shells + observability dashboards + seeds/evals
-- Sprint 5: Structured decoding everywhere; LLMLingua compression; retrieval diagnostics dashboards; FActScore/TruthfulQA suites.
+- Milestone 1: Scaffold repo, compose stack, Helm skeleton, configs stubs
+- Milestone 2: API contracts + research-mcp + crawler + provenance
+- Milestone 3: Knowledge fabric (Qdrant/OpenSearch/NebulaGraph) + hybrid orchestrator + ColBERT/SPLADE indexing + BGE reranking
+- Milestone 4: Agents (LangGraph) + debate/constitution + eval gates wiring + CoVe verification + DSPy compilation
+- Milestone 5: UI tri‑pane shells + observability dashboards + seeds/evals
+- Milestone 6: Structured decoding everywhere; LLMLingua compression; retrieval diagnostics dashboards; FActScore/TruthfulQA suites.
 
 ---
 

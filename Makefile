@@ -78,10 +78,10 @@ test-fast:
         PYTHONPATH=packages/api/src:packages/mcp-servers/research-mcp/src python3 -m pytest -q
 
 index.colbert:
-        PYTHONPATH=packages/retrieval/colbert/src python -m colbert.index build --config configs/retrieval/colbert.yaml
+        PYTHONPATH=packages/retrieval/src/colbert/src python -m colbert.index build --config configs/retrieval/colbert.yaml
 
 index.splade:
-        PYTHONPATH=packages/retrieval/splade/src python -m splade.index build --config configs/retrieval/splade.yaml
+        PYTHONPATH=packages/retrieval/src/splade/src python -m splade.index build --config configs/retrieval/splade.yaml
 
 # Run tests in Docker to avoid local Python/Conda interference
 test-docker:
@@ -104,33 +104,33 @@ lock-upgrade:
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
 
-# Phase 2 Implementation - Production telemetry and monitoring
-.PHONY: phase2.up phase2.down phase2.status telemetry.up collaboration.up ml.up
+# Monitoring and telemetry services
+.PHONY: monitoring.up monitoring.down monitoring.status telemetry.up collaboration.up ml.up
 
-# Start Phase 2 services (monitoring, telemetry)
-phase2.up:
-	@echo "🚀 Starting Phase 2 services (monitoring, telemetry)"
+# Start monitoring services (telemetry and analytics)
+monitoring.up:
+	@echo "🚀 Starting monitoring services (telemetry, analytics)"
 	docker compose up -d prometheus grafana
 	@echo "✅ Grafana available at: http://localhost:3001 (admin/admin)"
 	@echo "✅ Prometheus available at: http://localhost:9090"
 
-# Start full Phase 2 stack including collaboration and ML
-phase2.full:
-	@echo "🚀 Starting full Phase 2 stack"
+# Start full monitoring stack including collaboration and ML
+monitoring.full:
+	@echo "🚀 Starting full monitoring stack"
 	docker compose --profile collaboration --profile ml up -d
 	@echo "✅ Real-time collaboration available at: ws://localhost:8084/ws"
 	@echo "✅ Constitutional ML API available at: http://localhost:8085"
 
-# Stop Phase 2 services
-phase2.down:
-	@echo "🛑 Stopping Phase 2 services"
+# Stop monitoring services
+monitoring.down:
+	@echo "🛑 Stopping monitoring services"
 	docker compose stop prometheus grafana constitutional-bert collaboration-ws
 
-# Check Phase 2 service status
-phase2.status:
-	@echo "📊 Phase 2 Service Status"
+# Check monitoring service status
+monitoring.status:
+	@echo "📊 Monitoring Service Status"
 	@echo "========================"
-	@docker compose ps prometheus grafana constitutional-bert collaboration-ws 2>/dev/null || echo "No Phase 2 services running"
+	@docker compose ps prometheus grafana constitutional-bert collaboration-ws 2>/dev/null || echo "No monitoring services running"
 
 # Start only telemetry services
 telemetry.up:
@@ -147,9 +147,9 @@ ml.up:
 	@echo "🧠 Starting ML services"
 	docker compose --profile ml up -d constitutional-bert
 
-# Development helpers for Phase 2
-dev.phase2: dev.up phase2.up
-	@echo "🎉 Full development environment with Phase 2 features ready!"
+# Development helpers for monitoring stack
+dev.monitoring: dev.up monitoring.up
+	@echo "🎉 Full development environment with monitoring features ready!"
 	@echo ""
 	@echo "Available services:"
 	@echo "  - API: http://localhost:8080"
@@ -302,3 +302,10 @@ test.advanced.dry:
 test.load.dry:
 	@echo "🔍 Dry run: Load testing"
 	.venv/bin/python scripts/advanced_testing.py --dry-run load-test
+
+# Backward compatibility aliases (deprecated - use monitoring.* targets)
+phase2.up: monitoring.up
+phase2.down: monitoring.down
+phase2.status: monitoring.status
+phase2.full: monitoring.full
+dev.phase2: dev.monitoring

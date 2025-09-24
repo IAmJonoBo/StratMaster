@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Sprint 0 - Tracing validation script.
+API Tracing validation script.
 
-This script tests that OTEL traces are being generated correctly for Sprint 0 deliverables.
+This script tests that OTEL traces are being generated correctly for core API deliverables.
 """
 
 import asyncio
@@ -116,7 +116,7 @@ def test_langfuse_integration():
 async def main():
     """Run all tracing tests."""
     print("=" * 50)
-    print("    Sprint 0 - Tracing Validation")  
+    print("    Core API - Tracing Validation")  
     print("=" * 50)
     print()
     
@@ -146,11 +146,11 @@ async def main():
     if tests_passed == total_tests:
         print("🎉 ALL TRACING TESTS PASSED!")
         print()
-        print("Sprint 0 tracing deliverables validated:")
+        print("Core API tracing deliverables validated:")
         print("✅ OTEL traces are being generated")
         print("✅ X-Trace-Id headers are added to responses")
         print("✅ Langfuse integration is ready (when configured)")
-        print("✅ Span names match Sprint 0 specification:")
+        print("✅ Span names match Core API specification:")
         print("   - agent:call")
         print("   - debate:start")
         print("   - retrieval:hybrid")

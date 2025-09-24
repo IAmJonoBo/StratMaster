@@ -34,9 +34,9 @@ jobs:
       - name: Install retrieval/reranker test extras for Python 3.12
         if: matrix.python-version == '3.12'
         run: |
-          pip install -e packages/retrieval/splade[test-cli] \
-                      -e packages/retrieval/colbert[test-cli] \
-                      -e packages/rerankers/bge[test-cli]
+          pip install -e packages/retrieval/src/splade[test-cli] \
+                      -e packages/retrieval/src/colbert[test-cli] \
+                      -e packages/rerankers/src/bge[test-cli]
       - name: Run pytest if present
         run: |
           pip install pytest
