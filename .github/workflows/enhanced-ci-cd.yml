@@ -21,10 +21,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
@@ -49,7 +49,7 @@ jobs:
         echo "health_status=$(jq -r '.overall_status' health_report.json)" >> $GITHUB_OUTPUT
         
     - name: Upload health report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: health-report-${{ github.run_number }}
@@ -63,7 +63,7 @@ jobs:
         python scripts/self_healing.py analyze --auto-heal --output healing_report.json
         
     - name: Upload healing report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: steps.health_check.outputs.health_status == 'critical'
       with:
         name: healing-report-${{ github.run_number }}
@@ -83,10 +83,10 @@ jobs:
       
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         
@@ -127,7 +127,7 @@ jobs:
         python scripts/system_health_monitor.py report --format json --output build_report_py${{ matrix.python-version }}.json
         
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: build-report-py${{ matrix.python-version }}-${{ github.run_number }}
@@ -142,10 +142,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
@@ -172,7 +172,7 @@ jobs:
         python scripts/system_health_monitor.py check --dependencies-only > security_report_after.json
         
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports-${{ github.run_number }}
@@ -188,10 +188,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
@@ -221,7 +221,7 @@ jobs:
         
     - name: Create pull request for dependency updates
       if: steps.dep_check.outputs.updates_available == 'true'
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "chore: update dependencies [automated]"
@@ -255,10 +255,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
@@ -281,7 +281,7 @@ jobs:
         python scripts/system_health_monitor.py report --format json --output deployment_readiness.json
         
     - name: Upload deployment artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-readiness-${{ github.run_number }}
         path: |
@@ -304,10 +304,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
@@ -334,7 +334,7 @@ jobs:
         EOF
         
     - name: Upload monitoring configuration
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: monitoring-config-${{ github.run_number }}
         path: |
@@ -352,10 +352,10 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
@@ -395,7 +395,7 @@ jobs:
         EOF
         
     - name: Upload failure artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: failure-recovery-${{ github.run_number }}
         path: |
@@ -405,7 +405,7 @@ jobs:
         
     - name: Create issue for manual review
       if: github.ref == 'refs/heads/main'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
           github.rest.issues.create({
