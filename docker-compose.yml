@@ -72,17 +72,97 @@ services:
           action: sync
           target: /app
 
+  # LiteLLM Proxy - OSS-first model gateway with cloud fallbacks
+  litellm-proxy:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "8090:4000"  # LiteLLM default port
+    environment:
+      PYTHONUNBUFFERED: "1"
+      # LiteLLM configuration
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-1234}
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/litellm
+      # OpenTelemetry integration 
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      # External API keys for cloud fallbacks
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY:-}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY:-}
+      # Redis for caching and performance (<20ms routing target)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./configs/litellm-proxy.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # vLLM - Local high-throughput text/vision chat and embeddings
+  vllm:
+    image: vllm/vllm-openai:latest
+    ports:
+      - "8091:8000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    command: [
+      "--model", "meta-llama/Llama-3.1-8B-Instruct",
+      "--served-model-name", "llama-3.1-8b-instruct",
+      "--host", "0.0.0.0",
+      "--port", "8000",
+      "--max-model-len", "8192",
+      "--disable-log-requests"
+    ]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # TGI - GPU-efficient generation and re-ranking
+  tgi:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    ports:
+      - "8092:8080"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      MODEL_ID: meta-llama/Meta-Llama-3-70B-Instruct
+      MAX_INPUT_LENGTH: "4096"
+      MAX_TOTAL_TOKENS: "8192"
+      PORT: "8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
   router-mcp:
     build: ./packages/mcp-servers/router-mcp
     ports:
       - "8083:8083"
     environment:
       PYTHONUNBUFFERED: "1"
-      ROUTER_MCP_PROVIDER: local
-      ROUTER_MCP_COMPLETION_MODEL: mixtral-8x7b
-      ROUTER_MCP_EMBEDDING_MODEL: bge-small
+      # Update to use LiteLLM proxy as primary backend
+      ROUTER_MCP_PROVIDER: litellm
+      ROUTER_MCP_BASE_URL: http://litellm-proxy:4000
+      ROUTER_MCP_API_KEY: ${LITELLM_MASTER_KEY:-sk-1234}
+      ROUTER_MCP_COMPLETION_MODEL: chat-default
+      ROUTER_MCP_EMBEDDING_MODEL: embed-default
       ROUTER_MCP_RERANK_MODEL: bge-reranker-large
       ROUTER_MCP_TEMPERATURE: "0.2"
+    depends_on:
+      litellm-proxy:
+        condition: service_healthy
     develop:
       watch:
         - path: ./packages/mcp-servers/router-mcp
