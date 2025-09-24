@@ -145,7 +145,7 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 
 
 class TracingMiddleware(BaseHTTPMiddleware):
-    """Middleware to add trace ID headers and OTEL spans for Sprint 0."""
+    """Middleware to add trace ID headers and OTEL spans."""
     
     async def dispatch(self, request: Request, call_next):
         # Generate or extract trace ID
