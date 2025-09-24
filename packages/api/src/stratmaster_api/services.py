@@ -727,66 +727,122 @@ class OrchestratorService:
         self, tenant_id: str, payload: dict[str, Any]
     ) -> dict[str, Any]:
         """Create a predictive forecast with model performance metrics."""
-        from datetime import datetime
-        import random
+        import asyncio
+        from .predictive import create_forecast
         
-        forecast_id = f"forecast-{uuid4().hex[:8]}"
-        created_at = datetime.now(UTC).isoformat()
-        
-        # Extract request parameters
-        forecast_type = payload.get("forecast_type", "sales")
-        variables = payload.get("variables", ["revenue"])
+        # Extract parameters
+        forecast_type = payload.get("forecast_type", "usage")
+        horizon = payload.get("horizon", "monthly")  
+        variables = payload.get("variables", ["value"])
         confidence_intervals = payload.get("confidence_intervals", [50, 80, 95])
         
-        # Generate predictions for each variable
-        predictions = []
-        for variable in variables:
-            # Simple forecast simulation with confidence intervals
-            base_value = random.uniform(100, 1000)
-            prediction = {
-                "variable": variable,
-                "predicted_value": round(base_value, 2),
-                "confidence_intervals": {}
+        # Generate forecast using predictive engine
+        try:
+            # Run async function in sync context
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            forecast_result = loop.run_until_complete(
+                create_forecast(
+                    tenant_id=tenant_id,
+                    forecast_type=forecast_type,
+                    horizon=horizon,
+                    variables=variables,
+                    confidence_intervals=confidence_intervals
+                )
+            )
+            loop.close()
+            
+            # Create core forecast object for compatibility
+            if forecast_result["predictions"]:
+                first_prediction = forecast_result["predictions"][0]
+                metric = Metric(
+                    id=f"metric-{forecast_result['forecast_id']}", 
+                    name=variables[0], 
+                    definition=forecast_type
+                )
+                
+                # Convert predictions to forecast intervals
+                intervals = []
+                for ci in confidence_intervals:
+                    ci_key = f"{ci}%"
+                    if ci_key in first_prediction.get("confidence_intervals", {}):
+                        lower, upper = first_prediction["confidence_intervals"][ci_key]
+                        intervals.append(ForecastInterval(
+                            confidence=ci,
+                            lower=lower,
+                            upper=upper
+                        ))
+                
+                core_forecast = Forecast(
+                    id=forecast_result["forecast_id"],
+                    metric=metric,
+                    point_estimate=first_prediction["value"],
+                    intervals=intervals,
+                    horizon_days=forecast_result["horizon_days"],
+                )
+                
+                forecast_result["forecast"] = core_forecast
+            
+            return forecast_result
+            
+        except Exception as e:
+            # Fallback to original random implementation on error
+            from datetime import datetime
+            import random
+            
+            forecast_id = f"forecast-{uuid4().hex[:8]}"
+            created_at = datetime.now(UTC).isoformat()
+            
+            # Generate simple predictions
+            predictions = []
+            for variable in variables:
+                base_value = random.uniform(100, 1000)
+                prediction = {
+                    "variable": variable,
+                    "predicted_value": round(base_value, 2),
+                    "confidence_intervals": {}
+                }
+                
+                for ci in confidence_intervals:
+                    margin = base_value * (1 - ci/100) * 0.5
+                    prediction["confidence_intervals"][f"{ci}%"] = [
+                        round(base_value - margin, 2),
+                        round(base_value + margin, 2)
+                    ]
+                
+                predictions.append(prediction)
+            
+            # Mock performance metrics
+            model_performance = {
+                "accuracy": round(random.uniform(0.75, 0.95), 3),
+                "mae": round(random.uniform(0.05, 0.15), 3),
+                "rmse": round(random.uniform(0.08, 0.20), 3),
+                "r_squared": round(random.uniform(0.70, 0.90), 3),
+                "fallback": True
             }
             
-            for ci in confidence_intervals:
-                margin = base_value * (1 - ci/100) * 0.5
-                prediction["confidence_intervals"][f"{ci}%"] = [
-                    round(base_value - margin, 2),
-                    round(base_value + margin, 2)
-                ]
+            # Create core forecast object for compatibility
+            metric = Metric(id=f"metric-{forecast_id}", name=variables[0], definition=forecast_type)
+            core_forecast = Forecast(
+                id=forecast_id,
+                metric=metric,
+                point_estimate=predictions[0]["predicted_value"] if predictions else 1.0,
+                intervals=[
+                    ForecastInterval(confidence=50, lower=0.9, upper=1.1),
+                    ForecastInterval(confidence=90, lower=0.8, upper=1.2),
+                ],
+                horizon_days=30,
+            )
             
-            predictions.append(prediction)
-        
-        # Model performance metrics
-        model_performance = {
-            "accuracy": round(random.uniform(0.75, 0.95), 3),
-            "mae": round(random.uniform(0.05, 0.15), 3),
-            "rmse": round(random.uniform(0.08, 0.20), 3),
-            "r_squared": round(random.uniform(0.70, 0.90), 3)
-        }
-        
-        # Create core forecast object for compatibility
-        metric = Metric(id=f"metric-{forecast_id}", name=variables[0], definition=forecast_type)
-        core_forecast = Forecast(
-            id=forecast_id,
-            metric=metric,
-            point_estimate=predictions[0]["predicted_value"] if predictions else 1.0,
-            intervals=[
-                ForecastInterval(confidence=50, lower=0.9, upper=1.1),
-                ForecastInterval(confidence=90, lower=0.8, upper=1.2),
-            ],
-            horizon_days=30,  # Default horizon
-        )
-        
-        return {
-            "forecast_id": forecast_id,
-            "predictions": predictions,
-            "model_performance": model_performance,
-            "methodology": self._determine_forecast_methodology(forecast_type),
-            "created_at": created_at,
-            "forecast": core_forecast
-        }
+            return {
+                "forecast_id": forecast_id,
+                "predictions": predictions,
+                "model_performance": model_performance,
+                "methodology": "Fallback Heuristic (Error in Predictive Engine)",
+                "created_at": created_at,
+                "forecast": core_forecast,
+                "error": str(e)
+            }
 
     # ------------------------------------------------------------------
     # Internal helpers

@@ -1,0 +1,182 @@
+{
+  "gpt-4o": {
+    "model_name": "gpt-4o",
+    "arena_elo": 1287,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1178,
+    "cost_per_1k_tokens": 0.0128,
+    "success_rate": 0.998,
+    "last_updated": "2025-09-24T22:16:43.333626"
+  },
+  "claude-3-5-sonnet": {
+    "model_name": "claude-3-5-sonnet",
+    "arena_elo": 1269,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 960,
+    "cost_per_1k_tokens": 0.011,
+    "success_rate": 0.98,
+    "last_updated": "2025-09-24T22:16:43.333633"
+  },
+  "gpt-4o-mini": {
+    "model_name": "gpt-4o-mini",
+    "arena_elo": 1206,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1024,
+    "cost_per_1k_tokens": 0.0124,
+    "success_rate": 0.984,
+    "last_updated": "2025-09-24T22:16:43.333636"
+  },
+  "llama-3.1-70b": {
+    "model_name": "llama-3.1-70b",
+    "arena_elo": 1213,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1007,
+    "cost_per_1k_tokens": 0.0107,
+    "success_rate": 0.987,
+    "last_updated": "2025-09-24T22:16:43.333639"
+  },
+  "llama-3.1-8b": {
+    "model_name": "llama-3.1-8b",
+    "arena_elo": 1156,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 914,
+    "cost_per_1k_tokens": 0.0114,
+    "success_rate": 0.994,
+    "last_updated": "2025-09-24T22:16:43.333642"
+  },
+  "mixtral-8x7b-instruct": {
+    "model_name": "mixtral-8x7b-instruct",
+    "arena_elo": 1149,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 963,
+    "cost_per_1k_tokens": 0.011300000000000001,
+    "success_rate": 0.983,
+    "last_updated": "2025-09-24T22:16:43.333660"
+  },
+  "phi3-medium-instruct": {
+    "model_name": "phi3-medium-instruct",
+    "arena_elo": 1098,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 943,
+    "cost_per_1k_tokens": 0.0143,
+    "success_rate": 0.983,
+    "last_updated": "2025-09-24T22:16:43.333662"
+  },
+  "gemini-1.5-pro": {
+    "model_name": "gemini-1.5-pro",
+    "arena_elo": 1201,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1131,
+    "cost_per_1k_tokens": 0.0131,
+    "success_rate": 0.991,
+    "last_updated": "2025-09-24T22:16:43.333665"
+  },
+  "claude-3-opus": {
+    "model_name": "claude-3-opus",
+    "arena_elo": 1238,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1128,
+    "cost_per_1k_tokens": 0.0128,
+    "success_rate": 0.988,
+    "last_updated": "2025-09-24T22:16:43.333667"
+  },
+  "claude-3-haiku": {
+    "model_name": "claude-3-haiku",
+    "arena_elo": 1180,
+    "mteb_score": null,
+    "internal_score": 85.0,
+    "avg_latency_ms": 1152,
+    "cost_per_1k_tokens": 0.0102,
+    "success_rate": 0.992,
+    "last_updated": "2025-09-24T22:16:43.333669"
+  },
+  "text-embedding-3-large": {
+    "model_name": "text-embedding-3-large",
+    "arena_elo": null,
+    "mteb_score": 64.6,
+    "internal_score": 75.0,
+    "avg_latency_ms": 220,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333673"
+  },
+  "text-embedding-3-small": {
+    "model_name": "text-embedding-3-small",
+    "arena_elo": null,
+    "mteb_score": 62.3,
+    "internal_score": 75.0,
+    "avg_latency_ms": 277,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333676"
+  },
+  "text-embedding-ada-002": {
+    "model_name": "text-embedding-ada-002",
+    "arena_elo": null,
+    "mteb_score": 61.0,
+    "internal_score": 75.0,
+    "avg_latency_ms": 234,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333678"
+  },
+  "all-mpnet-base-v2": {
+    "model_name": "all-mpnet-base-v2",
+    "arena_elo": null,
+    "mteb_score": 57.8,
+    "internal_score": 75.0,
+    "avg_latency_ms": 228,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333683"
+  },
+  "bge-large-en-v1.5": {
+    "model_name": "bge-large-en-v1.5",
+    "arena_elo": null,
+    "mteb_score": 63.5,
+    "internal_score": 75.0,
+    "avg_latency_ms": 273,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333685"
+  },
+  "e5-large-v2": {
+    "model_name": "e5-large-v2",
+    "arena_elo": null,
+    "mteb_score": 62.3,
+    "internal_score": 75.0,
+    "avg_latency_ms": 299,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333686"
+  },
+  "instructor-xl": {
+    "model_name": "instructor-xl",
+    "arena_elo": null,
+    "mteb_score": 58.8,
+    "internal_score": 75.0,
+    "avg_latency_ms": 244,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333688"
+  },
+  "all-minilm-l6-v2": {
+    "model_name": "all-minilm-l6-v2",
+    "arena_elo": null,
+    "mteb_score": 56.3,
+    "internal_score": 75.0,
+    "avg_latency_ms": 259,
+    "cost_per_1k_tokens": 0.0001,
+    "success_rate": 0.995,
+    "last_updated": "2025-09-24T22:16:43.333690"
+  }
+}

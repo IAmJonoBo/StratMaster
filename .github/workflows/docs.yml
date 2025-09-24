@@ -152,16 +152,20 @@ jobs:
           pip install -e packages/api
         continue-on-error: true
 
-      - name: Extract API endpoints from code
+      - name: Extract API endpoints and check documentation coverage
         run: |
-          # This would run a script to extract all endpoints from FastAPI
-          echo "TODO: Implement endpoint extraction from FastAPI app"
-          # python scripts/extract_endpoints.py > endpoints.json
-        continue-on-error: true
-
-      - name: Check documentation coverage
-        run: |
-          # This would verify all endpoints are documented
-          echo "TODO: Implement documentation coverage check"
-          # python scripts/check_docs_coverage.py
-        continue-on-error: true
+          # Run comprehensive API documentation parity check
+          python scripts/api_docs_parity_checker.py \
+            --api-package packages/api/src/stratmaster_api \
+            --docs-path docs/ \
+            --output api-parity-report.json \
+            --fail-threshold 80.0
+        continue-on-error: false
+        
+      - name: Upload API parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-parity-report
+          path: api-parity-report.json
+          retention-days: 30

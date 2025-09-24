@@ -170,6 +170,15 @@ async def test_research_endpoint():
         assert "sources" in data
 ```
 
+### Frontier audit expectations
+
+The frontier audit introduces mandatory instrumentation and reporting requirements:
+
+- **Delivery metrics** – ensure new features export deploy metadata so the DORA pipeline can compute lead time, CFR, and MTTR. PRs should document how telemetry is emitted and sampled.【F:.github/workflows/ci.yml†L1-L180】
+- **Reliability signals** – when touching services, update SLO definitions, alert rules, and dashboards referenced in the implementation plan to keep error-budget tracking accurate.【F:docs/operations-guide.md†L135-L171】【F:Makefile†L120-L177】
+- **Accessibility & docs gates** – run Lighthouse/axe audits locally when UI changes are made and keep docs/code parity scripts green to avoid regressions in CI.【F:.github/workflows/accessibility-quality-gates.yml†L168-L210】【F:.github/workflows/docs.yml†L134-L167】
+- **Security & SBOM** – adding dependencies requires SBOM annotations and threat-model updates aligned with the STRIDE catalogue; follow the plan’s guidance before requesting review.【F:.github/workflows/ci.yml†L55-L71】【F:ops/threat-model/stride.md†L1-L3】
+
 ## Pull Request Process
 
 ### Before Submitting
