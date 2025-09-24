@@ -181,7 +181,7 @@ run_check \
 # 13. Cross-reference Validation
 run_check \
     "Cross-reference Validation" \
-    "grep -r '\\[.*\\](.*)' docs/ | grep -v 'http' | cut -d':' -f2 | sed 's/.*\\[.*\\](\\([^)]*\\)).*/\\1/' | sort | uniq | while read link; do test -f \"docs/\$link\" || (echo \"Broken link: \$link\" && exit 1); done" \
+    "find docs/ -name '*.md' -exec grep -o '\\[.*\\]([^h][^t][^t][^p][^)]*)' {} \\; | sed 's/.*](\\([^)]*\\)).*/\\1/' | sort | uniq | while read link; do test -f \"docs/\$link\" || { echo \"Broken link: \$link\"; exit 1; }; done" \
     "Validates all internal documentation links resolve correctly"
 
 # 14. Image Reference Validation
