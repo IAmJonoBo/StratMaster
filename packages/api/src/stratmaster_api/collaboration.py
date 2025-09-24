@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from typing import Any, Dict, Set
@@ -31,6 +32,11 @@ except ImportError:
     redis = None
 
 logger = logging.getLogger(__name__)
+
+# Feature flag for Real-Time Collaboration
+def is_collaboration_enabled() -> bool:
+    """Check if real-time collaboration is enabled via feature flag."""
+    return os.getenv("ENABLE_COLLAB_LIVE", "false").lower() == "true"
 
 
 @dataclass
@@ -382,6 +388,22 @@ class YjsCollaborationServer:
         }
         self.documents[doc_id] = new_doc
         return new_doc
+    
+    async def save_document_state(self, doc_id: str, state: dict[str, Any]):
+        """Save document state to storage."""
+        # Update in-memory storage
+        self.documents[doc_id] = state
+        
+        # Persist to Redis if available
+        if self.redis_client:
+            try:
+                await self.redis_client.set(
+                    f"doc:{doc_id}",
+                    json.dumps(state),
+                    ex=3600 * 24  # Expire after 24 hours
+                )
+            except Exception as e:
+                logger.warning(f"Failed to persist document to Redis: {e}")
     
     async def cleanup_connection(
         self,

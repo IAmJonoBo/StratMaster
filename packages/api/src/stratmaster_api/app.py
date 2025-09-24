@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import uuid
@@ -14,6 +15,8 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
+
+logger = logging.getLogger(__name__)
 
 # Optional OTEL FastAPI instrumentation - fallback gracefully if not available
 try:
@@ -370,6 +373,16 @@ def create_app() -> FastAPI:
     # Include experts router
     from .routers.experts import router as experts_router
     app.include_router(experts_router)
+
+    # Add collaboration WebSocket endpoint if enabled
+    from .collaboration import is_collaboration_enabled
+    if is_collaboration_enabled():
+        try:
+            from fastapi import WebSocket, WebSocketDisconnect
+            from .routers.collaboration import setup_collaboration_websocket
+            setup_collaboration_websocket(app)
+        except ImportError:
+            logger.warning("WebSocket dependencies not available. Collaboration features disabled.")
 
     return app
 
