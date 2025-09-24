@@ -47,6 +47,7 @@ from .models.schema_export import SCHEMA_VERSION
 from .routers import debate as debate_hitl_router
 from .routers import export as export_router  
 from .routers import ingestion as ingestion_router
+from .routers import performance as performance_router
 from .routers import security as security_router
 from .routers import strategy as strategy_router
 from .routers import ui as ui_router
@@ -196,6 +197,7 @@ def create_app() -> FastAPI:
     app.include_router(ingestion_router.router)
     app.include_router(debate_hitl_router.router)
     app.include_router(export_router.export_router)
+    app.include_router(performance_router.performance_router)
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
