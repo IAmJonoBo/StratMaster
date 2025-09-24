@@ -113,3 +113,4 @@ load-test-results.json
 .trunk/cache/
 .trunk/.state
 .venv-test/
+test_venv/

@@ -388,10 +388,10 @@ curl -X POST http://127.0.0.1:8080/recommendations \
     "confidence_score": 0.78
   },
   "implementation_roadmap": {
-    "phase_1": "Technology selection and procurement (Months 1-2)",
-    "phase_2": "Integration and testing (Months 3-5)", 
-    "phase_3": "Pilot deployment (Month 6)",
-    "phase_4": "Full rollout and optimization (Months 7-12)"
+    "procurement": "Technology selection and procurement (Months 1-2)",
+    "integration": "Integration and testing (Months 3-5)", 
+    "pilot": "Pilot deployment (Month 6)",
+    "rollout": "Full rollout and optimization (Months 7-12)"
   }
 }
 ```

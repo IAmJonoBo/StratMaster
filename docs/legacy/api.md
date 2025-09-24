@@ -497,9 +497,9 @@ Generate final strategic recommendations with decision brief.
       "low_risks": []
     },
     "implementation_plan": {
-      "phases": [
+      "milestones": [
         {
-          "phase": 1,
+          "milestone": 1,
           "name": "Foundation",
           "duration": "3 months",
           "deliverables": ["Infrastructure setup", "Team training"],
