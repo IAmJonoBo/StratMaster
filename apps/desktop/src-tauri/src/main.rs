@@ -7,6 +7,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, State, Window};
 
+// External dependencies
+use sys_info;
+use num_cpus;
+use webbrowser;
+
 // Application state for managing backend connections
 #[derive(Default)]
 struct AppState {
@@ -247,8 +252,3 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-// Add external dependencies that aren't in Cargo.toml yet
-use sys_info;
-use num_cpus;
-use webbrowser;
