@@ -14,6 +14,14 @@
 
 **Comprehensive Documentation**: [📚 Full Documentation](docs/README.md)
 
+### 🚀 **Comprehensive Guides** (Restored Library)
+
+**Core Documentation** - Complete coverage for all users:
+- [📋 **Engineering Status Report**](ENGINEERING_STATUS.md) - Complete system status analysis
+- [📊 **Current State Summary**](CURRENT_STATE_SUMMARY.md) - Production readiness overview  
+- [📖 **API Guide**](API_GUIDE.md) - Comprehensive API documentation with examples
+- [🔧 **Development Guide**](DEVELOPMENT_GUIDE.md) - Complete development workflow
+
 <div class="grid grid-2col">
 
 ### 🎯 [Tutorials](docs/tutorials/)
