@@ -2,11 +2,12 @@
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
         assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
-        deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate \
+        deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate deps.install.robust \
         setup setup.full setup.dry setup.validate \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
-        test.advanced test.property test.contract test.load test.integration
+        test.advanced test.property test.contract test.load test.integration \
+        health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot
 
 dev.up:
 	docker compose up -d
@@ -365,3 +366,87 @@ phase2.full: monitoring.full
 
 dev.phase2: dev.monitoring
 	@echo "⚠️  'dev.phase2' is deprecated. Use 'dev.monitoring' instead."
+
+# Enhanced dependency management with network resilience
+deps.install.robust:
+	python3 scripts/robust_installer.py install --requirements requirements.txt
+
+deps.install.robust.dev:
+	python3 scripts/robust_installer.py install --requirements requirements-dev.txt
+
+deps.cache.warmup:
+	python3 scripts/robust_installer.py cache-warmup
+
+deps.validate.environment:
+	python3 scripts/robust_installer.py validate-environment
+
+# System health monitoring
+health.monitor:
+	python3 scripts/system_health_monitor.py monitor --interval 60
+
+health.check:
+	python3 scripts/system_health_monitor.py check --all
+
+health.check.services:
+	python3 scripts/system_health_monitor.py check --services-only
+
+health.check.deps:
+	python3 scripts/system_health_monitor.py check --dependencies-only
+
+health.check.resources:
+	python3 scripts/system_health_monitor.py check --resources-only
+
+health.report:
+	python3 scripts/system_health_monitor.py report --format json --output health_report.json
+
+health.report.text:
+	python3 scripts/system_health_monitor.py report --format text
+
+# Self-healing automation
+heal.auto:
+	python3 scripts/self_healing.py analyze --auto-heal
+
+heal.analyze:
+	python3 scripts/self_healing.py analyze --dry-run
+
+heal.recover.service:
+	python3 scripts/self_healing.py recover --service $(SERVICE)
+
+heal.recover.deps:
+	python3 scripts/self_healing.py recover --dependencies
+
+heal.recover.env:
+	python3 scripts/self_healing.py recover --environment
+
+heal.cleanup:
+	python3 scripts/self_healing.py recover --cleanup
+
+heal.rollback:
+	python3 scripts/self_healing.py rollback --to-last-known-good
+
+heal.rollback.snapshot:
+	python3 scripts/self_healing.py rollback --snapshot-id $(SNAPSHOT_ID)
+
+heal.validate:
+	python3 scripts/self_healing.py validate-and-heal
+
+system.snapshot:
+	python3 scripts/self_healing.py snapshot
+
+# Enhanced bootstrap with network resilience
+bootstrap.robust: bootstrap-with-fallback
+
+bootstrap-with-fallback:
+	@echo "🚀 StratMaster Robust Bootstrap"
+	[ -d .venv ] || python3 -m venv .venv
+	@echo "📦 Installing core dependencies with network resilience..."
+	python3 scripts/robust_installer.py install --package "pip>=20.0.0"
+	python3 scripts/robust_installer.py install --package "pydantic>=2.0.0"
+	python3 scripts/robust_installer.py install --package "fastapi>=0.100.0"
+	python3 scripts/robust_installer.py install --package "uvicorn[standard]"
+	python3 scripts/robust_installer.py install --package "pytest"
+	@echo "📦 Installing StratMaster API..."
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api --timeout=300
+	@echo "🔧 Installing development tools..."
+	python3 scripts/robust_installer.py install --requirements requirements-dev.txt || echo "⚠️  Some dev dependencies failed, continuing..."
+	@echo "✅ Robust bootstrap completed"
