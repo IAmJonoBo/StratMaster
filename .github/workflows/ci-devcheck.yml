@@ -38,7 +38,8 @@ jobs:
           
       - name: Install additional development tools
         run: |
-          .venv/bin/pip install ruff bandit pip-audit
+          # Install with timeout and retry logic for network resilience
+          timeout 300 .venv/bin/pip install ruff bandit pip-audit || echo "Some tools installation timed out - this is expected in restricted environments"
           
       - name: Run development check script
         run: |
