@@ -1,0 +1,259 @@
+/**
+ * Sprint 6 - Design System Tokens
+ * 
+ * StratMaster design tokens using Open Props for consistent theming
+ * across Shoelace web components and custom UI elements.
+ * 
+ * Features:
+ * - CDN-friendly CSS variables
+ * - Framework-agnostic tokens
+ * - Easy theming and customization
+ * - Accessibility-first color system
+ */
+
+/* Import Open Props for base tokens */
+@import "https://unpkg.com/open-props";
+
+/* StratMaster Brand Colors */
+:root {
+  /* Primary Brand Colors */
+  --sm-primary-50: #f0f9ff;
+  --sm-primary-100: #e0f2fe;
+  --sm-primary-200: #bae6fd;
+  --sm-primary-300: #7dd3fc;
+  --sm-primary-400: #38bdf8;
+  --sm-primary-500: #0ea5e9;
+  --sm-primary-600: #0284c7;
+  --sm-primary-700: #0369a1;
+  --sm-primary-800: #075985;
+  --sm-primary-900: #0c4a6e;
+
+  /* Secondary Colors - Professional Purple */
+  --sm-secondary-50: #faf5ff;
+  --sm-secondary-100: #f3e8ff;
+  --sm-secondary-200: #e9d5ff;
+  --sm-secondary-300: #d8b4fe;
+  --sm-secondary-400: #c084fc;
+  --sm-secondary-500: #a855f7;
+  --sm-secondary-600: #9333ea;
+  --sm-secondary-700: #7c3aed;
+  --sm-secondary-800: #6b21a8;
+  --sm-secondary-900: #581c87;
+
+  /* Success Colors */
+  --sm-success-50: #f0fdf4;
+  --sm-success-100: #dcfce7;
+  --sm-success-200: #bbf7d0;
+  --sm-success-300: #86efac;
+  --sm-success-400: #4ade80;
+  --sm-success-500: #22c55e;
+  --sm-success-600: #16a34a;
+  --sm-success-700: #15803d;
+  --sm-success-800: #166534;
+  --sm-success-900: #14532d;
+
+  /* Warning Colors */
+  --sm-warning-50: #fffbeb;
+  --sm-warning-100: #fef3c7;
+  --sm-warning-200: #fde68a;
+  --sm-warning-300: #fcd34d;
+  --sm-warning-400: #fbbf24;
+  --sm-warning-500: #f59e0b;
+  --sm-warning-600: #d97706;
+  --sm-warning-700: #b45309;
+  --sm-warning-800: #92400e;
+  --sm-warning-900: #78350f;
+
+  /* Error Colors */
+  --sm-error-50: #fef2f2;
+  --sm-error-100: #fee2e2;
+  --sm-error-200: #fecaca;
+  --sm-error-300: #fca5a5;
+  --sm-error-400: #f87171;
+  --sm-error-500: #ef4444;
+  --sm-error-600: #dc2626;
+  --sm-error-700: #b91c1c;
+  --sm-error-800: #991b1b;
+  --sm-error-900: #7f1d1d;
+
+  /* Neutral Colors - Modern Gray Scale */
+  --sm-neutral-50: #f8fafc;
+  --sm-neutral-100: #f1f5f9;
+  --sm-neutral-200: #e2e8f0;
+  --sm-neutral-300: #cbd5e1;
+  --sm-neutral-400: #94a3b8;
+  --sm-neutral-500: #64748b;
+  --sm-neutral-600: #475569;
+  --sm-neutral-700: #334155;
+  --sm-neutral-800: #1e293b;
+  --sm-neutral-900: #0f172a;
+
+  /* Semantic Color Mapping */
+  --sm-color-primary: var(--sm-primary-600);
+  --sm-color-primary-hover: var(--sm-primary-700);
+  --sm-color-secondary: var(--sm-secondary-600);
+  --sm-color-secondary-hover: var(--sm-secondary-700);
+  
+  --sm-color-success: var(--sm-success-600);
+  --sm-color-warning: var(--sm-warning-500);
+  --sm-color-error: var(--sm-error-600);
+  
+  --sm-color-text: var(--sm-neutral-900);
+  --sm-color-text-secondary: var(--sm-neutral-600);
+  --sm-color-text-muted: var(--sm-neutral-500);
+  
+  --sm-color-background: var(--sm-neutral-50);
+  --sm-color-surface: #ffffff;
+  --sm-color-border: var(--sm-neutral-200);
+  --sm-color-border-hover: var(--sm-neutral-300);
+
+  /* Typography Scale */
+  --sm-font-family-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --sm-font-family-mono: ui-monospace, 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  
+  --sm-font-size-xs: 0.75rem;    /* 12px */
+  --sm-font-size-sm: 0.875rem;   /* 14px */
+  --sm-font-size-base: 1rem;     /* 16px */
+  --sm-font-size-lg: 1.125rem;   /* 18px */
+  --sm-font-size-xl: 1.25rem;    /* 20px */
+  --sm-font-size-2xl: 1.5rem;    /* 24px */
+  --sm-font-size-3xl: 1.875rem;  /* 30px */
+  --sm-font-size-4xl: 2.25rem;   /* 36px */
+  --sm-font-size-5xl: 3rem;      /* 48px */
+
+  --sm-font-weight-light: 300;
+  --sm-font-weight-normal: 400;
+  --sm-font-weight-medium: 500;
+  --sm-font-weight-semibold: 600;
+  --sm-font-weight-bold: 700;
+
+  --sm-line-height-tight: 1.25;
+  --sm-line-height-normal: 1.5;
+  --sm-line-height-relaxed: 1.75;
+
+  /* Spacing System (based on 4px grid) */
+  --sm-space-0: 0;
+  --sm-space-1: 0.25rem;   /* 4px */
+  --sm-space-2: 0.5rem;    /* 8px */
+  --sm-space-3: 0.75rem;   /* 12px */
+  --sm-space-4: 1rem;      /* 16px */
+  --sm-space-5: 1.25rem;   /* 20px */
+  --sm-space-6: 1.5rem;    /* 24px */
+  --sm-space-8: 2rem;      /* 32px */
+  --sm-space-10: 2.5rem;   /* 40px */
+  --sm-space-12: 3rem;     /* 48px */
+  --sm-space-16: 4rem;     /* 64px */
+  --sm-space-20: 5rem;     /* 80px */
+  --sm-space-24: 6rem;     /* 96px */
+
+  /* Border Radius */
+  --sm-radius-none: 0;
+  --sm-radius-sm: 0.125rem;   /* 2px */
+  --sm-radius-base: 0.25rem;  /* 4px */
+  --sm-radius-md: 0.375rem;   /* 6px */
+  --sm-radius-lg: 0.5rem;     /* 8px */
+  --sm-radius-xl: 0.75rem;    /* 12px */
+  --sm-radius-2xl: 1rem;      /* 16px */
+  --sm-radius-full: 9999px;
+
+  /* Shadows */
+  --sm-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --sm-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --sm-shadow-base: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --sm-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --sm-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --sm-shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* Z-Index Scale */
+  --sm-z-dropdown: 1000;
+  --sm-z-sticky: 1020;
+  --sm-z-fixed: 1030;
+  --sm-z-modal-backdrop: 1040;
+  --sm-z-modal: 1050;
+  --sm-z-popover: 1060;
+  --sm-z-tooltip: 1070;
+  --sm-z-toast: 1080;
+
+  /* Animation & Transitions */
+  --sm-transition-fast: 150ms ease;
+  --sm-transition-base: 200ms ease;
+  --sm-transition-slow: 300ms ease;
+  
+  --sm-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --sm-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --sm-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Focus Ring */
+  --sm-focus-ring: 0 0 0 3px var(--sm-primary-200);
+  --sm-focus-ring-error: 0 0 0 3px var(--sm-error-200);
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sm-color-text: var(--sm-neutral-100);
+    --sm-color-text-secondary: var(--sm-neutral-300);
+    --sm-color-text-muted: var(--sm-neutral-400);
+    
+    --sm-color-background: var(--sm-neutral-900);
+    --sm-color-surface: var(--sm-neutral-800);
+    --sm-color-border: var(--sm-neutral-700);
+    --sm-color-border-hover: var(--sm-neutral-600);
+
+    --sm-focus-ring: 0 0 0 3px var(--sm-primary-400);
+    --sm-focus-ring-error: 0 0 0 3px var(--sm-error-400);
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --sm-color-border: var(--sm-neutral-900);
+    --sm-shadow-base: 0 0 0 1px var(--sm-neutral-900);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sm-transition-fast: 0ms;
+    --sm-transition-base: 0ms;
+    --sm-transition-slow: 0ms;
+  }
+}
+
+/* Utility Classes for Quick Theming */
+.sm-primary { color: var(--sm-color-primary); }
+.sm-secondary { color: var(--sm-color-secondary); }
+.sm-success { color: var(--sm-color-success); }
+.sm-warning { color: var(--sm-color-warning); }
+.sm-error { color: var(--sm-color-error); }
+
+.sm-bg-primary { background-color: var(--sm-color-primary); }
+.sm-bg-secondary { background-color: var(--sm-color-secondary); }
+.sm-bg-success { background-color: var(--sm-color-success); }
+.sm-bg-warning { background-color: var(--sm-color-warning); }
+.sm-bg-error { background-color: var(--sm-color-error); }
+
+.sm-border-primary { border-color: var(--sm-color-primary); }
+.sm-border-secondary { border-color: var(--sm-color-secondary); }
+
+.sm-shadow { box-shadow: var(--sm-shadow-base); }
+.sm-shadow-lg { box-shadow: var(--sm-shadow-lg); }
+
+.sm-transition { transition: all var(--sm-transition-base); }
+.sm-focus-ring:focus { box-shadow: var(--sm-focus-ring); }
+
+/* Typography Utilities */
+.sm-text-xs { font-size: var(--sm-font-size-xs); }
+.sm-text-sm { font-size: var(--sm-font-size-sm); }
+.sm-text-base { font-size: var(--sm-font-size-base); }
+.sm-text-lg { font-size: var(--sm-font-size-lg); }
+.sm-text-xl { font-size: var(--sm-font-size-xl); }
+.sm-text-2xl { font-size: var(--sm-font-size-2xl); }
+
+.sm-font-light { font-weight: var(--sm-font-weight-light); }
+.sm-font-normal { font-weight: var(--sm-font-weight-normal); }
+.sm-font-medium { font-weight: var(--sm-font-weight-medium); }
+.sm-font-semibold { font-weight: var(--sm-font-weight-semibold); }
+.sm-font-bold { font-weight: var(--sm-font-weight-bold); }

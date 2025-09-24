@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StratMaster UI Preview - Sprint 6 Enhanced</title>
+    
+    <!-- Open Props + Custom Tokens -->
+    <link rel="stylesheet" href="../styles/tokens.css">
+    
+    <!-- Shoelace CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/themes/light.css" />
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: var(--sm-font-family-sans);
+            background-color: var(--sm-color-background);
+            color: var(--sm-color-text);
+            margin: 0;
+            padding: 0;
+            line-height: var(--sm-line-height-normal);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--sm-space-6);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--sm-primary-600), var(--sm-secondary-600));
+            color: white;
+            padding: var(--sm-space-8) var(--sm-space-6);
+            margin: calc(var(--sm-space-6) * -1) calc(var(--sm-space-6) * -1) var(--sm-space-8);
+            border-radius: 0 0 var(--sm-radius-xl) var(--sm-radius-xl);
+        }
+        
+        .grid {
+            display: grid;
+            gap: var(--sm-space-6);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            margin-bottom: var(--sm-space-8);
+        }
+        
+        .card {
+            background: var(--sm-color-surface);
+            border: 1px solid var(--sm-color-border);
+            border-radius: var(--sm-radius-lg);
+            padding: var(--sm-space-6);
+            box-shadow: var(--sm-shadow-sm);
+            transition: var(--sm-transition-base);
+        }
+        
+        .card:hover {
+            box-shadow: var(--sm-shadow-md);
+            border-color: var(--sm-color-border-hover);
+        }
+        
+        .card-title {
+            font-size: var(--sm-font-size-lg);
+            font-weight: var(--sm-font-weight-semibold);
+            margin: 0 0 var(--sm-space-4) 0;
+            color: var(--sm-color-text);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: var(--sm-space-1) var(--sm-space-3);
+            border-radius: var(--sm-radius-full);
+            font-size: var(--sm-font-size-xs);
+            font-weight: var(--sm-font-weight-medium);
+            margin-right: var(--sm-space-2);
+        }
+        
+        .badge-success {
+            background-color: var(--sm-success-100);
+            color: var(--sm-success-800);
+        }
+        
+        .badge-warning {
+            background-color: var(--sm-warning-100);
+            color: var(--sm-warning-800);
+        }
+        
+        .badge-primary {
+            background-color: var(--sm-primary-100);
+            color: var(--sm-primary-800);
+        }
+        
+        .workspace-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: var(--sm-space-4);
+            height: 600px;
+            margin-top: var(--sm-space-8);
+        }
+        
+        .sidebar {
+            background: var(--sm-color-surface);
+            border: 1px solid var(--sm-color-border);
+            border-radius: var(--sm-radius-lg);
+            padding: var(--sm-space-4);
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            background: var(--sm-color-surface);
+            border: 1px solid var(--sm-color-border);
+            border-radius: var(--sm-radius-lg);
+            padding: var(--sm-space-6);
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            font-size: var(--sm-font-size-xl);
+            font-weight: var(--sm-font-weight-semibold);
+            margin: 0 0 var(--sm-space-4) 0;
+            color: var(--sm-color-text);
+        }
+        
+        /* Custom Shoelace component styling */
+        sl-button {
+            --sl-color-primary-600: var(--sm-color-primary);
+            --sl-color-primary-700: var(--sm-color-primary-hover);
+        }
+        
+        sl-input, sl-textarea, sl-select {
+            --sl-border-color: var(--sm-color-border);
+            --sl-border-color-hover: var(--sm-color-border-hover);
+            --sl-border-radius-medium: var(--sm-radius-md);
+        }
+        
+        sl-card {
+            --sl-border-color: var(--sm-color-border);
+            --sl-border-radius-large: var(--sm-radius-lg);
+        }
+        
+        .demo-tabs {
+            margin-top: var(--sm-space-6);
+        }
+        
+        .evidence-badge {
+            padding: var(--sm-space-1) var(--sm-space-2);
+            border-radius: var(--sm-radius-sm);
+            font-size: var(--sm-font-size-xs);
+            font-weight: var(--sm-font-weight-bold);
+            display: inline-block;
+            margin-right: var(--sm-space-2);
+        }
+        
+        .evidence-badge-A {
+            background-color: var(--sm-success-500);
+            color: white;
+        }
+        
+        .evidence-badge-B {
+            background-color: var(--sm-success-400);
+            color: white;
+        }
+        
+        .evidence-badge-C {
+            background-color: var(--sm-warning-400);
+            color: white;
+        }
+        
+        .mobile-preview {
+            max-width: 375px;
+            margin: var(--sm-space-8) auto;
+            border: 2px solid var(--sm-neutral-300);
+            border-radius: var(--sm-radius-2xl);
+            padding: var(--sm-space-4);
+            background: var(--sm-color-surface);
+        }
+        
+        @media (max-width: 768px) {
+            .workspace-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1 style="margin: 0; font-size: var(--sm-font-size-3xl); font-weight: var(--sm-font-weight-bold);">
+                StratMaster UI System
+            </h1>
+            <p style="margin: var(--sm-space-2) 0 0 0; opacity: 0.9; font-size: var(--sm-font-size-lg);">
+                Sprint 6 - Shoelace Web Components + Open Props Design Tokens
+            </p>
+        </div>
+
+        <!-- Dashboard Overview -->
+        <section>
+            <h2 class="section-title">Dashboard Overview</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3 class="card-title">Active Strategies</h3>
+                    <div style="font-size: var(--sm-font-size-3xl); font-weight: var(--sm-font-weight-bold); color: var(--sm-color-primary); margin: var(--sm-space-2) 0;">
+                        12
+                    </div>
+                    <span class="badge badge-success">3 Completed</span>
+                    <span class="badge badge-warning">2 In Review</span>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Research Tasks</h3>
+                    <div style="font-size: var(--sm-font-size-3xl); font-weight: var(--sm-font-weight-bold); color: var(--sm-color-secondary); margin: var(--sm-space-2) 0;">
+                        47
+                    </div>
+                    <span class="badge badge-primary">15 Today</span>
+                    <span class="badge badge-success">32 Done</span>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Evidence Quality</h3>
+                    <div style="margin: var(--sm-space-4) 0;">
+                        <span class="evidence-badge evidence-badge-A">GRADE A</span>
+                        <span class="evidence-badge evidence-badge-B">GRADE B</span>
+                        <span class="evidence-badge evidence-badge-C">GRADE C</span>
+                    </div>
+                    <p style="color: var(--sm-color-text-secondary); margin: 0; font-size: var(--sm-font-size-sm);">
+                        Strong evidence base with high-quality sources
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shoelace Components Demo -->
+        <section>
+            <h2 class="section-title">Interactive Components (Shoelace)</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3 class="card-title">Form Controls</h3>
+                    <sl-input label="Strategy Title" placeholder="Enter strategy name..." style="margin-bottom: var(--sm-space-4);"></sl-input>
+                    <sl-select label="Priority Level" placeholder="Select priority..." style="margin-bottom: var(--sm-space-4);">
+                        <sl-option value="high">High Priority</sl-option>
+                        <sl-option value="medium">Medium Priority</sl-option>
+                        <sl-option value="low">Low Priority</sl-option>
+                    </sl-select>
+                    <sl-textarea label="Description" placeholder="Describe the strategy..." rows="3" style="margin-bottom: var(--sm-space-4);"></sl-textarea>
+                    <sl-button variant="primary">Save Strategy</sl-button>
+                    <sl-button variant="default" style="margin-left: var(--sm-space-2);">Cancel</sl-button>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Progress & Status</h3>
+                    <div style="margin-bottom: var(--sm-space-4);">
+                        <label style="display: block; margin-bottom: var(--sm-space-2); font-weight: var(--sm-font-weight-medium);">Research Progress</label>
+                        <sl-progress-bar value="75" style="margin-bottom: var(--sm-space-2);"></sl-progress-bar>
+                        <sl-badge variant="success">75% Complete</sl-badge>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--sm-space-4);">
+                        <label style="display: block; margin-bottom: var(--sm-space-2); font-weight: var(--sm-font-weight-medium);">Quality Score</label>
+                        <sl-rating value="4" readonly style="margin-bottom: var(--sm-space-2);"></sl-rating>
+                        <sl-badge variant="primary">Excellent</sl-badge>
+                    </div>
+                    
+                    <sl-switch checked>Enable real-time updates</sl-switch>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workspace Layout Demo -->
+        <section>
+            <h2 class="section-title">Tri-pane Workspace Layout</h2>
+            <div class="workspace-layout">
+                <!-- Left Sidebar - Brief -->
+                <div class="sidebar">
+                    <h4 style="margin: 0 0 var(--sm-space-4) 0; color: var(--sm-color-text); font-weight: var(--sm-font-weight-semibold);">
+                        Brief
+                    </h4>
+                    <sl-details summary="Project Overview" open>
+                        <p style="margin: var(--sm-space-2) 0; color: var(--sm-color-text-secondary); font-size: var(--sm-font-size-sm);">
+                            Brand positioning strategy for Q2 product launch targeting millennials.
+                        </p>
+                    </sl-details>
+                    
+                    <sl-details summary="Objectives">
+                        <ul style="margin: var(--sm-space-2) 0; padding-left: var(--sm-space-4); color: var(--sm-color-text-secondary); font-size: var(--sm-font-size-sm);">
+                            <li>Increase brand awareness by 40%</li>
+                            <li>Drive 25% growth in target segment</li>
+                            <li>Establish thought leadership</li>
+                        </ul>
+                    </sl-details>
+                    
+                    <sl-details summary="Timeline">
+                        <p style="margin: var(--sm-space-2) 0; color: var(--sm-color-text-secondary); font-size: var(--sm-font-size-sm);">
+                            8 weeks, launching March 15th
+                        </p>
+                    </sl-details>
+                </div>
+                
+                <!-- Main Content - Evidence -->
+                <div class="main-content">
+                    <h4 style="margin: 0 0 var(--sm-space-4) 0; color: var(--sm-color-text); font-weight: var(--sm-font-weight-semibold);">
+                        Evidence & Analysis
+                    </h4>
+                    
+                    <div class="demo-tabs">
+                        <sl-tab-group>
+                            <sl-tab slot="nav" panel="claims">Claims & Evidence</sl-tab>
+                            <sl-tab slot="nav" panel="counterpoints">Counterpoints</sl-tab>
+                            <sl-tab slot="nav" panel="synthesis">AI Synthesis</sl-tab>
+                            
+                            <sl-tab-panel name="claims">
+                                <sl-card style="margin-bottom: var(--sm-space-4);">
+                                    <div slot="header">
+                                        <span class="evidence-badge evidence-badge-A">GRADE A</span>
+                                        Market Research Finding
+                                    </div>
+                                    <p style="margin: 0; color: var(--sm-color-text-secondary);">
+                                        73% of millennials prioritize brand authenticity over price when making purchase decisions. 
+                                        <sl-tooltip content="Source: McKinsey Consumer Survey 2024">
+                                            <sl-icon name="info-circle" style="color: var(--sm-color-primary);"></sl-icon>
+                                        </sl-tooltip>
+                                    </p>
+                                </sl-card>
+                                
+                                <sl-card>
+                                    <div slot="header">
+                                        <span class="evidence-badge evidence-badge-B">GRADE B</span>
+                                        Competitive Analysis
+                                    </div>
+                                    <p style="margin: 0; color: var(--sm-color-text-secondary);">
+                                        Top 3 competitors have increased social media engagement by 45% through authentic storytelling campaigns.
+                                    </p>
+                                </sl-card>
+                            </sl-tab-panel>
+                            
+                            <sl-tab-panel name="counterpoints">
+                                <sl-alert variant="warning" open>
+                                    <sl-icon slot="icon" name="exclamation-triangle"></sl-icon>
+                                    <strong>Consider:</strong> Authenticity messaging may conflict with premium positioning strategy.
+                                </sl-alert>
+                                
+                                <sl-alert variant="neutral" open style="margin-top: var(--sm-space-4);">
+                                    <sl-icon slot="icon" name="question-circle"></sl-icon>
+                                    <strong>Question:</strong> How do we measure authenticity perception in our target market?
+                                </sl-alert>
+                            </sl-tab-panel>
+                            
+                            <sl-tab-panel name="synthesis">
+                                <div style="background: var(--sm-neutral-50); padding: var(--sm-space-4); border-radius: var(--sm-radius-md); border-left: 4px solid var(--sm-color-primary);">
+                                    <h5 style="margin: 0 0 var(--sm-space-2) 0; color: var(--sm-color-primary);">AI Recommendation</h5>
+                                    <p style="margin: 0; color: var(--sm-color-text-secondary);">
+                                        Based on the evidence analysis, recommend positioning around "Authentic Innovation" - 
+                                        combining millennial authenticity values with premium product quality. 
+                                        This addresses both market demand and competitive differentiation.
+                                    </p>
+                                </div>
+                            </sl-tab-panel>
+                        </sl-tab-group>
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar - Plan -->
+                <div class="sidebar">
+                    <h4 style="margin: 0 0 var(--sm-space-4) 0; color: var(--sm-color-text); font-weight: var(--sm-font-weight-semibold);">
+                        Action Plan
+                    </h4>
+                    
+                    <sl-card style="margin-bottom: var(--sm-space-4);">
+                        <div slot="header" style="font-size: var(--sm-font-size-sm); font-weight: var(--sm-font-weight-medium);">
+                            Phase 1: Research
+                        </div>
+                        <sl-checkbox checked>Conduct focus groups</sl-checkbox>
+                        <sl-checkbox checked>Analyze competitor messaging</sl-checkbox>
+                        <sl-checkbox>Survey target audience</sl-checkbox>
+                    </sl-card>
+                    
+                    <sl-card style="margin-bottom: var(--sm-space-4);">
+                        <div slot="header" style="font-size: var(--sm-font-size-sm); font-weight: var(--sm-font-weight-medium);">
+                            Phase 2: Strategy
+                        </div>
+                        <sl-checkbox>Define positioning statement</sl-checkbox>
+                        <sl-checkbox>Create messaging framework</sl-checkbox>
+                        <sl-checkbox>Design campaign concepts</sl-checkbox>
+                    </sl-card>
+                    
+                    <sl-button variant="primary" size="small" style="width: 100%; margin-bottom: var(--sm-space-2);">
+                        Export to Notion
+                    </sl-button>
+                    <sl-button variant="default" size="small" style="width: 100%;">
+                        Export to Trello
+                    </sl-button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mobile Preview -->
+        <section>
+            <h2 class="section-title">Mobile Approval Interface</h2>
+            <div class="mobile-preview">
+                <div style="text-align: center; margin-bottom: var(--sm-space-4);">
+                    <h4 style="margin: 0 0 var(--sm-space-2) 0;">Strategy Review</h4>
+                    <p style="margin: 0; color: var(--sm-color-text-secondary); font-size: var(--sm-font-size-sm);">
+                        Millennial Brand Positioning
+                    </p>
+                </div>
+                
+                <sl-card style="margin-bottom: var(--sm-space-4);">
+                    <div style="font-size: var(--sm-font-size-sm); margin-bottom: var(--sm-space-2);">
+                        <strong>Quality Score:</strong> 
+                        <sl-badge variant="success">92/100</sl-badge>
+                    </div>
+                    <div style="font-size: var(--sm-font-size-sm); margin-bottom: var(--sm-space-2);">
+                        <strong>Evidence:</strong> 
+                        <span class="evidence-badge evidence-badge-A">A</span>
+                        <span class="evidence-badge evidence-badge-A">A</span>
+                        <span class="evidence-badge evidence-badge-B">B</span>
+                    </div>
+                    <div style="font-size: var(--sm-font-size-sm);">
+                        <strong>Confidence:</strong> High (8 sources)
+                    </div>
+                </sl-card>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--sm-space-2);">
+                    <sl-button variant="success" size="large" style="width: 100%;">
+                        <sl-icon slot="prefix" name="check-circle"></sl-icon>
+                        Approve
+                    </sl-button>
+                    <sl-button variant="warning" size="large" style="width: 100%;">
+                        <sl-icon slot="prefix" name="arrow-clockwise"></sl-icon>
+                        Rework
+                    </sl-button>
+                </div>
+                
+                <sl-details summary="View Details" style="margin-top: var(--sm-space-4);">
+                    <p style="margin: var(--sm-space-2) 0; font-size: var(--sm-font-size-sm); color: var(--sm-color-text-secondary);">
+                        Recommendation focuses on authentic innovation positioning with strong market evidence support.
+                    </p>
+                </sl-details>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="margin-top: var(--sm-space-12); padding-top: var(--sm-space-8); border-top: 1px solid var(--sm-color-border); text-align: center; color: var(--sm-color-text-muted);">
+            <p>StratMaster UI System - Sprint 6 Implementation</p>
+            <p style="font-size: var(--sm-font-size-sm);">
+                Powered by <a href="https://shoelace.style/" target="_blank" style="color: var(--sm-color-primary);">Shoelace</a> + 
+                <a href="https://open-props.style/" target="_blank" style="color: var(--sm-color-primary);">Open Props</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Shoelace JS via CDN -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/shoelace.js"></script>
+    
+    <!-- Set Shoelace base path -->
+    <script>
+        import { setBasePath } from 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/utilities/base-path.js';
+        setBasePath('https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/');
+    </script>
+</body>
+</html>
