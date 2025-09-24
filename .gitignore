@@ -104,6 +104,15 @@ accessibility-audit-report.json
 property-test-results.json
 load-test-results.json
 
+# Self-healing system backups (exclude from git)
+.healing_backups/
+
+# Health and monitoring reports
+health_report*.json
+healing_report*.json
+monitoring_baseline.json
+monitoring_config.json
+
 # Misc
 *.swp
 *.swo
