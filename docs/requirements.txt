@@ -1,6 +1,6 @@
 # Documentation build dependencies
 mkdocs==1.6.1
-mkdocs-material==9.5.39
-pymdown-extensions==10.11.2
-mkdocs-swagger-ui-tag==0.6.10
+mkdocs-material==9.6.20
+pymdown-extensions==10.16.1
+mkdocs-swagger-ui-tag==0.7.2
 mkdocs-redoc-tag==1.0.0
