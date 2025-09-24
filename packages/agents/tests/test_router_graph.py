@@ -9,7 +9,7 @@ This module tests the agent routing functionality including:
 """
 
 
-from router_graph import AgentRouter, AgentType, RouterInput, RouterOutput
+from ..router_graph import AgentRouter, AgentType, RouterInput, RouterOutput
 
 
 class TestAgentRouter:
