@@ -9,7 +9,9 @@ from .schema_registry import REGISTRY
 
 def main():
     """Generate and print JSON schemas for Expert Council models."""
-    core_schema, defs = models_json_schema(models=REGISTRY, title="StratMaster Experts", components=None)
+    core_schema, defs = models_json_schema(
+        models=REGISTRY, title="StratMaster Experts", components=None
+    )
     print(json.dumps(core_schema, indent=2))
     if defs:
         print("\nDefinitions:")

@@ -46,6 +46,9 @@ from .models.requests import (
 from .models.schema_export import SCHEMA_VERSION
 from .routers import debate as debate_hitl_router
 from .routers import ingestion as ingestion_router
+from .routers import security as security_router
+from .routers import strategy as strategy_router
+from .routers import ui as ui_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -191,6 +194,9 @@ def create_app() -> FastAPI:
 
     app.include_router(ingestion_router.router)
     app.include_router(debate_hitl_router.router)
+    app.include_router(ui_router.router)
+    app.include_router(strategy_router.router)
+    app.include_router(security_router.router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -203,7 +209,7 @@ def create_app() -> FastAPI:
             "tenant_id": payload.tenant_id,
             "query": payload.query[:100],  # Truncate for tracing
             "max_sources": payload.max_sources
-        }) as trace_context:
+        }):
             result = orchestrator_stub.plan_research(
                 query=payload.query,
                 tenant_id=payload.tenant_id,
@@ -219,7 +225,7 @@ def create_app() -> FastAPI:
         with tracing_manager.trace_operation("research:run", {
             "tenant_id": payload.tenant_id,
             "plan_id": payload.plan_id
-        }) as trace_context:
+        }):
             result = orchestrator_stub.run_research(
                 plan_id=payload.plan_id,
                 tenant_id=payload.tenant_id,
@@ -256,7 +262,7 @@ def create_app() -> FastAPI:
             "hypothesis_id": payload.hypothesis_id,
             "claim_count": len(payload.claim_ids),
             "max_turns": payload.max_turns
-        }) as trace_context:
+        }):
             result = orchestrator_stub.run_debate(
                 _tenant_id=payload.tenant_id,
                 _hypothesis_id=payload.hypothesis_id,
@@ -319,11 +325,11 @@ def create_app() -> FastAPI:
         payload: ExperimentCreateRequest,
         _: str = Depends(require_idempotency_key),
     ) -> ExperimentCreateResponse:
-        experiment_id = orchestrator_stub.create_experiment(
+        result = orchestrator_stub.create_experiment(
             tenant_id=payload.tenant_id,
             payload=payload.model_dump(),
         )
-        return ExperimentCreateResponse(experiment_id=experiment_id)
+        return ExperimentCreateResponse(**result)
 
     app.include_router(experiments_router)
 
@@ -334,12 +340,11 @@ def create_app() -> FastAPI:
         payload: ForecastCreateRequest,
         _: str = Depends(require_idempotency_key),
     ) -> ForecastCreateResponse:
-        forecast = orchestrator_stub.create_forecast(
+        result = orchestrator_stub.create_forecast(
             tenant_id=payload.tenant_id,
-            metric_id=payload.metric_id,
-            horizon_days=payload.horizon_days,
+            payload=payload.model_dump(),
         )
-        return ForecastCreateResponse(forecast=forecast)
+        return ForecastCreateResponse(**result)
 
     app.include_router(forecasts_router)
 
