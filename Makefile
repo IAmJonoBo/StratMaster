@@ -1,4 +1,4 @@
-.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
         assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
@@ -72,8 +72,18 @@ format:
 	.venv/bin/black .
 
 bootstrap:
+	@echo "🚀 StratMaster Bootstrap"
 	[ -d .venv ] || python3 -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api pytest pre-commit
+	@echo "📦 Installing core dependencies..."
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install --upgrade pip --timeout=60
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install pydantic fastapi uvicorn pytest --timeout=60
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api --timeout=60
+	@echo "✅ Bootstrap completed. Run 'make setup' for full integrated setup."
+
+# Enhanced bootstrap with integrated setup (registers deps, downloads assets, upgrades)
+bootstrap-full:
+	$(MAKE) bootstrap
+	.venv/bin/python scripts/integrated_setup.py setup --required-only
 
 # Developer convenience target to run tests without pip (uses local sources)
 test-fast:
