@@ -141,22 +141,85 @@ The platform demonstrates exceptional technical capabilities, enterprise-grade s
   - **Status**: Installed version 0.0.20 with document parsing endpoints active
   - **Impact**: Strategy document parsing fully operational
 
-#### Implementation Completions Needed
-- **Keycloak OIDC Integration**: Security Sprint 9 - 90% complete
-  - Configuration files ready, final integration pending
-  - Enterprise SSO functionality critical for sales
+#### 🚀 CONCRETE IMPLEMENTATION ROADMAP (4 Weeks to Frontier-Ready)
 
-- **Export API Backends**: Sprint 5 - UI complete, APIs needed
-  - Notion, Trello, Jira integrations need backend implementation
-  - Current state: UI ready, business logic missing
+Based on detailed technical analysis from Scratch.md, the following concrete implementations are prioritized:
 
-- **Performance Validation**: Sprint 4 benchmarks needed
-  - Claims of <20ms routing and >20% MRR@10 need validation
-  - Performance testing infrastructure exists but needs execution
+##### Week 1: Platform Glue (P0 - Critical)
 
-- **Desktop App Completion**: Sprint 7 - Low priority
-  - Tauri scaffolding exists but incomplete
-  - Can be deferred for web-first deployment strategy
+**1. OSS-First Model Gateway Implementation**
+- **Deploy LiteLLM Proxy** as OpenAI-compatible gateway with auth, rate-limits, budgets
+- **Local High-Throughput Backends**:
+  - vLLM for text/vision chat and embeddings (paged attention, batching) 
+  - Hugging Face TGI for GPU-efficient generation and re-ranking
+- **Cloud Fallbacks**: Together AI + HF Inference Endpoints via LiteLLM adapters
+- **Per-tenant model allowlists** via configuration management
+- **Quality Gate**: p50 gateway overhead < 5ms, no single provider outage affects >20% traffic
+
+**2. Enterprise Observability Complete**
+- **OpenTelemetry FastAPI instrumentation** with OTLP collector export
+- **Langfuse integration** for LLM traces (inputs/outputs, tokens, latency, cost)  
+- **RAGAS metrics** in CI to catch retrieval/reasoning regressions
+- **Quality Gate**: 100% LLM calls traced, per-tenant cost dashboards operational
+
+**3. Export Backend Implementation**
+- **Notion API**: Pages & blocks (append children), databases for briefs
+- **Trello API**: Create/update cards, lists, labels with OAuth
+- **Jira Cloud API**: Issues (create/search via JQL), transitions, links
+- **Quality Gate**: Idempotent exports (re-runs update, don't duplicate)
+
+##### Week 2: Evaluation & Routing (P0 - Critical)
+
+**4. Evidence-Guided Model Recommender**
+- **External Signals**: LMSYS Arena (chat), MTEB (embeddings) integration
+- **Internal Evals**: Langfuse experiments + RAGAS on StratMaster tasks
+- **Cascade Routing**: Two-stage (cheap → strong) per FrugalGPT/RouteLLM approach
+- **Nightly Scoring**: Utility = quality_z - λ·cost - μ·latency optimization
+- **Quality Gate**: Routing decision time p50 < 20ms, provenance tracking operational
+
+##### Week 3: Retrieval Uplift (P0 - Critical)
+
+**5. SPLADE-v3 Integration**
+- **Sparse Lexical Expansion** for OOD recall and robustness improvement
+- **OpenSearch Integration**: Index SPLADE vectors in inverted index
+- **Hybrid Fusion**: RRF or weighted sum with BM25 + dense scores
+- **Quality Gate**: +≥10% NDCG@10 vs BM25+dense alone, <15% latency hit at p95
+
+##### Week 4: Collaboration & Compliance (P1 - Important)
+
+**6. Real-Time Collaboration**  
+- **Yjs Integration** with y-websocket provider for CRDT-based editing
+- **Presence System**: Cursors, editing awareness, conflict-free merges
+- **Storage**: Updates in Postgres/Redis via y-redis adapter
+- **Quality Gate**: <150ms echo latency on LAN, multi-tab torture test passes
+
+**7. OIDC Integration Completion**
+- **Keycloak Configuration**: "public" and "confidential" client with Auth Code + PKCE
+- **Role Mapping**: StratMaster RBAC integration with session introspection
+- **Quality Gate**: Login → token → API call → audit log round-trip in OTel traces
+
+#### Performance & Quality Gates (Go/No-Go Criteria)
+
+**Concrete Measurable Targets:**
+- ✅ Gateway overhead: p50 < 5ms, p95 < 15ms (LiteLLM proxy)
+- ✅ Routing decision time: p50 < 20ms (metadata-only policy + cached model table)
+- ✅ RAG metrics: RAGAS faithfulness ≥ 0.8, context precision/recall ≥ 0.7
+- ✅ Retrieval improvement: +≥10% NDCG@10 vs current baseline after SPLADE-v3
+- ✅ Observability: 100% LLM calls traced in Langfuse with cost dashboards  
+- ✅ Export idempotency: Brown-field re-runs update existing, don't duplicate
+- ✅ Security: OIDC auth flows pass, roles enforced in API, audit events captured
+
+#### Risk Mitigation Strategies
+
+**Technical Risks:**
+- **Provider drift/outages**: LiteLLM fallback order + health checks, local vLLM/TGI mirrors
+- **Benchmark mismatch**: Combine public leaderboards with internal evals (internal wins ties)
+- **Retrieval regressions**: RAGAS in CI with thresholds, feature flag rollbacks
+
+**Implementation Risks:**
+- **Complexity overload**: Focus on proven OSS tools (LiteLLM, vLLM, Yjs, RAGAS)
+- **Performance claims**: Separate proxy overhead, route-decision time, model time reporting
+- **Integration challenges**: Start with minimal viable implementations, iterate based on feedback
 
 ### Network Environment Limitations
 

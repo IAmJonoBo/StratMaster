@@ -1,0 +1,103 @@
+# LiteLLM Proxy Configuration - OSS-first with cloud fallbacks
+model_list:
+  # Local high-throughput backends
+  - model_name: chat-default
+    litellm_params:
+      model: openai/llama-3.1-8b-instruct
+      api_base: http://vllm:8000/v1
+      api_key: "sk-fake-key"  # vLLM doesn't require real key
+      
+  - model_name: chat-premium
+    litellm_params:
+      model: huggingface/tgi/Meta-Llama-3-70B-Instruct
+      api_base: http://tgi:8080
+      api_key: "hf_fake_key"
+      
+  - model_name: embed-default
+    litellm_params:
+      model: text-embedding-3-large
+      api_base: http://vllm:8000/v1
+      api_key: "sk-fake-key"
+      
+  # Cloud fallbacks
+  - model_name: cloud-fallback-chat
+    litellm_params:
+      model: together_ai/meta-llama/Meta-Llama-3-70B-Instruct-Turbo
+      api_key: os.environ/TOGETHER_API_KEY
+      
+  - model_name: hf-inference-fallback
+    litellm_params:
+      model: huggingface/meta-llama/Meta-Llama-3-70B-Instruct
+      api_key: os.environ/HUGGINGFACE_API_KEY
+
+# Routing rules based on Scratch.md requirements
+router_settings:
+  routing_strategy: "usage-based-routing"
+  model_selection_rules:
+    - when: 
+        task: "embed"
+      use: embed-default
+      
+    - when:
+        tenant: "regulated"
+      prefer: chat-premium
+      fallback: cloud-fallback-chat
+      
+    - when:
+        cost_surge: true
+      prefer: chat-default
+      
+    - when:
+        complexity: "high"
+      prefer: chat-premium
+      fallback: cloud-fallback-chat
+      
+    - when:
+        latency_critical: true  
+      prefer: chat-default
+
+# Performance and reliability settings
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: postgresql+psycopg://postgres:postgres@postgres:5432/litellm
+  
+  # Observability - integrate with existing OpenTelemetry setup
+  custom_auth: false
+  litellm_settings:
+    telemetry: true
+    success_callback: ["otel"]
+    failure_callback: ["otel"]
+    
+  # Quality gates from Scratch.md: p50 < 5ms, p95 < 15ms
+  timeout: 60  # seconds
+  max_budget: 1000  # USD per month
+  budget_duration: "1mo"
+  
+  # Health checks and fallbacks
+  health_check_interval: 30  # seconds
+  max_fallback_depth: 2
+  
+  # Rate limiting and cost controls
+  tpm_limit: 10000  # tokens per minute
+  rpm_limit: 1000   # requests per minute
+  
+# Per-tenant configuration
+litellm_settings:
+  # Cost tracking and budgets
+  track_cost_per_model: true
+  track_cost_per_tenant: true
+  
+  # Cache settings for performance (<20ms routing)
+  redis_host: redis
+  redis_port: 6379
+  redis_password: null
+  cache_responses: true
+  cache_params:
+    ttl: 3600  # 1 hour cache
+    
+  # Request mirroring for A/B testing
+  request_mirroring: false
+  
+  # Logging for audit trails
+  request_logs: true
+  detailed_debug_logs: false
