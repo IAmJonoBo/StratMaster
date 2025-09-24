@@ -2,8 +2,8 @@
 FastAPI application for real-time collaboration service.
 """
 
-import logging
 import os
+import logging
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 
@@ -22,6 +22,9 @@ from .models import (
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Feature flag for collaboration service
+ENABLE_COLLAB_LIVE = os.getenv("ENABLE_COLLAB_LIVE", "false").lower() == "true"
 
 # Global service instance
 collaboration_service: CollaborationService = None
