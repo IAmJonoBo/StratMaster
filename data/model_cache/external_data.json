@@ -1,0 +1,29 @@
+{
+  "arena_data": {
+    "gpt-4o": 1287,
+    "claude-3-5-sonnet": 1269,
+    "gpt-4o-mini": 1206,
+    "llama-3.1-70b": 1213,
+    "llama-3.1-8b": 1156,
+    "mixtral-8x7b-instruct": 1149,
+    "phi3-medium-instruct": 1098,
+    "gemini-1.5-pro": 1201,
+    "claude-3-opus": 1238,
+    "claude-3-haiku": 1180
+  },
+  "mteb_data": {
+    "text-embedding-3-large": 64.6,
+    "text-embedding-3-small": 62.3,
+    "text-embedding-ada-002": 61.0,
+    "all-mpnet-base-v2": 57.8,
+    "bge-large-en-v1.5": 63.5,
+    "e5-large-v2": 62.3,
+    "instructor-xl": 58.8,
+    "all-minilm-l6-v2": 56.3
+  },
+  "timestamp": "2025-09-24T22:16:43.333594",
+  "sources": {
+    "arena": "LMSYS Chatbot Arena (mock)",
+    "mteb": "MTEB Leaderboard (mock)"
+  }
+}

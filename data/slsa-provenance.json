@@ -1,0 +1,38 @@
+{
+  "_type": "https://in-toto.io/Statement/v0.1",
+  "subject": [
+    {
+      "name": "stratmaster",
+      "digest": {
+        "sha256": "placeholder-would-be-actual-artifact-hash"
+      }
+    }
+  ],
+  "predicateType": "https://slsa.dev/provenance/v0.2",
+  "predicate": {
+    "builder": {
+      "id": "StratMaster CI/CD Pipeline"
+    },
+    "buildType": "StratMaster Build",
+    "invocation": {
+      "configSource": {
+        "commit": "515017f683b5646b6999043dc35c5cecf14032c3",
+        "repository": "https://github.com/IAmJonoBo/StratMaster"
+      },
+      "parameters": {
+        "os": "Linux",
+        "arch": "x86_64",
+        "python_version": "3.12.3 (main, Aug 14 2025, 17:47:21) [GCC 13.3.0]",
+        "build_timestamp": "2025-09-24T22:23:41.689199+00:00"
+      }
+    },
+    "materials": [
+      {
+        "uri": "https://github.com/IAmJonoBo/StratMaster",
+        "digest": {
+          "sha1": "515017f683b5646b6999043dc35c5cecf14032c3"
+        }
+      }
+    ]
+  }
+}

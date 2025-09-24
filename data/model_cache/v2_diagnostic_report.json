@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-09-24T22:16:43.334502",
+  "model_recommender_v2_status": "enabled",
+  "data_sources": {
+    "arena_models": 10,
+    "mteb_models": 8,
+    "last_refresh": "2025-09-24T22:16:42.832825",
+    "sources": {
+      "arena": "LMSYS Chatbot Arena (mock)",
+      "mteb": "MTEB Leaderboard (mock)"
+    }
+  },
+  "telemetry": {
+    "events_processed": 30,
+    "models_with_stats": 3
+  },
+  "recommendations": {
+    "scenarios_tested": 4,
+    "primary_models": [
+      "gpt-4o",
+      "gpt-4o",
+      "claude-3-5-sonnet",
+      "text-embedding-3-large"
+    ]
+  },
+  "storage": {
+    "performance_records": 18,
+    "cache_files": [
+      "data/model_cache/model_performance.json",
+      "data/model_cache/external_data.json"
+    ]
+  }
+}

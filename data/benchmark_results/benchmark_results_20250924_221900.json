@@ -1,0 +1,529 @@
+{
+  "summary": {
+    "systems_tested": 3,
+    "datasets_per_system": 2,
+    "overall_best_system": "baseline",
+    "quality_gate_summary": {},
+    "performance_summary": {
+      "baseline": {
+        "avg_ndcg": 0.0,
+        "avg_mrr": 0.0,
+        "avg_p95_latency": 41.69583320617676,
+        "gate_pass_rate": 0.25
+      },
+      "splade": {
+        "avg_ndcg": 0.0,
+        "avg_mrr": 0.0,
+        "avg_p95_latency": 106.31847381591797,
+        "gate_pass_rate": 0.25
+      },
+      "colbert": {
+        "avg_ndcg": 0.0,
+        "avg_mrr": 0.0,
+        "avg_p95_latency": 172.36769199371338,
+        "gate_pass_rate": 0.25
+      }
+    }
+  },
+  "detailed_results": {
+    "baseline": {
+      "nfcorpus": {
+        "evaluation_results": {
+          "system_name": "baseline",
+          "dataset": "nfcorpus",
+          "timestamp": "2025-09-24T22:18:58.498379",
+          "k": 10,
+          "total_queries": 5,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 39.18099403381348,
+            "p95_ms": 40.18592834472656,
+            "p99_ms": 40.18592834472656,
+            "mean_ms": 35.18948554992676,
+            "all_latencies": [
+              29.2356014251709,
+              27.167797088623047,
+              40.177106857299805,
+              39.18099403381348,
+              40.18592834472656
+            ]
+          },
+          "evaluation_time_s": 0.1765120029449463,
+          "queries_per_second": 28.326685531745333
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 40.18592834472656,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      },
+      "msmarco": {
+        "evaluation_results": {
+          "system_name": "baseline",
+          "dataset": "msmarco",
+          "timestamp": "2025-09-24T22:18:58.609103",
+          "k": 10,
+          "total_queries": 3,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 37.250518798828125,
+            "p95_ms": 43.20573806762695,
+            "p99_ms": 43.20573806762695,
+            "mean_ms": 36.55648231506348,
+            "all_latencies": [
+              29.21319007873535,
+              43.20573806762695,
+              37.250518798828125
+            ]
+          },
+          "evaluation_time_s": 0.1100168228149414,
+          "queries_per_second": 27.268556964658767
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 43.20573806762695,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      }
+    },
+    "splade": {
+      "nfcorpus": {
+        "evaluation_results": {
+          "system_name": "splade",
+          "dataset": "nfcorpus",
+          "timestamp": "2025-09-24T22:18:59.070955",
+          "k": 10,
+          "total_queries": 5,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 94.29168701171875,
+            "p95_ms": 107.29789733886719,
+            "p99_ms": 107.29789733886719,
+            "mean_ms": 92.0931339263916,
+            "all_latencies": [
+              70.24979591369629,
+              107.29789733886719,
+              98.30188751220703,
+              94.29168701171875,
+              90.32440185546875
+            ]
+          },
+          "evaluation_time_s": 0.4611508846282959,
+          "queries_per_second": 10.842438270567731
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 107.29789733886719,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      },
+      "msmarco": {
+        "evaluation_results": {
+          "system_name": "splade",
+          "dataset": "msmarco",
+          "timestamp": "2025-09-24T22:18:59.323749",
+          "k": 10,
+          "total_queries": 3,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 78.26709747314453,
+            "p95_ms": 105.33905029296875,
+            "p99_ms": 105.33905029296875,
+            "mean_ms": 83.95250638326009,
+            "all_latencies": [
+              105.33905029296875,
+              78.26709747314453,
+              68.25137138366699
+            ]
+          },
+          "evaluation_time_s": 0.2522242069244385,
+          "queries_per_second": 11.894179534079147
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 105.33905029296875,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      }
+    },
+    "colbert": {
+      "nfcorpus": {
+        "evaluation_results": {
+          "system_name": "colbert",
+          "dataset": "nfcorpus",
+          "timestamp": "2025-09-24T22:19:00.055734",
+          "k": 10,
+          "total_queries": 5,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 140.37823677062988,
+            "p95_ms": 175.35972595214844,
+            "p99_ms": 175.35972595214844,
+            "mean_ms": 146.14129066467285,
+            "all_latencies": [
+              175.35972595214844,
+              140.37823677062988,
+              133.30960273742676,
+              108.29710960388184,
+              173.36177825927734
+            ]
+          },
+          "evaluation_time_s": 0.73140549659729,
+          "queries_per_second": 6.836153164368393
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 175.35972595214844,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      },
+      "msmarco": {
+        "evaluation_results": {
+          "system_name": "colbert",
+          "dataset": "msmarco",
+          "timestamp": "2025-09-24T22:19:00.485754",
+          "k": 10,
+          "total_queries": 3,
+          "metrics": {
+            "ndcg_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "mrr": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "recall_at_k": {
+              "mean": 0.0,
+              "std": 0.0,
+              "scores": [
+                0.0,
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "latency": {
+            "p50_ms": 139.32466506958008,
+            "p95_ms": 169.37565803527832,
+            "p99_ms": 169.37565803527832,
+            "mean_ms": 143.00894737243652,
+            "all_latencies": [
+              169.37565803527832,
+              139.32466506958008,
+              120.32651901245117
+            ]
+          },
+          "evaluation_time_s": 0.4294116497039795,
+          "queries_per_second": 6.986303240883402
+        },
+        "quality_gates": {
+          "ndcg_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.3
+          },
+          "mrr_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.4
+          },
+          "recall_gate": {
+            "passed": false,
+            "value": 0.0,
+            "threshold": 0.2
+          },
+          "latency_gate": {
+            "passed": true,
+            "value": 169.37565803527832,
+            "threshold": 200.0
+          },
+          "overall": {
+            "passed": false,
+            "passed_gates": 1,
+            "total_gates": 4
+          }
+        }
+      }
+    }
+  },
+  "timestamp": "2025-09-24T22:19:00.487456"
+}

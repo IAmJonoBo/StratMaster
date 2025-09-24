@@ -1,0 +1,234 @@
+# Service Level Objectives and Error Budget Definitions
+# Implements SLO requirements from GAP_ANALYSIS.md
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stratmaster-slos
+  namespace: stratmaster
+data:
+  slos.yaml: |
+    # StratMaster Service Level Objectives
+    services:
+      
+      # API Service SLOs
+      stratmaster-api:
+        slis:
+          availability:
+            description: "API service availability"
+            query: "up{job='stratmaster-api'}"
+            target: 99.5  # 99.5% uptime
+            window: "30d"
+            error_budget: 0.5  # 0.5% error budget
+            
+          latency_p95:
+            description: "95th percentile response latency" 
+            query: "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job='stratmaster-api'}[5m]))"
+            target: 500  # 500ms p95 target
+            unit: "ms"
+            window: "30d"
+            
+          latency_p99:
+            description: "99th percentile response latency"
+            query: "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job='stratmaster-api'}[5m]))"
+            target: 1000  # 1s p99 target
+            unit: "ms"
+            window: "30d"
+            
+          error_rate:
+            description: "HTTP 5xx error rate"
+            query: "rate(http_requests_total{job='stratmaster-api',code=~'5..'}[5m]) / rate(http_requests_total{job='stratmaster-api'}[5m])"
+            target: 1.0  # < 1% error rate
+            unit: "percentage"
+            window: "30d"
+            
+        alerts:
+          - name: "StratMaster API High Error Rate"
+            condition: "error_rate > 5"  # > 5% triggers immediate alert
+            severity: "critical"
+            summary: "StratMaster API error rate is {{ $value }}%"
+            
+          - name: "StratMaster API High Latency"
+            condition: "latency_p95 > 1000"  # > 1s p95 triggers alert
+            severity: "warning" 
+            summary: "StratMaster API p95 latency is {{ $value }}ms"
+            
+          - name: "StratMaster API Down"
+            condition: "availability < 0.995"  # Below 99.5% availability
+            severity: "critical"
+            summary: "StratMaster API availability is {{ $value }}%"
+      
+      # Research MCP Service SLOs
+      research-mcp:
+        slis:
+          availability:
+            description: "Research MCP service availability"
+            query: "up{job='research-mcp'}"
+            target: 99.0  # 99% uptime (less critical than main API)
+            window: "30d"
+            error_budget: 1.0
+            
+          latency_p95:
+            description: "95th percentile response latency"
+            query: "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job='research-mcp'}[5m]))"
+            target: 1000  # 1s p95 target (research can be slower)
+            unit: "ms"
+            window: "30d"
+            
+          error_rate:
+            description: "HTTP 5xx error rate"
+            query: "rate(http_requests_total{job='research-mcp',code=~'5..'}[5m]) / rate(http_requests_total{job='research-mcp'}[5m])"
+            target: 2.0  # < 2% error rate
+            unit: "percentage"
+            window: "30d"
+            
+        alerts:
+          - name: "Research MCP High Error Rate" 
+            condition: "error_rate > 10"  # > 10% triggers alert
+            severity: "warning"
+            summary: "Research MCP error rate is {{ $value }}%"
+            
+          - name: "Research MCP Down"
+            condition: "availability < 0.99"
+            severity: "warning"
+            summary: "Research MCP availability is {{ $value }}%"
+      
+      # Collaboration Service SLOs (when implemented)
+      collaboration:
+        slis:
+          availability:
+            description: "Collaboration service availability"
+            query: "up{job='collaboration'}"
+            target: 99.9  # 99.9% uptime (critical for real-time)
+            window: "30d"
+            error_budget: 0.1
+            
+          websocket_latency:
+            description: "WebSocket message latency"
+            query: "histogram_quantile(0.95, rate(websocket_message_duration_seconds_bucket{job='collaboration'}[5m]))"
+            target: 150  # < 150ms target for real-time feel
+            unit: "ms"
+            window: "30d"
+            
+          connection_success_rate:
+            description: "WebSocket connection success rate"
+            query: "rate(websocket_connections_total{job='collaboration',status='success'}[5m]) / rate(websocket_connections_total{job='collaboration'}[5m])"
+            target: 99.5  # 99.5% connection success
+            unit: "percentage"
+            window: "30d"
+            
+        alerts:
+          - name: "Collaboration Service High Latency"
+            condition: "websocket_latency > 300"  # > 300ms triggers alert
+            severity: "critical"
+            summary: "Collaboration WebSocket latency is {{ $value }}ms"
+            
+          - name: "Collaboration Connection Failures"
+            condition: "connection_success_rate < 95"  # < 95% triggers alert
+            severity: "critical"
+            summary: "Collaboration connection success rate is {{ $value }}%"
+      
+      # Knowledge Graph Service SLOs
+      knowledge:
+        slis:
+          availability:
+            description: "Knowledge service availability"
+            query: "up{job='knowledge'}"
+            target: 99.5  # 99.5% uptime
+            window: "30d"
+            error_budget: 0.5
+            
+          query_latency_p95:
+            description: "95th percentile query latency"
+            query: "histogram_quantile(0.95, rate(knowledge_query_duration_seconds_bucket{job='knowledge'}[5m]))"
+            target: 2000  # 2s p95 target (complex queries allowed)
+            unit: "ms"
+            window: "30d"
+            
+          index_freshness:
+            description: "Knowledge index freshness"
+            query: "time() - knowledge_last_index_update_timestamp"
+            target: 3600  # < 1 hour staleness
+            unit: "seconds"
+            window: "30d"
+            
+        alerts:
+          - name: "Knowledge Service Slow Queries"
+            condition: "query_latency_p95 > 5000"  # > 5s triggers alert
+            severity: "warning"
+            summary: "Knowledge service p95 query latency is {{ $value }}ms"
+            
+          - name: "Knowledge Index Stale"
+            condition: "index_freshness > 7200"  # > 2 hours triggers alert
+            severity: "warning"
+            summary: "Knowledge index is {{ $value }}s behind"
+
+    # Error Budget Policies
+    error_budget_policies:
+      burn_rate_alerts:
+        # Alert when error budget burn rate is too high
+        fast_burn:
+          window: "5m"
+          threshold: 14.4  # 2% of monthly budget in 5 minutes
+          severity: "critical"
+          
+        slow_burn:
+          window: "1h"  
+          threshold: 6  # 25% of monthly budget in 1 hour
+          severity: "warning"
+          
+      actions:
+        critical_burn:
+          - "Stop non-essential deployments"
+          - "Escalate to on-call engineer"
+          - "Begin incident response"
+          
+        warning_burn:
+          - "Review recent changes"
+          - "Consider rollback if pattern continues"
+          - "Alert development team"
+
+    # Golden Signals Monitoring
+    golden_signals:
+      # Latency - How long it takes to service a request
+      latency:
+        metrics:
+          - "http_request_duration_seconds"
+          - "websocket_message_duration_seconds"
+          - "knowledge_query_duration_seconds"
+        thresholds:
+          p50: 100   # 100ms
+          p95: 500   # 500ms
+          p99: 1000  # 1s
+          
+      # Traffic - How much demand is being placed on your system
+      traffic:
+        metrics:
+          - "http_requests_total"
+          - "websocket_connections_total"
+          - "knowledge_queries_total"
+        thresholds:
+          rps_warning: 100    # 100 RPS warning
+          rps_critical: 500   # 500 RPS critical
+          
+      # Errors - The rate of requests that fail
+      errors:
+        metrics:
+          - "http_requests_total{code=~'5..'}"
+          - "websocket_connection_errors_total"
+          - "knowledge_query_errors_total"
+        thresholds:
+          error_rate_warning: 1.0   # 1% warning
+          error_rate_critical: 5.0  # 5% critical
+          
+      # Saturation - How "full" your service is
+      saturation:
+        metrics:
+          - "process_resident_memory_bytes"
+          - "go_memstats_heap_inuse_bytes"
+          - "cpu_usage_percent"
+        thresholds:
+          cpu_warning: 70      # 70% CPU warning
+          cpu_critical: 90     # 90% CPU critical
+          memory_warning: 80   # 80% memory warning
+          memory_critical: 95  # 95% memory critical

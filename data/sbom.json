@@ -1,0 +1,3472 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:stratmaster-20250924-222338",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-09-24T22:23:38.348671+00:00",
+    "tools": [
+      {
+        "vendor": "StratMaster",
+        "name": "SBOM Generator",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "stratmaster-app",
+      "name": "StratMaster",
+      "version": "515017f-dirty",
+      "description": "AI-powered strategic planning and analysis platform",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "python-PyPDF2-3.0.1+",
+      "name": "PyPDF2",
+      "version": ">=3.0.1",
+      "scope": "required",
+      "purl": "pkg:pypi/PyPDF2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.0.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-PyYAML-6.0.2+",
+      "name": "PyYAML",
+      "version": ">=6.0.2",
+      "scope": "required",
+      "purl": "pkg:pypi/PyYAML",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=6.0.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-aiosqlite-0.21.0+",
+      "name": "aiosqlite",
+      "version": ">=0.21.0",
+      "scope": "required",
+      "purl": "pkg:pypi/aiosqlite",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.21.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-apscheduler-3.11.0+",
+      "name": "apscheduler",
+      "version": ">=3.11.0",
+      "scope": "required",
+      "purl": "pkg:pypi/apscheduler",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.11.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-cryptography-46.0.1+",
+      "name": "cryptography",
+      "version": ">=46.0.1",
+      "scope": "required",
+      "purl": "pkg:pypi/cryptography",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=46.0.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-fastjsonschema-2.21.2+",
+      "name": "fastjsonschema",
+      "version": ">=2.21.2",
+      "scope": "required",
+      "purl": "pkg:pypi/fastjsonschema",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=2.21.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-httpx-1.0.dev3+",
+      "name": "httpx",
+      "version": ">=1.0.dev3",
+      "scope": "required",
+      "purl": "pkg:pypi/httpx",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.0.dev3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-jinja2-3.1.6+",
+      "name": "jinja2",
+      "version": ">=3.1.6",
+      "scope": "required",
+      "purl": "pkg:pypi/jinja2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.1.6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-langchain-core-0.3.76+",
+      "name": "langchain-core",
+      "version": ">=0.3.76",
+      "scope": "required",
+      "purl": "pkg:pypi/langchain-core",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.3.76"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-markdown-3.9+",
+      "name": "markdown",
+      "version": ">=3.9",
+      "scope": "required",
+      "purl": "pkg:pypi/markdown",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.9"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-mcp-1.14.1+",
+      "name": "mcp",
+      "version": ">=1.14.1",
+      "scope": "required",
+      "purl": "pkg:pypi/mcp",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.14.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-nltk-3.9.1+",
+      "name": "nltk",
+      "version": ">=3.9.1",
+      "scope": "required",
+      "purl": "pkg:pypi/nltk",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.9.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-numpy-2.3.3+",
+      "name": "numpy",
+      "version": ">=2.3.3",
+      "scope": "required",
+      "purl": "pkg:pypi/numpy",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=2.3.3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-opentelemetry-api-1.37.0+",
+      "name": "opentelemetry-api",
+      "version": ">=1.37.0",
+      "scope": "required",
+      "purl": "pkg:pypi/opentelemetry-api",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.37.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-opentelemetry-exporter-otlp-1.37.0+",
+      "name": "opentelemetry-exporter-otlp",
+      "version": ">=1.37.0",
+      "scope": "required",
+      "purl": "pkg:pypi/opentelemetry-exporter-otlp",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.37.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-opentelemetry-exporter-prometheus-0.46b0+",
+      "name": "opentelemetry-exporter-prometheus",
+      "version": ">=0.46b0",
+      "scope": "required",
+      "purl": "pkg:pypi/opentelemetry-exporter-prometheus",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.46b0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-opentelemetry-instrumentation-fastapi-0.48b0+",
+      "name": "opentelemetry-instrumentation-fastapi",
+      "version": ">=0.48b0",
+      "scope": "required",
+      "purl": "pkg:pypi/opentelemetry-instrumentation-fastapi",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.48b0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-opentelemetry-sdk-1.37.0+",
+      "name": "opentelemetry-sdk",
+      "version": ">=1.37.0",
+      "scope": "required",
+      "purl": "pkg:pypi/opentelemetry-sdk",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.37.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-orjson-3.11.3+",
+      "name": "orjson",
+      "version": ">=3.11.3",
+      "scope": "required",
+      "purl": "pkg:pypi/orjson",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.11.3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pandas-2.3.2+",
+      "name": "pandas",
+      "version": ">=2.3.2",
+      "scope": "required",
+      "purl": "pkg:pypi/pandas",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=2.3.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-passlib-1.7.4+",
+      "name": "passlib",
+      "version": ">=1.7.4",
+      "scope": "required",
+      "purl": "pkg:pypi/passlib",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.7.4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-presidio-analyzer-2.2.360+",
+      "name": "presidio-analyzer",
+      "version": ">=2.2.360",
+      "scope": "required",
+      "purl": "pkg:pypi/presidio-analyzer",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=2.2.360"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-presidio-anonymizer-2.2.360+",
+      "name": "presidio-anonymizer",
+      "version": ">=2.2.360",
+      "scope": "required",
+      "purl": "pkg:pypi/presidio-anonymizer",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=2.2.360"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-prometheus-client-0.23.1+",
+      "name": "prometheus-client",
+      "version": ">=0.23.1",
+      "scope": "required",
+      "purl": "pkg:pypi/prometheus-client",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.23.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-docx-1.2.0+",
+      "name": "python-docx",
+      "version": ">=1.2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/python-docx",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.2.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-jose-3.5.0+",
+      "name": "python-jose",
+      "version": ">=3.5.0",
+      "scope": "required",
+      "purl": "pkg:pypi/python-jose",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.5.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-keycloak-5.8.1+",
+      "name": "python-keycloak",
+      "version": ">=5.8.1",
+      "scope": "required",
+      "purl": "pkg:pypi/python-keycloak",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=5.8.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-multipart-0.0.20+",
+      "name": "python-multipart",
+      "version": ">=0.0.20",
+      "scope": "required",
+      "purl": "pkg:pypi/python-multipart",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.0.20"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-pptx-1.0.2+",
+      "name": "python-pptx",
+      "version": ">=1.0.2",
+      "scope": "required",
+      "purl": "pkg:pypi/python-pptx",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.0.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-socketio-5.13.0+",
+      "name": "python-socketio",
+      "version": ">=5.13.0",
+      "scope": "required",
+      "purl": "pkg:pypi/python-socketio",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=5.13.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyyaml-6.0.2+",
+      "name": "pyyaml",
+      "version": ">=6.0.2",
+      "scope": "required",
+      "purl": "pkg:pypi/pyyaml",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=6.0.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-qdrant-client-1.15.1+",
+      "name": "qdrant-client",
+      "version": ">=1.15.1",
+      "scope": "required",
+      "purl": "pkg:pypi/qdrant-client",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.15.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-redis-6.4.0+",
+      "name": "redis",
+      "version": ">=6.4.0",
+      "scope": "required",
+      "purl": "pkg:pypi/redis",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=6.4.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-rich-14.1.0+",
+      "name": "rich",
+      "version": ">=14.1.0",
+      "scope": "required",
+      "purl": "pkg:pypi/rich",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=14.1.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-scikit-learn-1.7.2+",
+      "name": "scikit-learn",
+      "version": ">=1.7.2",
+      "scope": "required",
+      "purl": "pkg:pypi/scikit-learn",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.7.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-sentence-transformers-5.1.1+",
+      "name": "sentence-transformers",
+      "version": ">=5.1.1",
+      "scope": "required",
+      "purl": "pkg:pypi/sentence-transformers",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=5.1.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-spacy-3.8.7+",
+      "name": "spacy",
+      "version": ">=3.8.7",
+      "scope": "required",
+      "purl": "pkg:pypi/spacy",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.8.7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-stratmaster-cove-0.1.0+",
+      "name": "stratmaster-cove",
+      "version": ">=0.1.0",
+      "scope": "required",
+      "purl": "pkg:pypi/stratmaster-cove",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.1.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-structlog-25.4.0+",
+      "name": "structlog",
+      "version": ">=25.4.0",
+      "scope": "required",
+      "purl": "pkg:pypi/structlog",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=25.4.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-tenacity-9.1.2+",
+      "name": "tenacity",
+      "version": ">=9.1.2",
+      "scope": "required",
+      "purl": "pkg:pypi/tenacity",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=9.1.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-typer-0.19.2+",
+      "name": "typer",
+      "version": ">=0.19.2",
+      "scope": "required",
+      "purl": "pkg:pypi/typer",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.19.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-typing-extensions-4.15.0+",
+      "name": "typing-extensions",
+      "version": ">=4.15.0",
+      "scope": "required",
+      "purl": "pkg:pypi/typing-extensions",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=4.15.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-websockets-15.0.1+",
+      "name": "websockets",
+      "version": ">=15.0.1",
+      "scope": "required",
+      "purl": "pkg:pypi/websockets",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=15.0.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-black-25.9.0+",
+      "name": "black",
+      "version": ">=25.9.0",
+      "scope": "required",
+      "purl": "pkg:pypi/black",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=25.9.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-mypy-1.18.2+",
+      "name": "mypy",
+      "version": ">=1.18.2",
+      "scope": "required",
+      "purl": "pkg:pypi/mypy",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.18.2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pytest-asyncio-1.2.0+",
+      "name": "pytest-asyncio",
+      "version": ">=1.2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pytest-asyncio",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=1.2.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pytest-cov-7.0.0+",
+      "name": "pytest-cov",
+      "version": ">=7.0.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pytest-cov",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=7.0.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-ruff-0.13.1+",
+      "name": "ruff",
+      "version": ">=0.13.1",
+      "scope": "required",
+      "purl": "pkg:pypi/ruff",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=0.13.1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-types-PyYAML-6.0.12.20250915+",
+      "name": "types-PyYAML",
+      "version": ">=6.0.12.20250915",
+      "scope": "required",
+      "purl": "pkg:pypi/types-PyYAML",
+      "properties": [
+        {
+          "name": "source",
+          "value": "requirements-dev.txt"
+        },
+        {
+          "name": "constraint",
+          "value": ">=6.0.12.20250915"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-requires-python = \"-3.11\"+",
+      "name": "requires-python = \"",
+      "version": ">=3.11\"",
+      "scope": "required",
+      "purl": "pkg:pypi/requires-python = \"",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pyproject.toml"
+        },
+        {
+          "name": "constraint",
+          "value": ">=3.11\""
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-argcomplete-3.6.2",
+      "name": "argcomplete",
+      "version": "3.6.2",
+      "scope": "required",
+      "purl": "pkg:pypi/argcomplete@3.6.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-attrs-23.2.0",
+      "name": "attrs",
+      "version": "23.2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/attrs@23.2.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-Automat-22.10.0",
+      "name": "Automat",
+      "version": "22.10.0",
+      "scope": "required",
+      "purl": "pkg:pypi/Automat@22.10.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-Babel-2.10.3",
+      "name": "Babel",
+      "version": "2.10.3",
+      "scope": "required",
+      "purl": "pkg:pypi/Babel@2.10.3",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-bcc-0.29.1",
+      "name": "bcc",
+      "version": "0.29.1",
+      "scope": "required",
+      "purl": "pkg:pypi/bcc@0.29.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-bcrypt-3.2.2",
+      "name": "bcrypt",
+      "version": "3.2.2",
+      "scope": "required",
+      "purl": "pkg:pypi/bcrypt@3.2.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-blinker-1.7.0",
+      "name": "blinker",
+      "version": "1.7.0",
+      "scope": "required",
+      "purl": "pkg:pypi/blinker@1.7.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-boto3-1.34.46",
+      "name": "boto3",
+      "version": "1.34.46",
+      "scope": "required",
+      "purl": "pkg:pypi/boto3@1.34.46",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-botocore-1.34.46",
+      "name": "botocore",
+      "version": "1.34.46",
+      "scope": "required",
+      "purl": "pkg:pypi/botocore@1.34.46",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-certifi-2023.11.17",
+      "name": "certifi",
+      "version": "2023.11.17",
+      "scope": "required",
+      "purl": "pkg:pypi/certifi@2023.11.17",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-chardet-5.2.0",
+      "name": "chardet",
+      "version": "5.2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/chardet@5.2.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-click-8.1.6",
+      "name": "click",
+      "version": "8.1.6",
+      "scope": "required",
+      "purl": "pkg:pypi/click@8.1.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-cloud-init-25.1.4",
+      "name": "cloud-init",
+      "version": "25.1.4",
+      "scope": "required",
+      "purl": "pkg:pypi/cloud-init@25.1.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-colorama-0.4.6",
+      "name": "colorama",
+      "version": "0.4.6",
+      "scope": "required",
+      "purl": "pkg:pypi/colorama@0.4.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-command-not-found-0.3",
+      "name": "command-not-found",
+      "version": "0.3",
+      "scope": "required",
+      "purl": "pkg:pypi/command-not-found@0.3",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-configobj-5.0.8",
+      "name": "configobj",
+      "version": "5.0.8",
+      "scope": "required",
+      "purl": "pkg:pypi/configobj@5.0.8",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-constantly-23.10.4",
+      "name": "constantly",
+      "version": "23.10.4",
+      "scope": "required",
+      "purl": "pkg:pypi/constantly@23.10.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-cryptography-41.0.7",
+      "name": "cryptography",
+      "version": "41.0.7",
+      "scope": "required",
+      "purl": "pkg:pypi/cryptography@41.0.7",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-dbus-python-1.3.2",
+      "name": "dbus-python",
+      "version": "1.3.2",
+      "scope": "required",
+      "purl": "pkg:pypi/dbus-python@1.3.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-distro-1.9.0",
+      "name": "distro",
+      "version": "1.9.0",
+      "scope": "required",
+      "purl": "pkg:pypi/distro@1.9.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-distro-info-1.7+build1",
+      "name": "distro-info",
+      "version": "1.7+build1",
+      "scope": "required",
+      "purl": "pkg:pypi/distro-info@1.7+build1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-httplib2-0.20.4",
+      "name": "httplib2",
+      "version": "0.20.4",
+      "scope": "required",
+      "purl": "pkg:pypi/httplib2@0.20.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-hyperlink-21.0.0",
+      "name": "hyperlink",
+      "version": "21.0.0",
+      "scope": "required",
+      "purl": "pkg:pypi/hyperlink@21.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-idna-3.6",
+      "name": "idna",
+      "version": "3.6",
+      "scope": "required",
+      "purl": "pkg:pypi/idna@3.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-incremental-22.10.0",
+      "name": "incremental",
+      "version": "22.10.0",
+      "scope": "required",
+      "purl": "pkg:pypi/incremental@22.10.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-Jinja2-3.1.2",
+      "name": "Jinja2",
+      "version": "3.1.2",
+      "scope": "required",
+      "purl": "pkg:pypi/Jinja2@3.1.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-jmespath-1.0.1",
+      "name": "jmespath",
+      "version": "1.0.1",
+      "scope": "required",
+      "purl": "pkg:pypi/jmespath@1.0.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-jsonpatch-1.32",
+      "name": "jsonpatch",
+      "version": "1.32",
+      "scope": "required",
+      "purl": "pkg:pypi/jsonpatch@1.32",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-jsonpointer-2.0",
+      "name": "jsonpointer",
+      "version": "2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/jsonpointer@2.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-jsonschema-4.10.3",
+      "name": "jsonschema",
+      "version": "4.10.3",
+      "scope": "required",
+      "purl": "pkg:pypi/jsonschema@4.10.3",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-launchpadlib-1.11.0",
+      "name": "launchpadlib",
+      "version": "1.11.0",
+      "scope": "required",
+      "purl": "pkg:pypi/launchpadlib@1.11.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-lazr.restfulclient-0.14.6",
+      "name": "lazr.restfulclient",
+      "version": "0.14.6",
+      "scope": "required",
+      "purl": "pkg:pypi/lazr.restfulclient@0.14.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-lazr.uri-1.0.6",
+      "name": "lazr.uri",
+      "version": "1.0.6",
+      "scope": "required",
+      "purl": "pkg:pypi/lazr.uri@1.0.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-markdown-it-py-3.0.0",
+      "name": "markdown-it-py",
+      "version": "3.0.0",
+      "scope": "required",
+      "purl": "pkg:pypi/markdown-it-py@3.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-MarkupSafe-2.1.5",
+      "name": "MarkupSafe",
+      "version": "2.1.5",
+      "scope": "required",
+      "purl": "pkg:pypi/MarkupSafe@2.1.5",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-mdurl-0.1.2",
+      "name": "mdurl",
+      "version": "0.1.2",
+      "scope": "required",
+      "purl": "pkg:pypi/mdurl@0.1.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-mercurial-6.7.2",
+      "name": "mercurial",
+      "version": "6.7.2",
+      "scope": "required",
+      "purl": "pkg:pypi/mercurial@6.7.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-netaddr-0.8.0",
+      "name": "netaddr",
+      "version": "0.8.0",
+      "scope": "required",
+      "purl": "pkg:pypi/netaddr@0.8.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-netifaces-0.11.0",
+      "name": "netifaces",
+      "version": "0.11.0",
+      "scope": "required",
+      "purl": "pkg:pypi/netifaces@0.11.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-oauthlib-3.2.2",
+      "name": "oauthlib",
+      "version": "3.2.2",
+      "scope": "required",
+      "purl": "pkg:pypi/oauthlib@3.2.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-packaging-24.0",
+      "name": "packaging",
+      "version": "24.0",
+      "scope": "required",
+      "purl": "pkg:pypi/packaging@24.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pexpect-4.9.0",
+      "name": "pexpect",
+      "version": "4.9.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pexpect@4.9.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pip-24.0",
+      "name": "pip",
+      "version": "24.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pip@24.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pipx-1.7.1",
+      "name": "pipx",
+      "version": "1.7.1",
+      "scope": "required",
+      "purl": "pkg:pypi/pipx@1.7.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-platformdirs-4.4.0",
+      "name": "platformdirs",
+      "version": "4.4.0",
+      "scope": "required",
+      "purl": "pkg:pypi/platformdirs@4.4.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-ptyprocess-0.7.0",
+      "name": "ptyprocess",
+      "version": "0.7.0",
+      "scope": "required",
+      "purl": "pkg:pypi/ptyprocess@0.7.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyasn1-0.4.8",
+      "name": "pyasn1",
+      "version": "0.4.8",
+      "scope": "required",
+      "purl": "pkg:pypi/pyasn1@0.4.8",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyasn1-modules-0.2.8",
+      "name": "pyasn1-modules",
+      "version": "0.2.8",
+      "scope": "required",
+      "purl": "pkg:pypi/pyasn1-modules@0.2.8",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-Pygments-2.17.2",
+      "name": "Pygments",
+      "version": "2.17.2",
+      "scope": "required",
+      "purl": "pkg:pypi/Pygments@2.17.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-PyGObject-3.48.2",
+      "name": "PyGObject",
+      "version": "3.48.2",
+      "scope": "required",
+      "purl": "pkg:pypi/PyGObject@3.48.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-PyHamcrest-2.1.0",
+      "name": "PyHamcrest",
+      "version": "2.1.0",
+      "scope": "required",
+      "purl": "pkg:pypi/PyHamcrest@2.1.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-PyJWT-2.7.0",
+      "name": "PyJWT",
+      "version": "2.7.0",
+      "scope": "required",
+      "purl": "pkg:pypi/PyJWT@2.7.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyOpenSSL-23.2.0",
+      "name": "pyOpenSSL",
+      "version": "23.2.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pyOpenSSL@23.2.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyparsing-3.1.1",
+      "name": "pyparsing",
+      "version": "3.1.1",
+      "scope": "required",
+      "purl": "pkg:pypi/pyparsing@3.1.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyparted-3.12.0",
+      "name": "pyparted",
+      "version": "3.12.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pyparted@3.12.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyrsistent-0.20.0",
+      "name": "pyrsistent",
+      "version": "0.20.0",
+      "scope": "required",
+      "purl": "pkg:pypi/pyrsistent@0.20.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pyserial-3.5",
+      "name": "pyserial",
+      "version": "3.5",
+      "scope": "required",
+      "purl": "pkg:pypi/pyserial@3.5",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-apt-2.7.7+ubuntu5",
+      "name": "python-apt",
+      "version": "2.7.7+ubuntu5",
+      "scope": "required",
+      "purl": "pkg:pypi/python-apt@2.7.7+ubuntu5",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-dateutil-2.8.2",
+      "name": "python-dateutil",
+      "version": "2.8.2",
+      "scope": "required",
+      "purl": "pkg:pypi/python-dateutil@2.8.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-debian-0.1.49+ubuntu2",
+      "name": "python-debian",
+      "version": "0.1.49+ubuntu2",
+      "scope": "required",
+      "purl": "pkg:pypi/python-debian@0.1.49+ubuntu2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-python-magic-0.4.27",
+      "name": "python-magic",
+      "version": "0.4.27",
+      "scope": "required",
+      "purl": "pkg:pypi/python-magic@0.4.27",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-pytz-2024.1",
+      "name": "pytz",
+      "version": "2024.1",
+      "scope": "required",
+      "purl": "pkg:pypi/pytz@2024.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-PyYAML-6.0.1",
+      "name": "PyYAML",
+      "version": "6.0.1",
+      "scope": "required",
+      "purl": "pkg:pypi/PyYAML@6.0.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-requests-2.31.0",
+      "name": "requests",
+      "version": "2.31.0",
+      "scope": "required",
+      "purl": "pkg:pypi/requests@2.31.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-rich-13.7.1",
+      "name": "rich",
+      "version": "13.7.1",
+      "scope": "required",
+      "purl": "pkg:pypi/rich@13.7.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-s3transfer-0.10.1",
+      "name": "s3transfer",
+      "version": "0.10.1",
+      "scope": "required",
+      "purl": "pkg:pypi/s3transfer@0.10.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-service-identity-24.1.0",
+      "name": "service-identity",
+      "version": "24.1.0",
+      "scope": "required",
+      "purl": "pkg:pypi/service-identity@24.1.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-setuptools-68.1.2",
+      "name": "setuptools",
+      "version": "68.1.2",
+      "scope": "required",
+      "purl": "pkg:pypi/setuptools@68.1.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-six-1.16.0",
+      "name": "six",
+      "version": "1.16.0",
+      "scope": "required",
+      "purl": "pkg:pypi/six@1.16.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-sos-4.8.2",
+      "name": "sos",
+      "version": "4.8.2",
+      "scope": "required",
+      "purl": "pkg:pypi/sos@4.8.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-ssh-import-id-5.11",
+      "name": "ssh-import-id",
+      "version": "5.11",
+      "scope": "required",
+      "purl": "pkg:pypi/ssh-import-id@5.11",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-systemd-python-235",
+      "name": "systemd-python",
+      "version": "235",
+      "scope": "required",
+      "purl": "pkg:pypi/systemd-python@235",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-Twisted-24.3.0",
+      "name": "Twisted",
+      "version": "24.3.0",
+      "scope": "required",
+      "purl": "pkg:pypi/Twisted@24.3.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-typing_extensions-4.10.0",
+      "name": "typing_extensions",
+      "version": "4.10.0",
+      "scope": "required",
+      "purl": "pkg:pypi/typing_extensions@4.10.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-ubuntu-pro-client-8001",
+      "name": "ubuntu-pro-client",
+      "version": "8001",
+      "scope": "required",
+      "purl": "pkg:pypi/ubuntu-pro-client@8001",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-ufw-0.36.2",
+      "name": "ufw",
+      "version": "0.36.2",
+      "scope": "required",
+      "purl": "pkg:pypi/ufw@0.36.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-urllib3-2.0.7",
+      "name": "urllib3",
+      "version": "2.0.7",
+      "scope": "required",
+      "purl": "pkg:pypi/urllib3@2.0.7",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-userpath-1.9.2",
+      "name": "userpath",
+      "version": "1.9.2",
+      "scope": "required",
+      "purl": "pkg:pypi/userpath@1.9.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-wadllib-1.3.6",
+      "name": "wadllib",
+      "version": "1.3.6",
+      "scope": "required",
+      "purl": "pkg:pypi/wadllib@1.3.6",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-WALinuxAgent-2.11.1.4",
+      "name": "WALinuxAgent",
+      "version": "2.11.1.4",
+      "scope": "required",
+      "purl": "pkg:pypi/WALinuxAgent@2.11.1.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-wheel-0.42.0",
+      "name": "wheel",
+      "version": "0.42.0",
+      "scope": "required",
+      "purl": "pkg:pypi/wheel@0.42.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-zope.interface-6.1",
+      "name": "zope.interface",
+      "version": "6.1",
+      "scope": "required",
+      "purl": "pkg:pypi/zope.interface@6.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-zstandard-0.22.0",
+      "name": "zstandard",
+      "version": "0.22.0",
+      "scope": "required",
+      "purl": "pkg:pypi/zstandard@0.22.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "pip-installed"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-next-^15.0.0",
+      "name": "next",
+      "version": "^15.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/next@^15.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-^19.0.0",
+      "name": "react",
+      "version": "^19.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react@^19.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-dom-^19.0.0",
+      "name": "react-dom",
+      "version": "^19.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-dom@^19.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@tailwindcss/forms-^0.5.0",
+      "name": "@tailwindcss/forms",
+      "version": "^0.5.0",
+      "scope": "required",
+      "purl": "pkg:npm/@tailwindcss/forms@^0.5.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@heroicons/react-^2.0.0",
+      "name": "@heroicons/react",
+      "version": "^2.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@heroicons/react@^2.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-clsx-^2.0.0",
+      "name": "clsx",
+      "version": "^2.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/clsx@^2.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-lucide-react-^0.544.0",
+      "name": "lucide-react",
+      "version": "^0.544.0",
+      "scope": "required",
+      "purl": "pkg:npm/lucide-react@^0.544.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@types/node-^22.0.0",
+      "name": "@types/node",
+      "version": "^22.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@types/node@^22.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@types/react-^19.0.0",
+      "name": "@types/react",
+      "version": "^19.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@types/react@^19.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@types/react-dom-^19.0.0",
+      "name": "@types/react-dom",
+      "version": "^19.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@types/react-dom@^19.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-autoprefixer-^10.0.0",
+      "name": "autoprefixer",
+      "version": "^10.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/autoprefixer@^10.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-eslint-^9.0.0",
+      "name": "eslint",
+      "version": "^9.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/eslint@^9.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-eslint-config-next-^15.0.0",
+      "name": "eslint-config-next",
+      "version": "^15.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/eslint-config-next@^15.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-postcss-^8.0.0",
+      "name": "postcss",
+      "version": "^8.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/postcss@^8.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-tailwindcss-^4.0.0",
+      "name": "tailwindcss",
+      "version": "^4.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/tailwindcss@^4.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-typescript-^5.0.0",
+      "name": "typescript",
+      "version": "^5.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/typescript@^5.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/web/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-19.1.1",
+      "name": "react",
+      "version": "19.1.1",
+      "scope": "required",
+      "purl": "pkg:npm/react@19.1.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-0.81.4",
+      "name": "react-native",
+      "version": "0.81.4",
+      "scope": "required",
+      "purl": "pkg:npm/react-native@0.81.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-navigation/native-^7.0.0",
+      "name": "@react-navigation/native",
+      "version": "^7.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-navigation/native@^7.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-navigation/stack-^7.0.0",
+      "name": "@react-navigation/stack",
+      "version": "^7.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-navigation/stack@^7.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-navigation/bottom-tabs-^7.0.0",
+      "name": "@react-navigation/bottom-tabs",
+      "version": "^7.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-navigation/bottom-tabs@^7.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-native-async-storage/async-storage-^2.0.0",
+      "name": "@react-native-async-storage/async-storage",
+      "version": "^2.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-native-async-storage/async-storage@^2.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-native-firebase/app-^23.0.0",
+      "name": "@react-native-firebase/app",
+      "version": "^23.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-native-firebase/app@^23.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-native-firebase/messaging-^23.0.0",
+      "name": "@react-native-firebase/messaging",
+      "version": "^23.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/@react-native-firebase/messaging@^23.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-biometrics-^3.0.1",
+      "name": "react-native-biometrics",
+      "version": "^3.0.1",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-biometrics@^3.0.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-keychain-^10.0.0",
+      "name": "react-native-keychain",
+      "version": "^10.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-keychain@^10.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-gesture-handler-^2.13.4",
+      "name": "react-native-gesture-handler",
+      "version": "^2.13.4",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-gesture-handler@^2.13.4",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-reanimated-^4.0.0",
+      "name": "react-native-reanimated",
+      "version": "^4.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-reanimated@^4.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-safe-area-context-^5.0.0",
+      "name": "react-native-safe-area-context",
+      "version": "^5.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-safe-area-context@^5.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-screens-^4.0.0",
+      "name": "react-native-screens",
+      "version": "^4.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-screens@^4.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-vector-icons-^10.0.2",
+      "name": "react-native-vector-icons",
+      "version": "^10.0.2",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-vector-icons@^10.0.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-svg-^15.0.0",
+      "name": "react-native-svg",
+      "version": "^15.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-svg@^15.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-signature-canvas-^5.0.0",
+      "name": "react-native-signature-canvas",
+      "version": "^5.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-signature-canvas@^5.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-document-picker-^9.1.1",
+      "name": "react-native-document-picker",
+      "version": "^9.1.1",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-document-picker@^9.1.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-image-picker-^8.0.0",
+      "name": "react-native-image-picker",
+      "version": "^8.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-image-picker@^8.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-native-push-notification-^8.1.1",
+      "name": "react-native-push-notification",
+      "version": "^8.1.1",
+      "scope": "required",
+      "purl": "pkg:npm/react-native-push-notification@^8.1.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-axios-^1.6.2",
+      "name": "axios",
+      "version": "^1.6.2",
+      "scope": "required",
+      "purl": "pkg:npm/axios@^1.6.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-zustand-^5.0.0",
+      "name": "zustand",
+      "version": "^5.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/zustand@^5.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-hook-form-^7.48.2",
+      "name": "react-hook-form",
+      "version": "^7.48.2",
+      "scope": "required",
+      "purl": "pkg:npm/react-hook-form@^7.48.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-date-fns-^4.0.0",
+      "name": "date-fns",
+      "version": "^4.0.0",
+      "scope": "required",
+      "purl": "pkg:npm/date-fns@^4.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "dependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@babel/core-^7.20.0",
+      "name": "@babel/core",
+      "version": "^7.20.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@babel/core@^7.20.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@babel/preset-env-^7.20.0",
+      "name": "@babel/preset-env",
+      "version": "^7.20.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@babel/preset-env@^7.20.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@babel/runtime-^7.20.0",
+      "name": "@babel/runtime",
+      "version": "^7.20.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@babel/runtime@^7.20.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-native/eslint-config-^0.81.0",
+      "name": "@react-native/eslint-config",
+      "version": "^0.81.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@react-native/eslint-config@^0.81.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@react-native/metro-config-^0.81.0",
+      "name": "@react-native/metro-config",
+      "version": "^0.81.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@react-native/metro-config@^0.81.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@tsconfig/react-native-^3.0.0",
+      "name": "@tsconfig/react-native",
+      "version": "^3.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@tsconfig/react-native@^3.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-@types/react-test-renderer-^19.0.0",
+      "name": "@types/react-test-renderer",
+      "version": "^19.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/@types/react-test-renderer@^19.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-babel-jest-^30.0.0",
+      "name": "babel-jest",
+      "version": "^30.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/babel-jest@^30.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-jest-^30.0.0",
+      "name": "jest",
+      "version": "^30.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/jest@^30.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-metro-react-native-babel-preset-0.77.0",
+      "name": "metro-react-native-babel-preset",
+      "version": "0.77.0",
+      "scope": "optional",
+      "purl": "pkg:npm/metro-react-native-babel-preset@0.77.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-prettier-^3.0.0",
+      "name": "prettier",
+      "version": "^3.0.0",
+      "scope": "optional",
+      "purl": "pkg:npm/prettier@^3.0.0",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-react-test-renderer-19.1.1",
+      "name": "react-test-renderer",
+      "version": "19.1.1",
+      "scope": "optional",
+      "purl": "pkg:npm/react-test-renderer@19.1.1",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm-typescript-5.9.2",
+      "name": "typescript",
+      "version": "5.9.2",
+      "scope": "optional",
+      "purl": "pkg:npm/typescript@5.9.2",
+      "properties": [
+        {
+          "name": "source",
+          "value": "apps/mobile/package.json"
+        },
+        {
+          "name": "dependency_type",
+          "value": "devDependencies"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "bom-ref": "container-python-3.13-slim",
+      "name": "python",
+      "version": "3.13-slim",
+      "scope": "required",
+      "purl": "pkg:docker/python@3.13-slim",
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker/router-mcp/Dockerfile"
+        },
+        {
+          "name": "type",
+          "value": "base-image"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "bom-ref": "service-litellm-proxy",
+      "name": "litellm-proxy",
+      "description": "Docker service: ghcr.io/berriai/litellm:main-latest",
+      "endpoints": [
+        "http://litellm-proxy:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "ghcr.io/berriai/litellm:main-latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-vllm",
+      "name": "vllm",
+      "description": "Docker service: vllm/vllm-openai:latest",
+      "endpoints": [
+        "http://vllm:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "vllm/vllm-openai:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-tgi",
+      "name": "tgi",
+      "description": "Docker service: ghcr.io/huggingface/text-generation-inference:latest",
+      "endpoints": [
+        "http://tgi:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "ghcr.io/huggingface/text-generation-inference:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-postgres",
+      "name": "postgres",
+      "description": "Docker service: postgres:17",
+      "endpoints": [
+        "http://postgres:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "postgres:17"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-qdrant",
+      "name": "qdrant",
+      "description": "Docker service: qdrant/qdrant:latest",
+      "endpoints": [
+        "http://qdrant:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "qdrant/qdrant:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-opensearch",
+      "name": "opensearch",
+      "description": "Docker service: opensearchproject/opensearch:3.2.0",
+      "endpoints": [
+        "http://opensearch:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "opensearchproject/opensearch:3.2.0"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-minio",
+      "name": "minio",
+      "description": "Docker service: quay.io/minio/minio:latest",
+      "endpoints": [
+        "http://minio:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "quay.io/minio/minio:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-searxng",
+      "name": "searxng",
+      "description": "Docker service: searxng/searxng:latest",
+      "endpoints": [
+        "http://searxng:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "searxng/searxng:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-temporal",
+      "name": "temporal",
+      "description": "Docker service: temporalio/auto-setup:1.28.1",
+      "endpoints": [
+        "http://temporal:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "temporalio/auto-setup:1.28.1"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-temporal-ui",
+      "name": "temporal-ui",
+      "description": "Docker service: temporalio/web:1.21.0",
+      "endpoints": [
+        "http://temporal-ui:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "temporalio/web:1.21.0"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-langfuse",
+      "name": "langfuse",
+      "description": "Docker service: langfuse/langfuse:latest",
+      "endpoints": [
+        "http://langfuse:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "langfuse/langfuse:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-otel-collector",
+      "name": "otel-collector",
+      "description": "Docker service: otel/opentelemetry-collector:0.136.0",
+      "endpoints": [
+        "http://otel-collector:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "otel/opentelemetry-collector:0.136.0"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-keycloak",
+      "name": "keycloak",
+      "description": "Docker service: quay.io/keycloak/keycloak:26.3",
+      "endpoints": [
+        "http://keycloak:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "quay.io/keycloak/keycloak:26.3"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-redis",
+      "name": "redis",
+      "description": "Docker service: redis:8-alpine",
+      "endpoints": [
+        "http://redis:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "redis:8-alpine"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-nebula",
+      "name": "nebula",
+      "description": "Docker service: vesoft/nebula-standalone:latest",
+      "endpoints": [
+        "http://nebula:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "vesoft/nebula-standalone:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-playwright-worker",
+      "name": "playwright-worker",
+      "description": "Docker service: mcr.microsoft.com/playwright/python:v1.55.0-jammy",
+      "endpoints": [
+        "http://playwright-worker:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "mcr.microsoft.com/playwright/python:v1.55.0-jammy"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-prometheus",
+      "name": "prometheus",
+      "description": "Docker service: prom/prometheus:latest",
+      "endpoints": [
+        "http://prometheus:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "prom/prometheus:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-grafana",
+      "name": "grafana",
+      "description": "Docker service: grafana/grafana:latest",
+      "endpoints": [
+        "http://grafana:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "grafana/grafana:latest"
+        }
+      ]
+    },
+    {
+      "bom-ref": "service-constitutional-bert",
+      "name": "constitutional-bert",
+      "description": "Docker service: huggingface/transformers-pytorch-gpu:latest",
+      "endpoints": [
+        "http://constitutional-bert:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "properties": [
+        {
+          "name": "source",
+          "value": "docker-compose.yml"
+        },
+        {
+          "name": "image",
+          "value": "huggingface/transformers-pytorch-gpu:latest"
+        }
+      ]
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "EXAMPLE-CVE-2024-0001",
+      "description": "Example vulnerability - would be populated from real sources",
+      "published": "2024-01-01T00:00:00Z",
+      "updated": "2024-01-01T00:00:00Z",
+      "ratings": [
+        {
+          "source": {
+            "name": "NVD"
+          },
+          "score": 7.5,
+          "severity": "HIGH",
+          "method": "CVSSv3"
+        }
+      ],
+      "affects": [
+        {
+          "ref": "python-example-1.0.0"
+        }
+      ]
+    }
+  ],
+  "compositions": []
+}

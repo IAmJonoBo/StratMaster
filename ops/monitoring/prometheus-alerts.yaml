@@ -1,0 +1,271 @@
+# Prometheus Alert Rules for StratMaster SLOs
+# Generated from ops/monitoring/slos.yaml
+
+groups:
+  - name: stratmaster.slo.alerts
+    rules:
+    
+    # API Service Alerts
+    - alert: StratMasterAPIHighErrorRate
+      expr: |
+        (
+          rate(http_requests_total{job="stratmaster-api",code=~"5.."}[5m]) /
+          rate(http_requests_total{job="stratmaster-api"}[5m])
+        ) * 100 > 5
+      for: 2m
+      labels:
+        severity: critical
+        service: stratmaster-api
+        slo: error_rate
+      annotations:
+        summary: "StratMaster API error rate is {{ $value | humanize }}%"
+        description: |
+          The StratMaster API error rate has exceeded 5% for more than 2 minutes.
+          Current error rate: {{ $value | humanize }}%
+          This indicates a critical service degradation that requires immediate attention.
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/api-high-error-rate.md"
+        
+    - alert: StratMasterAPIHighLatency
+      expr: |
+        histogram_quantile(0.95, 
+          rate(http_request_duration_seconds_bucket{job="stratmaster-api"}[5m])
+        ) * 1000 > 1000
+      for: 5m
+      labels:
+        severity: warning
+        service: stratmaster-api
+        slo: latency
+      annotations:
+        summary: "StratMaster API p95 latency is {{ $value | humanize }}ms"
+        description: |
+          The StratMaster API 95th percentile latency has exceeded 1000ms for more than 5 minutes.
+          Current p95 latency: {{ $value | humanize }}ms
+          This may impact user experience and should be investigated.
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/api-high-latency.md"
+        
+    - alert: StratMasterAPIDown
+      expr: up{job="stratmaster-api"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: stratmaster-api
+        slo: availability
+      annotations:
+        summary: "StratMaster API is down"
+        description: |
+          The StratMaster API service has been down for more than 1 minute.
+          This is a critical service outage requiring immediate response.
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/api-down.md"
+        
+    # Research MCP Service Alerts
+    - alert: ResearchMCPHighErrorRate
+      expr: |
+        (
+          rate(http_requests_total{job="research-mcp",code=~"5.."}[5m]) /
+          rate(http_requests_total{job="research-mcp"}[5m])
+        ) * 100 > 10
+      for: 5m
+      labels:
+        severity: warning
+        service: research-mcp
+        slo: error_rate
+      annotations:
+        summary: "Research MCP error rate is {{ $value | humanize }}%"
+        description: |
+          The Research MCP error rate has exceeded 10% for more than 5 minutes.
+          Current error rate: {{ $value | humanize }}%
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/research-mcp-errors.md"
+        
+    - alert: ResearchMCPDown
+      expr: up{job="research-mcp"} == 0
+      for: 2m
+      labels:
+        severity: warning
+        service: research-mcp
+        slo: availability
+      annotations:
+        summary: "Research MCP is down"
+        description: |
+          The Research MCP service has been down for more than 2 minutes.
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/research-mcp-down.md"
+        
+    # Collaboration Service Alerts (for when implemented)
+    - alert: CollaborationServiceHighLatency
+      expr: |
+        histogram_quantile(0.95, 
+          rate(websocket_message_duration_seconds_bucket{job="collaboration"}[5m])
+        ) * 1000 > 300
+      for: 2m
+      labels:
+        severity: critical
+        service: collaboration
+        slo: latency
+      annotations:
+        summary: "Collaboration WebSocket latency is {{ $value | humanize }}ms"
+        description: |
+          The Collaboration service WebSocket latency has exceeded 300ms for more than 2 minutes.
+          Current latency: {{ $value | humanize }}ms
+          This severely impacts real-time collaboration experience.
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/collaboration-latency.md"
+        
+    - alert: CollaborationConnectionFailures
+      expr: |
+        (
+          rate(websocket_connections_total{job="collaboration",status="success"}[5m]) /
+          rate(websocket_connections_total{job="collaboration"}[5m])
+        ) * 100 < 95
+      for: 2m
+      labels:
+        severity: critical
+        service: collaboration
+        slo: connection_success_rate
+      annotations:
+        summary: "Collaboration connection success rate is {{ $value | humanize }}%"
+        description: |
+          The Collaboration service connection success rate has dropped below 95% for more than 2 minutes.
+          Current success rate: {{ $value | humanize }}%
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/collaboration-connection-failures.md"
+        
+    # Knowledge Service Alerts
+    - alert: KnowledgeServiceSlowQueries
+      expr: |
+        histogram_quantile(0.95, 
+          rate(knowledge_query_duration_seconds_bucket{job="knowledge"}[5m])
+        ) * 1000 > 5000
+      for: 10m
+      labels:
+        severity: warning
+        service: knowledge
+        slo: query_latency
+      annotations:
+        summary: "Knowledge service p95 query latency is {{ $value | humanize }}ms"
+        description: |
+          The Knowledge service 95th percentile query latency has exceeded 5000ms for more than 10 minutes.
+          Current p95 latency: {{ $value | humanize }}ms
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/knowledge-slow-queries.md"
+        
+    - alert: KnowledgeIndexStale
+      expr: |
+        (time() - knowledge_last_index_update_timestamp) > 7200
+      for: 0m
+      labels:
+        severity: warning
+        service: knowledge
+        slo: index_freshness
+      annotations:
+        summary: "Knowledge index is {{ $value | humanizeDuration }} behind"
+        description: |
+          The Knowledge service index hasn't been updated in over 2 hours.
+          Index age: {{ $value | humanizeDuration }}
+        runbook_url: "https://github.com/IAmJonoBo/StratMaster/docs/runbooks/knowledge-stale-index.md"
+
+  - name: stratmaster.error.budget.alerts
+    rules:
+    
+    # Error Budget Burn Rate Alerts
+    - alert: StratMasterAPIFastBurnRate
+      expr: |
+        (
+          (1 - (
+            rate(http_requests_total{job="stratmaster-api",code=~"2..|3.."}[5m]) /
+            rate(http_requests_total{job="stratmaster-api"}[5m])
+          )) > 0.144  # 14.4% of monthly budget in 5 minutes
+        )
+      for: 2m
+      labels:
+        severity: critical
+        service: stratmaster-api
+        type: error_budget_burn
+        burn_rate: fast
+      annotations:
+        summary: "StratMaster API fast error budget burn detected"
+        description: |
+          The StratMaster API is burning through its error budget at a fast rate.
+          At this rate, the monthly error budget will be exhausted in less than 6 hours.
+          Current burn rate: {{ $value | humanize }}%
+        action: "Stop non-essential deployments and escalate to on-call engineer"
+        
+    - alert: StratMasterAPISlowBurnRate
+      expr: |
+        (
+          (1 - (
+            rate(http_requests_total{job="stratmaster-api",code=~"2..|3.."}[1h]) /
+            rate(http_requests_total{job="stratmaster-api"}[1h])
+          )) > 0.06  # 6% of monthly budget in 1 hour  
+        )
+      for: 15m
+      labels:
+        severity: warning
+        service: stratmaster-api
+        type: error_budget_burn
+        burn_rate: slow
+      annotations:
+        summary: "StratMaster API slow error budget burn detected"
+        description: |
+          The StratMaster API is burning through its error budget at an elevated rate.
+          At this rate, the monthly error budget will be exhausted in less than 5 days.
+          Current burn rate: {{ $value | humanize }}%
+        action: "Review recent changes and consider rollback if pattern continues"
+
+  - name: stratmaster.golden.signals
+    rules:
+    
+    # Golden Signals - Traffic
+    - alert: StratMasterHighTraffic
+      expr: rate(http_requests_total{job="stratmaster-api"}[5m]) > 500
+      for: 5m
+      labels:
+        severity: critical
+        service: stratmaster-api
+        signal: traffic
+      annotations:
+        summary: "StratMaster API traffic is {{ $value | humanize }} RPS"
+        description: |
+          StratMaster API is receiving unusually high traffic.
+          Current RPS: {{ $value | humanize }}
+          This may indicate a traffic spike or potential DDoS.
+        
+    - alert: StratMasterTrafficSpike
+      expr: rate(http_requests_total{job="stratmaster-api"}[5m]) > 100
+      for: 2m
+      labels:
+        severity: warning
+        service: stratmaster-api
+        signal: traffic
+      annotations:
+        summary: "StratMaster API traffic spike: {{ $value | humanize }} RPS"
+        description: |
+          StratMaster API is receiving elevated traffic.
+          Current RPS: {{ $value | humanize }}
+          Monitor for capacity issues.
+        
+    # Golden Signals - Saturation
+    - alert: StratMasterHighCPU
+      expr: cpu_usage_percent{job=~"stratmaster-.*"} > 90
+      for: 5m
+      labels:
+        severity: critical
+        service: "{{ $labels.job }}"
+        signal: saturation
+      annotations:
+        summary: "{{ $labels.job }} high CPU usage: {{ $value | humanize }}%"
+        description: |
+          Service {{ $labels.job }} CPU usage has exceeded 90% for more than 5 minutes.
+          Current CPU usage: {{ $value | humanize }}%
+          
+    - alert: StratMasterHighMemory
+      expr: |
+        (
+          process_resident_memory_bytes{job=~"stratmaster-.*"} / 
+          (1024 * 1024 * 1024)
+        ) > 2
+      for: 5m
+      labels:
+        severity: warning
+        service: "{{ $labels.job }}"
+        signal: saturation
+      annotations:
+        summary: "{{ $labels.job }} high memory usage: {{ $value | humanize }}GB"
+        description: |
+          Service {{ $labels.job }} memory usage has exceeded 2GB for more than 5 minutes.
+          Current memory usage: {{ $value | humanize }}GB
