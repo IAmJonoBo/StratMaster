@@ -1,0 +1,49 @@
+{
+  "timestamp": 1758706760.3862226,
+  "results": {
+    "sparse": {
+      "mrr_10": 0.31,
+      "precision_10": 0.1,
+      "recall_10": 0.2,
+      "latency_p50": 62.705039978027344,
+      "latency_p95": 72.70550727844238,
+      "total_queries": 10,
+      "method": "sparse"
+    },
+    "dense": {
+      "mrr_10": 0.12416666666666668,
+      "precision_10": 0.1,
+      "recall_10": 0.2,
+      "latency_p50": 62.99281120300293,
+      "latency_p95": 73.01878929138184,
+      "total_queries": 10,
+      "method": "dense"
+    },
+    "hybrid": {
+      "mrr_10": 0.1025,
+      "precision_10": 0.06,
+      "recall_10": 0.12,
+      "latency_p50": 63.49039077758789,
+      "latency_p95": 73.57335090637207,
+      "total_queries": 10,
+      "method": "hybrid"
+    }
+  },
+  "analysis": {
+    "mrr_improvements": {
+      "hybrid_vs_sparse_pct": -66.93548387096774,
+      "hybrid_vs_dense_pct": -17.449664429530213,
+      "best_improvement_pct": -17.449664429530213
+    },
+    "sprint_4_goals": {
+      "mrr_target_pct": 20.0,
+      "mrr_achieved_pct": -17.449664429530213,
+      "mrr_goal_met": false,
+      "latency_target_ms": 100,
+      "latency_achieved_ms": 73.57335090637207,
+      "latency_goal_met": true
+    },
+    "overall_success": false
+  },
+  "test_queries": 10
+}
