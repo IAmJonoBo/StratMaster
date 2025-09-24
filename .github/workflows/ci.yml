@@ -206,3 +206,21 @@ jobs:
           name: dora-metrics-${{ matrix.python-version }}
           path: /tmp/dora_metrics.json
           retention-days: 30
+          
+      - name: Generate SBOM and SLSA Provenance
+        run: |
+          # Generate SBOM with vulnerability data
+          python scripts/generate_sbom.py \
+            --output /tmp/sbom-${{ matrix.python-version }}.json \
+            --provenance /tmp/slsa-provenance-${{ matrix.python-version }}.json \
+            --include-vulnerabilities
+            
+      - name: Upload SBOM Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-artifacts-${{ matrix.python-version }}
+          path: |
+            /tmp/sbom-${{ matrix.python-version }}.json
+            /tmp/slsa-provenance-${{ matrix.python-version }}.json
+          retention-days: 90

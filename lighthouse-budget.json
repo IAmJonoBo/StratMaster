@@ -14,10 +14,15 @@
     },
     "assert": {
       "assertions": {
-        "categories:accessibility": ["error", {"minScore": 0.9}],
-        "categories:performance": ["warn", {"minScore": 0.75}],
-        "categories:best-practices": ["warn", {"minScore": 0.85}],
-        "categories:seo": ["warn", {"minScore": 0.8}]
+        "categories:accessibility": ["error", {"minScore": 0.95}],
+        "categories:performance": ["error", {"minScore": 0.85}],
+        "categories:best-practices": ["warn", {"minScore": 0.90}],
+        "categories:seo": ["warn", {"minScore": 0.85}],
+        "audits:largest-contentful-paint": ["error", {"maxNumericValue": 2500}],
+        "audits:cumulative-layout-shift": ["error", {"maxNumericValue": 0.1}],
+        "audits:total-blocking-time": ["error", {"maxNumericValue": 200}],
+        "audits:first-contentful-paint": ["warn", {"maxNumericValue": 1800}],
+        "audits:interactive": ["warn", {"maxNumericValue": 3000}]
       }
     },
     "upload": {
@@ -28,22 +33,26 @@
     {
       "path": "/*",
       "timings": [
-        {"metric": "first-contentful-paint", "budget": 3000},
-        {"metric": "largest-contentful-paint", "budget": 4000},
+        {"metric": "first-contentful-paint", "budget": 1800},
+        {"metric": "largest-contentful-paint", "budget": 2500},
         {"metric": "cumulative-layout-shift", "budget": 0.1},
-        {"metric": "total-blocking-time", "budget": 500}
+        {"metric": "total-blocking-time", "budget": 200},
+        {"metric": "interactive", "budget": 3000},
+        {"metric": "speed-index", "budget": 3000}
       ],
       "resourceSizes": [
-        {"resourceType": "script", "budget": 300},
-        {"resourceType": "image", "budget": 500},
-        {"resourceType": "stylesheet", "budget": 100},
-        {"resourceType": "total", "budget": 1000}
+        {"resourceType": "script", "budget": 250},
+        {"resourceType": "image", "budget": 400},
+        {"resourceType": "stylesheet", "budget": 80},
+        {"resourceType": "font", "budget": 100},
+        {"resourceType": "total", "budget": 800}
       ],
       "resourceCounts": [
-        {"resourceType": "script", "budget": 20},
-        {"resourceType": "image", "budget": 30},
-        {"resourceType": "stylesheet", "budget": 10},
-        {"resourceType": "third-party", "budget": 5}
+        {"resourceType": "script", "budget": 15},
+        {"resourceType": "image", "budget": 25},
+        {"resourceType": "stylesheet", "budget": 8},
+        {"resourceType": "font", "budget": 5},
+        {"resourceType": "third-party", "budget": 3}
       ]
     }
   ]
