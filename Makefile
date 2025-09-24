@@ -78,10 +78,10 @@ test-fast:
         PYTHONPATH=packages/api/src:packages/mcp-servers/research-mcp/src python3 -m pytest -q
 
 index.colbert:
-        PYTHONPATH=packages/retrieval/colbert/src python -m colbert.index build --config configs/retrieval/colbert.yaml
+        PYTHONPATH=packages/retrieval/src/colbert/src python -m colbert.index build --config configs/retrieval/colbert.yaml
 
 index.splade:
-        PYTHONPATH=packages/retrieval/splade/src python -m splade.index build --config configs/retrieval/splade.yaml
+        PYTHONPATH=packages/retrieval/src/splade/src python -m splade.index build --config configs/retrieval/splade.yaml
 
 # Run tests in Docker to avoid local Python/Conda interference
 test-docker:
