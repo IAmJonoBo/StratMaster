@@ -1,0 +1,35 @@
+{
+  "description": "Hybrid search pipeline combining BM25 and vector embeddings",
+  "processors": [
+    {
+      "text_embedding": {
+        "model_id": "sentence-transformers/all-MiniLM-L6-v2",
+        "field_map": {
+          "title": "title_embedding",
+          "summary": "summary_embedding",
+          "content": "content_embedding"
+        }
+      }
+    },
+    {
+      "script": {
+        "description": "Calculate field boosts for title and abstract",
+        "source": """
+          if (ctx.title != null) {
+            ctx.title_boost = 2.0;
+          }
+          if (ctx.summary != null) {
+            ctx.abstract_boost = 1.5;
+          }
+          ctx.content_boost = 1.0;
+        """
+      }
+    },
+    {
+      "set": {
+        "field": "hybrid_score",
+        "value": 0
+      }
+    }
+  ]
+}

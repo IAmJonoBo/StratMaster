@@ -121,3 +121,23 @@ structured_outputs:
   enabled: true
   backend: outlines
   strict_json: true
+
+# Sprint 4: Hybrid search configuration
+hybrid_search:
+  enabled: true
+  fusion_weights:
+    sparse: 0.3  # SPLADE/BM25 weight
+    dense: 0.7   # Vector embedding weight
+  field_boosts:
+    title: 2.0
+    abstract: 1.5
+    content: 1.0
+  retrieval_budget:
+    max_passages: 50
+    max_tokens: 8000
+    disagreement_sampling:
+      enabled: false  # Enable only when router policy indicates
+      threshold: 0.3
+  performance_targets:
+    mrr_at_10_uplift: 0.20  # 20% improvement target
+    max_latency_p95_ms: 500  # Must not degrade baseline performance
