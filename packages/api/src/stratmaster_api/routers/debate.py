@@ -14,8 +14,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from ..dependencies import require_idempotency_key
+from ..learning import DebateOutcome, debate_learning_system
 from ..tracing import tracing_manager
-from ..learning import debate_learning_system, DebateOutcome
 
 router = APIRouter(prefix="/debate", tags=["debate"])
 

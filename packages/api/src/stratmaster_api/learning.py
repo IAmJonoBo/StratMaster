@@ -5,11 +5,9 @@ AI system that learns from debate outcomes and improves policy decisions.
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-from uuid import uuid4
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -37,7 +35,7 @@ class DebateOutcome:
         self.quality_rating = quality_rating
         self.human_feedback = human_feedback
         self.debate_features = debate_features
-        self.timestamp = timestamp or datetime.now(timezone.utc)
+        self.timestamp = timestamp or datetime.now(UTC)
 
 
 class DebateLearningSystem:

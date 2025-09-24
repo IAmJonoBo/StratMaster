@@ -5,15 +5,13 @@ Multi-format document parsing and evidence-based PIE/ICE/RICE scoring.
 
 from __future__ import annotations
 
-import json
 import logging
 import re
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -209,7 +207,7 @@ class DocumentParser:
             assumptions=assumptions,
             confidence=confidence,
             processing_time_ms=processing_time_ms,
-            created_at=datetime.now(timezone.utc).isoformat()
+            created_at=datetime.now(UTC).isoformat()
         )
     
     def _parse_pdf(self, content: bytes) -> str:
@@ -289,7 +287,7 @@ class DocumentParser:
         number_pattern = r"(\w+(?:\s+\w+)*)\s*[:=]\s*(\$?\d+(?:[,\.\d]*)?(?:\w+)?)"
         number_matches = re.findall(number_pattern, text, re.IGNORECASE)
         for metric, value in number_matches:
-            if len(metric) > 3 and not metric.lower() in ["the", "and", "but", "for"]:
+            if len(metric) > 3 and metric.lower() not in ["the", "and", "but", "for"]:
                 metrics.append(f"{metric.strip()}: {value}")
         
         # Common business metrics
@@ -427,7 +425,7 @@ class StrategyEngine:
             implementation_roadmap=implementation_roadmap,
             evidence_citations=evidence_citations,
             confidence_rating=confidence_rating,
-            created_at=datetime.now(timezone.utc).isoformat()
+            created_at=datetime.now(UTC).isoformat()
         )
     
     def _generate_executive_summary(self, request: StrategyBriefRequest) -> str:
@@ -478,8 +476,8 @@ class StrategyEngine:
                 },
                 "expected_outcomes": [
                     f"Achievement of {objective}",
-                    f"Improved performance in related areas",
-                    f"Enhanced organizational capabilities"
+                    "Improved performance in related areas",
+                    "Enhanced organizational capabilities"
                 ]
             }
             options.append(option)
@@ -549,7 +547,7 @@ class StrategyEngine:
         recommendations = []
         
         # Sort options by PIE weighted score
-        option_scores = list(zip(options, pie_scores))
+        option_scores = list(zip(options, pie_scores, strict=False))
         option_scores.sort(key=lambda x: x[1].weighted_score, reverse=True)
         
         for i, (option, score) in enumerate(option_scores):
@@ -560,14 +558,14 @@ class StrategyEngine:
                 "title": option["title"],
                 "rationale": f"PIE weighted score: {score.weighted_score:.2f}",
                 "implementation_steps": [
-                    f"Phase 1: Planning and resource allocation",
-                    f"Phase 2: Core implementation activities",
-                    f"Phase 3: Monitoring and optimization"
+                    "Phase 1: Planning and resource allocation",
+                    "Phase 2: Core implementation activities",
+                    "Phase 3: Monitoring and optimization"
                 ],
                 "success_criteria": [
                     f"Completion of key activities within {option['resource_requirements']['timeframe']}",
-                    f"Achievement of measurable outcomes",
-                    f"Stakeholder satisfaction > 4.0/5.0"
+                    "Achievement of measurable outcomes",
+                    "Stakeholder satisfaction > 4.0/5.0"
                 ]
             }
             recommendations.append(recommendation)
@@ -615,9 +613,9 @@ class StrategyEngine:
                 "title": rec["title"],
                 "duration": "3-4 months" if rec["priority"] == "High" else "2-3 months",
                 "key_milestones": [
-                    f"Milestone 1: Planning completed",
-                    f"Milestone 2: 50% implementation progress", 
-                    f"Milestone 3: Full implementation and review"
+                    "Milestone 1: Planning completed",
+                    "Milestone 2: 50% implementation progress", 
+                    "Milestone 3: Full implementation and review"
                 ],
                 "dependencies": f"Completion of Phase {i}" if i > 0 else "None",
                 "resource_allocation": {
@@ -714,6 +712,6 @@ async def get_business_model_canvas(tenant_id: str) -> dict[str, Any]:
     return {
         "tenant_id": tenant_id,
         "canvas": canvas.model_dump(),
-        "last_updated": datetime.now(timezone.utc).isoformat(),
+        "last_updated": datetime.now(UTC).isoformat(),
         "completion_percentage": 85.0
     }

@@ -5,14 +5,13 @@ Role-based access control, audit logging, and compliance features.
 
 from __future__ import annotations
 
-import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -146,7 +145,7 @@ class SecurityService:
         """Log an audit event."""
         entry = AuditLogEntry(
             id=f"audit-{uuid4().hex[:8]}",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             event_type=event_type,
             user_id=user_id,
             tenant_id=tenant_id,
@@ -360,7 +359,7 @@ class SecurityService:
         
         return ComplianceReport(
             report_id=report_id,
-            generated_at=datetime.now(timezone.utc).isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             tenant_id=tenant_id,
             compliance_frameworks=["SOC 2", "GDPR", "ISO 27001"],
             overall_score=overall_score,

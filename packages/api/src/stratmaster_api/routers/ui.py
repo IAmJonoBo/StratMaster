@@ -5,12 +5,10 @@ Modern web components framework with tri-pane workspace.
 
 from __future__ import annotations
 
-import json
 import logging
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
@@ -254,7 +252,7 @@ def generate_shoelace_html(config: UIConfig, layout: WorkspaceLayout) -> str:
 <body>
     <div class="workspace-container">
         <!-- Brief Pane -->
-        {"" if not layout.show_brief else f'''
+        {"" if not layout.show_brief else '''
         <div class="workspace-pane brief-pane">
             <div class="pane-header">
                 <div class="pane-title">
@@ -313,7 +311,7 @@ def generate_shoelace_html(config: UIConfig, layout: WorkspaceLayout) -> str:
         '''}
         
         <!-- Evidence Pane -->
-        {"" if not layout.show_evidence else f'''
+        {"" if not layout.show_evidence else '''
         <div class="workspace-pane evidence-pane">
             <div class="pane-header">
                 <div class="pane-title">
@@ -383,7 +381,7 @@ def generate_shoelace_html(config: UIConfig, layout: WorkspaceLayout) -> str:
         '''}
         
         <!-- Plan Pane -->
-        {"" if not layout.show_plan else f'''
+        {"" if not layout.show_plan else '''
         <div class="workspace-pane plan-pane">
             <div class="pane-header">
                 <div class="pane-title">
@@ -646,7 +644,6 @@ async def hardware_detection_wizard() -> HTMLResponse:
 @router.get("/workspace")
 async def workspace_ui() -> HTMLResponse:
     """Main tri-pane workspace UI - Sprint 6."""
-    from fastapi import Request
     
     # For demo purposes, create a default profile
     # In production, this would come from the query parameters or user session

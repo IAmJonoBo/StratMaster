@@ -702,10 +702,10 @@ class OrchestratorService:
 
     def create_experiment(self, tenant_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Create a strategic experiment with proper validation and risk assessment."""
-        from datetime import datetime, timezone
+        from datetime import datetime
         
         experiment_id = f"exp-{uuid4().hex[:8]}"
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(UTC).isoformat()
         
         # AI-assess hypothesis confidence based on keywords and structure
         hypothesis = payload.get("hypothesis", "")
@@ -727,11 +727,11 @@ class OrchestratorService:
         self, tenant_id: str, payload: dict[str, Any]
     ) -> dict[str, Any]:
         """Create a predictive forecast with model performance metrics."""
-        from datetime import datetime, timezone
+        from datetime import datetime
         import random
         
         forecast_id = f"forecast-{uuid4().hex[:8]}"
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(UTC).isoformat()
         
         # Extract request parameters
         forecast_type = payload.get("forecast_type", "sales")

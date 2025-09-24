@@ -44,8 +44,11 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
-from .routers import debate as debate_hitl_router, ui as ui_router, strategy as strategy_router, security as security_router
+from .routers import debate as debate_hitl_router
 from .routers import ingestion as ingestion_router
+from .routers import security as security_router
+from .routers import strategy as strategy_router
+from .routers import ui as ui_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
