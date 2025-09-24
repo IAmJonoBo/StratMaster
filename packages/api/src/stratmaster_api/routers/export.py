@@ -18,16 +18,16 @@ from pydantic import BaseModel, Field
 
 # Import integration clients
 try:
-    from stratmaster_integrations.export_wizard import (
+    from ..integrations.export_wizard import (
         ExportConfig,
         ExportPlatform, 
         UnifiedStrategy,
         UnifiedTactic,
         ExportWizard,
     )
-    from stratmaster_integrations.notion.client import NotionClient, NotionStrategy
-    from stratmaster_integrations.trello.client import TrelloClient, TrelloStrategy
-    from stratmaster_integrations.jira.client import JiraClient, JiraStrategy
+    from ..integrations.notion.client import NotionClient, NotionStrategy
+    from ..integrations.trello.client import TrelloClient, TrelloStrategy
+    from ..integrations.jira.client import JiraClient, JiraStrategy
     INTEGRATIONS_AVAILABLE = True
 except ImportError:
     INTEGRATIONS_AVAILABLE = False
