@@ -1,7 +1,9 @@
-.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap dev.up dev.down dev.logs lock lock-upgrade \
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
-        assets.plan assets.pull assets.verify assets.required deps.check deps.plan deps.upgrade deps.upgrade.safe \
+        assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
+        deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate \
+        setup setup.full setup.dry setup.validate \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
         test.advanced test.property test.contract test.load test.integration
@@ -70,8 +72,18 @@ format:
 	.venv/bin/black .
 
 bootstrap:
+	@echo "🚀 StratMaster Bootstrap"
 	[ -d .venv ] || python3 -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api pytest pre-commit
+	@echo "📦 Installing core dependencies..."
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install --upgrade pip --timeout=60
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install pydantic fastapi uvicorn pytest --timeout=60
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api --timeout=60
+	@echo "✅ Bootstrap completed. Run 'make setup' for full integrated setup."
+
+# Enhanced bootstrap with integrated setup (registers deps, downloads assets, upgrades)
+bootstrap-full:
+	$(MAKE) bootstrap
+	.venv/bin/python scripts/integrated_setup.py setup --required-only
 
 # Developer convenience target to run tests without pip (uses local sources)
 test-fast:
@@ -206,6 +218,36 @@ assets.plan.dry:
 assets.pull.dry:
 	@echo "🔍 Dry run: Asset download simulation"  
 	python scripts/assets_pull.py --dry-run pull --all
+
+# Dependency Registry System - Scan and register all package dependencies
+deps.register:
+	@echo "📦 Registering package dependencies..."
+	python scripts/register_dependencies.py register
+
+deps.scan:
+	@echo "🔍 Scanning package dependencies..."
+	python scripts/register_dependencies.py scan
+
+deps.validate:
+	@echo "✅ Validating dependency registry..."
+	python scripts/register_dependencies.py validate
+
+# Integrated Setup System - Complete environment setup with chaining
+setup:
+	@echo "🚀 Running integrated setup (required assets only)..."
+	python scripts/integrated_setup.py setup --required-only
+
+setup.full:
+	@echo "🚀 Running full integrated setup (all assets)..."
+	python scripts/integrated_setup.py setup --full
+
+setup.dry:
+	@echo "🔍 Dry run: Integrated setup simulation"
+	python scripts/integrated_setup.py setup --dry-run
+
+setup.validate:
+	@echo "✅ Validating complete environment..."
+	python scripts/integrated_setup.py validate
 
 # Safe Dependency Upgrade System
 deps.check:
