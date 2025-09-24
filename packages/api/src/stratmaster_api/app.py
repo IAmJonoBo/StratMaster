@@ -45,6 +45,7 @@ from .models.requests import (
 from .models.schema_export import SCHEMA_VERSION
 from .dependencies import require_idempotency_key
 from .routers import ingestion as ingestion_router
+from .routers import debate as debate_hitl_router
 from .tracing import tracing_manager
 from .schemas import (
     CompressionConfig,
@@ -189,6 +190,7 @@ def create_app() -> FastAPI:
     register_model_schema_endpoints(app)
 
     app.include_router(ingestion_router.router)
+    app.include_router(debate_hitl_router.router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 

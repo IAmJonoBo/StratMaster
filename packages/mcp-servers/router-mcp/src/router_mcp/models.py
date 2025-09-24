@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -98,3 +99,25 @@ class InfoResponse(BaseModel):
     version: str
     capabilities: list[str]
     service: ServiceInfo
+
+
+# Sprint 1 - Dynamic Agent Selection Models
+class AgentRouteRequest(BaseModel):
+    """Request for agent routing - Sprint 1 implementation."""
+    model_config = ConfigDict(extra="forbid")
+
+    query: str
+    tenant_id: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    policy_flags: dict[str, bool] = Field(default_factory=dict)
+
+
+class AgentRouteResponse(BaseModel):
+    """Response from agent routing - Sprint 1 implementation."""
+    model_config = ConfigDict(extra="forbid")
+
+    selected_agents: list[str]
+    rationale: str
+    confidence: float
+    routing_metadata: dict[str, Any]
+    tenant_id: str
