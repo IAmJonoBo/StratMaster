@@ -243,6 +243,103 @@ class DependencyUpgrader:
             pass
         return None
     
+    def _check_security_advisories(self, package: str, version: str) -> bool:
+        """Check for security advisories for a package version."""
+        try:
+            # Use GitHub's security advisory API
+            url = f"https://api.github.com/advisories?ecosystem=pip&package={package}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                advisories = response.json()
+                for advisory in advisories:
+                    affected_ranges = advisory.get('vulnerabilities', [])
+                    for vuln in affected_ranges:
+                        if vuln.get('package', {}).get('name') == package:
+                            # Check if current version is affected
+                            ranges = vuln.get('ranges', [])
+                            if self._version_in_vulnerable_range(version, ranges):
+                                return True
+        except Exception:
+            pass
+        return False
+    
+    def _version_in_vulnerable_range(self, version: str, ranges: list) -> bool:
+        """Check if version falls within vulnerable ranges."""
+        # Simplified version comparison - in production use packaging.version
+        try:
+            for range_obj in ranges:
+                events = range_obj.get('events', [])
+                for event in events:
+                    if event.get('introduced') and event.get('fixed'):
+                        # Check if version is between introduced and fixed
+                        if version >= event['introduced'] and version < event['fixed']:
+                            return True
+        except Exception:
+            pass
+        return False
+    
+    def _run_security_scan(self) -> dict[str, list[str]]:
+        """Run security scan on current dependencies."""
+        print("🔒 Running security scan...")
+        
+        # Focus only on our application dependencies from requirements files
+        app_packages = set()
+        
+        # Get packages from requirements files
+        for req_file in ['requirements.txt', 'requirements-dev.txt']:
+            req_path = self.project_root / req_file
+            if req_path.exists():
+                with open(req_path) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and not line.startswith('-'):
+                            pkg_name = line.split('==')[0].split('>=')[0].split('<=')[0]
+                            app_packages.add(pkg_name.lower())
+        
+        # Get packages from pyproject.toml dependencies
+        pyproject_path = self.project_root / "packages" / "api" / "pyproject.toml"
+        if pyproject_path.exists():
+            try:
+                with open(pyproject_path) as f:
+                    import tomllib
+                    try:
+                        data = tomllib.loads(f.read())
+                    except AttributeError:
+                        # Python < 3.11 fallback
+                        import tomli
+                        f.seek(0)
+                        data = tomli.load(f)
+                    
+                    deps = data.get('project', {}).get('dependencies', [])
+                    for dep in deps:
+                        pkg_name = dep.split('>=')[0].split('<=')[0].split('==')[0]
+                        app_packages.add(pkg_name.lower())
+            except Exception:
+                pass
+        
+        # Run safety check if available
+        safety_issues = []
+        
+        # Check for vulnerable packages in our app dependencies only
+        success, output = self._run_command(["python", "-m", "pip", "list", "--format=json"])
+        if success:
+            try:
+                import json
+                packages = json.loads(output)
+                for pkg in packages:
+                    pkg_name = pkg['name'].lower()
+                    if pkg_name in app_packages or pkg_name.replace('-', '_') in app_packages:
+                        if self._check_security_advisories(pkg['name'], pkg['version']):
+                            safety_issues.append(f"{pkg['name']}=={pkg['version']}")
+            except Exception:
+                pass
+        
+        return {
+            "vulnerable_packages": safety_issues,
+            "code_issues": []
+        }
+    
     def _get_latest_docker_tag(self, image_name: str, current_tag: str) -> str | None:
         """Get latest Docker tag for known images."""
         # This is simplified - in production you'd query Docker registries
@@ -607,7 +704,7 @@ Examples:
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
-    parser.add_argument('command', choices=['check', 'plan', 'upgrade'],
+    parser.add_argument('command', choices=['check', 'plan', 'upgrade', 'security-scan'],
                        help='Action to perform')
     parser.add_argument('--scope', choices=['all', 'python', 'docker', 'github-actions'],
                        default='python', help='Scope of dependencies to check')
@@ -634,6 +731,15 @@ Examples:
             success = upgrader.upgrade(scope=args.scope, update_type=args.type)
             if not success:
                 sys.exit(1)
+        elif args.command == 'security-scan':
+            scan_results = upgrader._run_security_scan()
+            if scan_results['vulnerable_packages']:
+                print("🚨 Vulnerable packages found:")
+                for pkg in scan_results['vulnerable_packages']:
+                    print(f"  • {pkg}")
+                print("\nConsider upgrading these packages with: python scripts/dependency_upgrade.py upgrade --type minor")
+            else:
+                print("✅ No security vulnerabilities detected in current dependencies")
                 
     except KeyboardInterrupt:
         print("\n⚠️  Operation interrupted by user")

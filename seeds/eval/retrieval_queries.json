@@ -1,0 +1,52 @@
+{
+  "queries": [
+    {
+      "query_id": "eval_001",
+      "query_text": "strategic planning methodologies for technology companies",
+      "relevant_docs": [
+        "doc_001",
+        "doc_003",
+        "doc_007",
+        "doc_012"
+      ],
+      "relevance_scores": {
+        "doc_001": 3,
+        "doc_003": 2,
+        "doc_007": 3,
+        "doc_012": 1
+      }
+    },
+    {
+      "query_id": "eval_002",
+      "query_text": "AI implementation challenges in enterprise settings",
+      "relevant_docs": [
+        "doc_002",
+        "doc_005",
+        "doc_009",
+        "doc_015",
+        "doc_018"
+      ],
+      "relevance_scores": {
+        "doc_002": 3,
+        "doc_005": 2,
+        "doc_009": 3,
+        "doc_015": 2,
+        "doc_018": 1
+      }
+    },
+    {
+      "query_id": "eval_003",
+      "query_text": "competitive analysis frameworks for market positioning",
+      "relevant_docs": [
+        "doc_004",
+        "doc_008",
+        "doc_011"
+      ],
+      "relevance_scores": {
+        "doc_004": 3,
+        "doc_008": 2,
+        "doc_011": 2
+      }
+    }
+  ]
+}

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
 from .config import ProviderConfig
+from .model_recommender import ModelRecommender, TaskContext
 
 logger = logging.getLogger(__name__)
 
@@ -26,20 +28,93 @@ except ImportError:  # pragma: no cover
 @dataclass
 class ProviderAdapter:
     config: ProviderConfig
+    recommender: ModelRecommender | None = None
 
-    def complete(
+    def __post_init__(self):
+        """Initialize model recommender if not provided."""
+        if self.recommender is None:
+            self.recommender = ModelRecommender()
+
+    async def complete(
         self,
         prompt: str,
         max_tokens: int,
         model: str | None = None,
         temperature: float | None = None,
+        tenant_id: str = "default",
+        task_type: str = "chat",
+        complexity: str = "medium"
     ) -> dict[str, Any]:
-        target_model = model or self.config.completion_model
+        """Complete with intelligent model selection and fallback handling."""
+        start_time = time.time()
+        
+        # Use intelligent model selection if no specific model requested
+        if not model and self.recommender:
+            context = TaskContext(
+                task_type=task_type,
+                tenant_id=tenant_id,
+                complexity=complexity,
+                latency_critical=False,
+                cost_sensitive=True
+            )
+            
+            try:
+                primary_model, fallback_models = await self.recommender.recommend_model(context)
+                models_to_try = [primary_model] + fallback_models
+            except Exception as e:
+                logger.warning(f"Model recommendation failed: {e}")
+                models_to_try = [self.config.completion_model]
+        else:
+            models_to_try = [model or self.config.completion_model]
+        
+        # Try models in cascade order
+        last_error = None
+        for attempt_model in models_to_try:
+            try:
+                result = await self._attempt_completion(
+                    prompt, max_tokens, attempt_model, temperature
+                )
+                
+                # Update performance metrics
+                latency_ms = (time.time() - start_time) * 1000
+                if self.recommender:
+                    await self.recommender.update_model_performance(
+                        attempt_model, latency_ms, True
+                    )
+                
+                result["model_used"] = attempt_model
+                result["cascade_tried"] = models_to_try[:models_to_try.index(attempt_model) + 1]
+                return result
+                
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model {attempt_model} failed: {e}")
+                
+                # Update failure metrics
+                if self.recommender:
+                    latency_ms = (time.time() - start_time) * 1000
+                    await self.recommender.update_model_performance(
+                        attempt_model, latency_ms, False
+                    )
+                continue
+        
+        # All models failed
+        raise Exception(f"All models failed. Last error: {last_error}")
+
+    async def _attempt_completion(
+        self,
+        prompt: str,
+        max_tokens: int,
+        model: str,
+        temperature: float | None = None,
+    ) -> dict[str, Any]:
+        """Attempt completion with a specific model."""
         temperature = self.config.temperature if temperature is None else temperature
+        
         if self.config.name in {"openai", "litellm", "vllm"} and litellm is not None:
             try:  # pragma: no cover - network path
                 response = litellm.completion(
-                    model=target_model,
+                    model=model,
                     messages=[{"role": "user", "content": prompt}],
                     max_tokens=max_tokens,
                     temperature=temperature,
@@ -53,19 +128,18 @@ class ProviderAdapter:
                     "text": text,
                     "tokens": tokens,
                     "provider": provider,
-                    "model": target_model,
+                    "model": model,
                 }
             except Exception as exc:
-                logger.warning(
-                    "Provider completion failed; falling back to synthetic",
-                    exc_info=exc,
-                )
+                logger.warning("Provider completion failed; falling back", exc_info=exc)
+                raise exc
+        
+        # Fallback response for non-LiteLLM providers
         return {
-            "text": prompt
-            + "\nRecommended: consolidate premium positioning with phased rollout.",
-            "tokens": min(len(prompt.split()) + 12, max_tokens),
+            "text": f"Mock completion for: {prompt[:50]}...",
+            "tokens": max_tokens // 2,
             "provider": self.config.name,
-            "model": target_model,
+            "model": model,
         }
 
     def embed(self, inputs: Iterable[str], model: str | None = None) -> dict[str, Any]:
