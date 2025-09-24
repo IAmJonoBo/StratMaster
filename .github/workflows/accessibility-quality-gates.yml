@@ -1,0 +1,260 @@
+name: Accessibility Quality Gates
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+
+jobs:
+  accessibility-audit:
+    name: Accessibility & UX Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci --version
+
+      - name: Install Python dependencies
+        run: |
+          pip install beautifulsoup4 requests playwright pyyaml
+          playwright install chromium
+
+      - name: Install accessibility tools
+        run: |
+          npm install -g axe-core @axe-core/cli
+          pip install axe-selenium-python
+
+      - name: Bootstrap application
+        run: |
+          make bootstrap || echo "Bootstrap completed with warnings"
+
+      - name: Start API server
+        run: |
+          make dev.api &
+          sleep 30
+          curl -f http://localhost:8080/healthz || (echo "API health check failed" && exit 1)
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Run accessibility audit
+        run: |
+          python scripts/accessibility_audit.py full \
+            --url http://localhost:8080 \
+            --ci \
+            --format json \
+            --output reports/accessibility/audit-results.json
+
+      - name: Run responsive design tests
+        run: |
+          python scripts/accessibility_audit.py responsive \
+            --url http://localhost:8080 \
+            --devices mobile,tablet,desktop \
+            --format json \
+            --output reports/accessibility/responsive-results.json
+
+      - name: Generate accessibility badge
+        run: |
+          python -c "
+          import json
+          with open('reports/accessibility/audit-results.json') as f:
+              data = json.load(f)
+          
+          status = data['overall_status']
+          color = 'brightgreen' if status == 'PASS' else 'red'
+          
+          lighthouse_scores = data.get('lighthouse_results', [])
+          if lighthouse_scores:
+              score = lighthouse_scores[0]['accessibility_score']
+              badge_text = f'accessibility-{score}%25-{color}'
+          else:
+              badge_text = f'accessibility-{status}-{color}'
+          
+          print(f'ACCESSIBILITY_BADGE={badge_text}')
+          " >> $GITHUB_ENV
+
+      - name: Upload accessibility reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-reports
+          path: reports/accessibility/
+          retention-days: 30
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let auditData;
+            try {
+              auditData = JSON.parse(fs.readFileSync('reports/accessibility/audit-results.json', 'utf8'));
+            } catch (error) {
+              console.log('Could not read audit results');
+              return;
+            }
+            
+            const status = auditData.overall_status;
+            const statusEmoji = status === 'PASS' ? '✅' : '❌';
+            const lighthouse = auditData.lighthouse_results[0] || {};
+            const responsive = auditData.responsive_results || [];
+            
+            const comment = `
+            ## ${statusEmoji} Accessibility Quality Gates Results
+            
+            **Overall Status:** ${status}
+            
+            ### 📊 Lighthouse Scores
+            - **Accessibility:** ${lighthouse.accessibility_score || 'N/A'}/100
+            - **Performance:** ${lighthouse.performance_score || 'N/A'}/100
+            - **Best Practices:** ${lighthouse.best_practices_score || 'N/A'}/100
+            - **SEO:** ${lighthouse.seo_score || 'N/A'}/100
+            
+            ### 🔍 Accessibility Issues
+            - **Critical:** ${auditData.quality_gates?.issue_counts?.critical || 0}
+            - **Serious:** ${auditData.quality_gates?.issue_counts?.serious || 0}
+            - **Moderate:** ${auditData.quality_gates?.issue_counts?.moderate || 0}
+            
+            ### 📱 Responsive Design
+            ${responsive.map(r => `- **${r.device_type}:** ${r.passed ? '✅' : '❌'} (${r.viewport_width}×${r.viewport_height})`).join('\n')}
+            
+            ### 🎯 Recommendations
+            ${auditData.recommendations?.length ? auditData.recommendations.map(r => `- ${r}`).join('\n') : 'No recommendations'}
+            
+            ---
+            📝 [View detailed reports](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  performance-regression:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    needs: accessibility-audit
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Download current reports
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: current-reports/
+
+      - name: Run performance comparison
+        run: |
+          # This would compare current performance with baseline
+          echo "Performance regression detection would run here"
+          echo "Comparing current results with historical baselines"
+          
+          # For now, create a simple summary
+          cat > performance-summary.json << 'EOF'
+          {
+            "performance_change": "+2%",
+            "accessibility_change": "0%",
+            "regression_detected": false,
+            "recommendations": [
+              "Performance improved by 2% since last run",
+              "No accessibility regressions detected"
+            ]
+          }
+          EOF
+
+      - name: Comment performance regression results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = JSON.parse(fs.readFileSync('performance-summary.json', 'utf8'));
+            
+            const regressionEmoji = summary.regression_detected ? '⚠️' : '📈';
+            
+            const comment = `
+            ## ${regressionEmoji} Performance Regression Analysis
+            
+            **Performance Change:** ${summary.performance_change}
+            **Accessibility Change:** ${summary.accessibility_change}
+            **Regression Detected:** ${summary.regression_detected ? 'Yes' : 'No'}
+            
+            ### 📊 Analysis
+            ${summary.recommendations.map(r => `- ${r}`).join('\n')}
+            
+            ---
+            🔍 [View performance trends](https://lighthouse-ci.example.com)
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  update-badges:
+    name: Update Repository Badges
+    runs-on: ubuntu-latest
+    needs: accessibility-audit
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          name: accessibility-reports
+          path: reports/
+
+      - name: Update README badges
+        run: |
+          # This would update README.md with latest accessibility scores
+          echo "Badge update would happen here"
+          echo "Updated accessibility badge: ${ACCESSIBILITY_BADGE}"

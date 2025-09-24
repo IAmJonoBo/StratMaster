@@ -60,11 +60,20 @@ class TaskContext:
 class ModelRecommender:
     """Evidence-guided model recommendation engine."""
     
-    def __init__(self, config_path: str = "configs/router/models-policy.yaml"):
+    def __init__(
+        self, 
+        config_path: str = "configs/router/models-policy.yaml",
+        persistence_store: "ModelPerformanceStore | None" = None
+    ):
         self.config_path = Path(config_path)
         self.performance_cache: dict[str, ModelPerformance] = {}
         self.last_cache_update: datetime | None = None
         self.client = httpx.AsyncClient()
+        
+        # Persistence layer for Model Recommender V2
+        self.store = persistence_store
+        if persistence_store and is_model_recommender_v2_enabled():
+            logger.info("Model Recommender V2 enabled with persistent storage")
         
     async def recommend_model(
         self, 
@@ -107,23 +116,27 @@ class ModelRecommender:
     
     async def _refresh_performance_cache(self) -> None:
         """Refresh model performance data from external sources."""
+        # If using persistent storage, try loading from DB first
+        if self.store and is_model_recommender_v2_enabled():
+            await self._load_from_persistent_storage()
+        
         if (self.last_cache_update and 
             datetime.now() - self.last_cache_update < timedelta(hours=1)):
             return
         
         logger.info("Refreshing model performance cache...")
         
-        # Fetch LMSYS Arena data
-        arena_data = await self._fetch_arena_leaderboard()
-        
-        # Fetch MTEB scores
-        mteb_data = await self._fetch_mteb_scores()
-        
-        # Get internal evaluation data (would integrate with Langfuse)
+        # Try loading cached external data first
+        arena_data = await self._get_cached_or_fresh_arena_data()
+        mteb_data = await self._get_cached_or_fresh_mteb_data()
         internal_data = await self._fetch_internal_evaluations()
         
         # Merge all data sources
         self._update_performance_cache(arena_data, mteb_data, internal_data)
+        
+        # Save to persistent storage if available
+        if self.store and is_model_recommender_v2_enabled():
+            await self._save_to_persistent_storage()
         
         self.last_cache_update = datetime.now()
         logger.info(f"Updated performance data for {len(self.performance_cache)} models")
@@ -468,3 +481,88 @@ class ModelRecommender:
         perf.last_updated = datetime.now()
         
         logger.debug(f"Updated performance for {model}: latency={latency_ms}ms, success={success}")
+        
+        # Record to persistent storage and telemetry if available
+        if self.store and is_model_recommender_v2_enabled():
+            await self.store.record_telemetry_event(
+                model_name=model,
+                tenant_id=None,  # Would come from context in real usage
+                latency_ms=latency_ms,
+                success=success,
+                cost_per_token=cost_per_token
+            )
+    
+    async def _load_from_persistent_storage(self) -> None:
+        """Load performance data from persistent storage."""
+        if not self.store:
+            return
+            
+        try:
+            stored_performance = await self.store.load_all_model_performance()
+            if stored_performance:
+                self.performance_cache = stored_performance
+                logger.info(f"Loaded {len(stored_performance)} models from persistent storage")
+        except Exception as e:
+            logger.warning(f"Failed to load from persistent storage: {e}")
+    
+    async def _save_to_persistent_storage(self) -> None:
+        """Save current performance cache to persistent storage."""
+        if not self.store:
+            return
+            
+        try:
+            for performance in self.performance_cache.values():
+                await self.store.save_model_performance(performance)
+        except Exception as e:
+            logger.warning(f"Failed to save to persistent storage: {e}")
+    
+    async def _get_cached_or_fresh_arena_data(self) -> dict[str, float]:
+        """Get Arena data from cache or fetch fresh."""
+        if self.store and is_model_recommender_v2_enabled():
+            cached_data = await self.store.load_external_data_cache("arena_leaderboard")
+            if cached_data:
+                logger.debug("Using cached Arena data")
+                return cached_data
+        
+        return await self._fetch_arena_leaderboard()
+    
+    async def _get_cached_or_fresh_mteb_data(self) -> dict[str, float]:
+        """Get MTEB data from cache or fetch fresh."""
+        if self.store and is_model_recommender_v2_enabled():
+            cached_data = await self.store.load_external_data_cache("mteb_scores")
+            if cached_data:
+                logger.debug("Using cached MTEB data")
+                return cached_data
+        
+        return await self._fetch_mteb_scores()
+    
+    def get_debug_info(self) -> dict[str, Any]:
+        """Get debugging information about model recommendations."""
+        cache_age = None
+        if self.last_cache_update:
+            cache_age = (datetime.now() - self.last_cache_update).total_seconds()
+        
+        return {
+            "cache_size": len(self.performance_cache),
+            "cache_age_seconds": cache_age,
+            "last_updated": self.last_cache_update.isoformat() if self.last_cache_update else None,
+            "model_recommender_v2_enabled": is_model_recommender_v2_enabled(),
+            "has_persistence": self.store is not None,
+            "models": [
+                {
+                    "name": perf.model_name,
+                    "arena_elo": perf.arena_elo,
+                    "mteb_score": perf.mteb_score,
+                    "internal_score": perf.internal_score,
+                    "avg_latency_ms": perf.avg_latency_ms,
+                    "cost_per_1k_tokens": perf.cost_per_1k_tokens,
+                    "success_rate": perf.success_rate,
+                    "last_updated": perf.last_updated.isoformat() if perf.last_updated else None
+                }
+                for perf in self.performance_cache.values()
+            ]
+        }
+    
+    async def close(self) -> None:
+        """Close HTTP client and cleanup resources."""
+        await self.client.aclose()

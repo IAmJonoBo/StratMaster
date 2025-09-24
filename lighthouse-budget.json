@@ -1,0 +1,50 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:8080",
+        "http://localhost:8080/docs",
+        "http://localhost:8080/performance/metrics",
+        "http://localhost:8080/strategy/generate"
+      ],
+      "startServerCommand": "make dev.up",
+      "startServerReadyPattern": "Application startup complete",
+      "startServerReadyTimeout": 60000,
+      "numberOfRuns": 3
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", {"minScore": 0.9}],
+        "categories:performance": ["warn", {"minScore": 0.75}],
+        "categories:best-practices": ["warn", {"minScore": 0.85}],
+        "categories:seo": ["warn", {"minScore": 0.8}]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  },
+  "budgets": [
+    {
+      "path": "/*",
+      "timings": [
+        {"metric": "first-contentful-paint", "budget": 3000},
+        {"metric": "largest-contentful-paint", "budget": 4000},
+        {"metric": "cumulative-layout-shift", "budget": 0.1},
+        {"metric": "total-blocking-time", "budget": 500}
+      ],
+      "resourceSizes": [
+        {"resourceType": "script", "budget": 300},
+        {"resourceType": "image", "budget": 500},
+        {"resourceType": "stylesheet", "budget": 100},
+        {"resourceType": "total", "budget": 1000}
+      ],
+      "resourceCounts": [
+        {"resourceType": "script", "budget": 20},
+        {"resourceType": "image", "budget": 30},
+        {"resourceType": "stylesheet", "budget": 10},
+        {"resourceType": "third-party", "budget": 5}
+      ]
+    }
+  ]
+}
