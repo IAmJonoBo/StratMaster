@@ -156,3 +156,52 @@ async def generate_analytics_report(
     except Exception as e:
         logger.error(f"Error generating {report_type} report: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate {report_type} report")
+
+
+@router.get("/forecast/heart/{tenant_id}")
+async def get_heart_metrics_forecast(tenant_id: str) -> Dict[str, Any]:
+    """Get HEART metrics forecast for a tenant."""
+    try:
+        from ..predictive import get_heart_forecast
+        forecast = await get_heart_forecast(tenant_id)
+        return forecast
+    except Exception as e:
+        logger.error(f"Error getting HEART forecast for tenant {tenant_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get HEART forecast")
+
+
+@router.get("/forecast/product/{tenant_id}")
+async def get_product_metrics_forecast(tenant_id: str) -> Dict[str, Any]:
+    """Get product metrics forecast for a tenant."""
+    try:
+        from ..predictive import get_product_forecast
+        forecast = await get_product_forecast(tenant_id)
+        return forecast
+    except Exception as e:
+        logger.error(f"Error getting product forecast for tenant {tenant_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get product forecast")
+
+
+@router.post("/forecast/custom")
+async def create_custom_forecast(
+    tenant_id: str,
+    forecast_type: str,
+    horizon: str = "monthly",
+    variables: List[str] = None,
+    confidence_intervals: List[int] = None
+) -> Dict[str, Any]:
+    """Create a custom predictive forecast."""
+    try:
+        from ..predictive import create_forecast
+        
+        forecast = await create_forecast(
+            tenant_id=tenant_id,
+            forecast_type=forecast_type,
+            horizon=horizon,
+            variables=variables or ["value"],
+            confidence_intervals=confidence_intervals or [50, 80, 95]
+        )
+        return forecast
+    except Exception as e:
+        logger.error(f"Error creating custom forecast: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create forecast")
