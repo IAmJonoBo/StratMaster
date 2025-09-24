@@ -216,8 +216,13 @@ class RetrievalBudget:
         top_results = hybrid_scores[:len(hybrid_scores)//2]
         disagreement_sample = disagreement_scores[:len(hybrid_scores)//4]
         
-        # Combine and re-sort
-        combined = list(set(top_results + disagreement_sample))
+        # Combine and re-sort by removing duplicates by doc_id
+        seen_doc_ids = set()
+        combined = []
+        for result in top_results + disagreement_sample:
+            if result.doc_id not in seen_doc_ids:
+                seen_doc_ids.add(result.doc_id)
+                combined.append(result)
         combined.sort(key=lambda x: x.hybrid_score, reverse=True)
         
         return combined

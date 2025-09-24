@@ -314,7 +314,12 @@ class RouterService:
 
     def route_agents(self, payload: AgentRouteRequest) -> AgentRouteResponse:
         """Route request to appropriate agents - Sprint 1 implementation."""
-        from ....agents.router_graph import AgentRouter, RouterInput
+        # Import from the correct path - agents package is a sibling
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), "../../../../../agents/src"))
+        
+        from router_graph import AgentRouter, RouterInput
         
         # Create router instance
         router = AgentRouter()

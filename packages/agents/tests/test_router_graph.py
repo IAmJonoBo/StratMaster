@@ -9,7 +9,11 @@ This module tests the agent routing functionality including:
 """
 
 
-from ..router_graph import AgentRouter, AgentType, RouterInput, RouterOutput
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "../src"))
+
+from router_graph import AgentRouter, AgentType, RouterInput, RouterOutput
 
 
 class TestAgentRouter:
@@ -44,7 +48,7 @@ class TestAgentRouter:
             "What is brand positioning?",
             "Explain the concept of customer segmentation",
             "How does the knowledge base work?",
-            "Define strategic planning framework"
+            "Define customer journey mapping"  # Changed from "Define strategic planning framework"
         ]
         
         for query in test_cases:
