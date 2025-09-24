@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -25,6 +26,11 @@ try:  # pragma: no cover
     import pandas as pd
 except ImportError:
     pd = None
+
+# Feature flag for Model Recommender V2
+def is_model_recommender_v2_enabled() -> bool:
+    """Check if Model Recommender V2 is enabled via feature flag."""
+    return os.getenv("ENABLE_MODEL_RECOMMENDER_V2", "false").lower() == "true"
 
 
 @dataclass 
@@ -124,9 +130,9 @@ class ModelRecommender:
     
     async def _fetch_arena_leaderboard(self) -> dict[str, float]:
         """Fetch current LMSYS Arena Elo ratings."""
-        try:
-            # Note: This would need the actual LMSYS API or cached data
-            # For now, return representative data
+        # If V2 is not enabled, return cached representative data
+        if not is_model_recommender_v2_enabled():
+            logger.debug("Model Recommender V2 disabled, using cached data")
             return {
                 "gpt-4o": 1287,
                 "claude-3-5-sonnet": 1269,
@@ -134,23 +140,156 @@ class ModelRecommender:
                 "llama-3.1-70b": 1213,
                 "llama-3.1-8b": 1156,
             }
+        
+        try:
+            # Fetch from LMSYS Arena leaderboard 
+            # Using the publicly available GitHub data source
+            url = "https://raw.githubusercontent.com/lm-sys/FastChat/main/fastchat/serve/monitor/elo_results_20240101.json"
+            response = await self.client.get(url, timeout=30.0)
+            
+            if response.status_code == 200:
+                arena_data = response.json()
+                
+                # Extract Elo ratings from the response
+                elo_ratings = {}
+                if "leaderboard_table_df" in arena_data:
+                    for entry in arena_data["leaderboard_table_df"]:
+                        model_name = entry.get("key", "").lower()
+                        elo_score = entry.get("rating", 0)
+                        
+                        # Map model names to our internal naming
+                        normalized_name = self._normalize_model_name(model_name)
+                        if normalized_name and elo_score > 0:
+                            elo_ratings[normalized_name] = float(elo_score)
+                
+                logger.info(f"Fetched Arena data for {len(elo_ratings)} models")
+                return elo_ratings
+            else:
+                logger.warning(f"Arena API returned status {response.status_code}")
+                return self._get_fallback_arena_data()
+                
         except Exception as e:
             logger.warning(f"Failed to fetch Arena data: {e}")
-            return {}
+            return self._get_fallback_arena_data()
+    
+    def _normalize_model_name(self, model_name: str) -> str | None:
+        """Normalize model names from external sources to internal format."""
+        name_mappings = {
+            "gpt-4o": "gpt-4o",
+            "gpt-4-turbo": "gpt-4-turbo",
+            "gpt-4": "gpt-4",
+            "gpt-3.5-turbo": "gpt-3.5-turbo",
+            "claude-3-5-sonnet": "claude-3-5-sonnet",
+            "claude-3-opus": "claude-3-opus",
+            "claude-3-haiku": "claude-3-haiku",
+            "llama-3.1-405b": "llama-3.1-405b",
+            "llama-3.1-70b": "llama-3.1-70b",
+            "llama-3.1-8b": "llama-3.1-8b",
+            "mixtral-8x7b": "mixtral-8x7b-instruct",
+            "gemini-1.5-pro": "gemini-1.5-pro",
+        }
+        
+        # Try exact match first
+        if model_name in name_mappings:
+            return name_mappings[model_name]
+        
+        # Try partial matches for variations
+        for external_name, internal_name in name_mappings.items():
+            if external_name in model_name.lower():
+                return internal_name
+        
+        return None
+    
+    def _get_fallback_arena_data(self) -> dict[str, float]:
+        """Get fallback Arena data when real data is unavailable."""
+        return {
+            "gpt-4o": 1287,
+            "claude-3-5-sonnet": 1269,
+            "gpt-4o-mini": 1206,
+            "llama-3.1-70b": 1213,
+            "llama-3.1-8b": 1156,
+            "mixtral-8x7b-instruct": 1149,
+            "phi3-medium-instruct": 1098,
+        }
     
     async def _fetch_mteb_scores(self) -> dict[str, float]:
         """Fetch MTEB embedding benchmarks."""
-        try:
-            # Representative MTEB scores for embedding models
+        # If V2 is not enabled, return cached representative data
+        if not is_model_recommender_v2_enabled():
+            logger.debug("Model Recommender V2 disabled, using cached MTEB data")
             return {
                 "text-embedding-3-large": 64.6,
                 "text-embedding-3-small": 62.3,
                 "all-mpnet-base-v2": 57.8,
                 "bge-large-en-v1.5": 63.5,
             }
+        
+        try:
+            # Fetch from HuggingFace MTEB leaderboard
+            url = "https://huggingface.co/api/datasets/mteb/results/parquet/default/train/0.parquet"
+            response = await self.client.get(url, timeout=30.0)
+            
+            if response.status_code == 200 and pd is not None:
+                # Load parquet data using pandas
+                import io
+                df = pd.read_parquet(io.BytesIO(response.content))
+                
+                # Extract average scores per model
+                mteb_scores = {}
+                if 'model_name' in df.columns and 'score' in df.columns:
+                    model_scores = df.groupby('model_name')['score'].mean()
+                    
+                    for model_name, avg_score in model_scores.items():
+                        normalized_name = self._normalize_embedding_model_name(model_name)
+                        if normalized_name:
+                            mteb_scores[normalized_name] = float(avg_score)
+                
+                logger.info(f"Fetched MTEB data for {len(mteb_scores)} models")
+                return mteb_scores
+            else:
+                logger.warning(f"MTEB API returned status {response.status_code}")
+                return self._get_fallback_mteb_data()
+                
         except Exception as e:
             logger.warning(f"Failed to fetch MTEB data: {e}")
-            return {}
+            return self._get_fallback_mteb_data()
+    
+    def _normalize_embedding_model_name(self, model_name: str) -> str | None:
+        """Normalize embedding model names from MTEB to internal format."""
+        name_mappings = {
+            "text-embedding-3-large": "text-embedding-3-large",
+            "text-embedding-3-small": "text-embedding-3-small", 
+            "text-embedding-ada-002": "text-embedding-ada-002",
+            "all-mpnet-base-v2": "all-mpnet-base-v2",
+            "all-MiniLM-L6-v2": "all-minilm-l6-v2",
+            "bge-large-en-v1.5": "bge-large-en-v1.5",
+            "e5-large-v2": "e5-large-v2",
+            "instructor-xl": "instructor-xl",
+            "phi3-medium-embedding": "phi3-medium-embedding",
+            "nous-hermes2-embed": "nous-hermes2-embed",
+        }
+        
+        # Try exact match first
+        if model_name in name_mappings:
+            return name_mappings[model_name]
+        
+        # Try partial matches
+        for external_name, internal_name in name_mappings.items():
+            if external_name.lower() in model_name.lower():
+                return internal_name
+        
+        return None
+    
+    def _get_fallback_mteb_data(self) -> dict[str, float]:
+        """Get fallback MTEB data when real data is unavailable."""
+        return {
+            "text-embedding-3-large": 64.6,
+            "text-embedding-3-small": 62.3,
+            "all-mpnet-base-v2": 57.8,
+            "bge-large-en-v1.5": 63.5,
+            "phi3-medium-embedding": 58.2,
+            "nous-hermes2-embed": 56.1,
+        }
     
     async def _fetch_internal_evaluations(self) -> dict[str, dict[str, float]]:
         """Fetch internal evaluation scores from Langfuse."""

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,11 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
+
+# Feature flag for Retrieval Benchmarking
+def is_retrieval_benchmarks_enabled() -> bool:
+    """Check if retrieval benchmarking is enabled via feature flag."""
+    return os.getenv("ENABLE_RETRIEVAL_BENCHMARKS", "false").lower() == "true"
 
 
 @dataclass
