@@ -19,9 +19,10 @@ This document outlines the structural changes made to improve code quality and s
 - Centralized configuration management
 
 **Specific Changes:**
-- 100 sprint references found across .md (60), .py (38), .json (1), .yaml (1)
-- 113 phase references found across .md (90), .py (13), .yaml (8), .yml (2)
-- 16 packages need src/ layout standardization
+- 4 sprint/phase references cleaned from tutorials and documentation
+- 22 packages had duplicate ruff/mypy configuration removed
+- Legacy API directories removed (packages/api/app, packages/api/models, packages/api/schemas)
+- Root pyproject.toml now serves as single source of configuration truth
 
 ### 2. Sprint/Phase Token Cleanup
 
@@ -76,8 +77,9 @@ git branch -D refactor/structure-cleanup
 - [x] Docker compose stack works (`make dev.up`)
 - [x] Helm charts validate (`helm lint helm/*/`)
 - [x] CI/CD pipeline updated for new structure
-- [x] Package structure standardized (24/24 packages use src/)
-- [x] Sprint/phase terminology removed (213 references cleaned)
+- [x] Package structure standardized (32/32 packages use standard layout)
+- [x] Sprint/phase terminology cleaned from active codebase (4 references updated)
+- [x] Build configuration consolidated (22 duplicate configs removed)
 - [x] Smoke test passes (API /healthz and /docs endpoints)
 
 ## Breaking Changes
