@@ -378,6 +378,10 @@ def create_app() -> FastAPI:
     from .routers.analytics import router as analytics_router
     app.include_router(analytics_router)
 
+    # Include industry templates router
+    from .routers.templates import router as templates_router
+    app.include_router(templates_router)
+
     # Include verification router
     from .routers.verification import router as verification_router
     app.include_router(verification_router)
