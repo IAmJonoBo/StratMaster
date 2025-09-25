@@ -124,4 +124,13 @@ monitoring_config.json
 .trunk/cache/
 .trunk/.state
 .venv-test/
+
 test_venv/
+
+# Ignore uvicorn pid files
+.uvicorn.pid
+# V2 Development Working Files (exclude from commits)
+v2_consolidation_analysis.json
+v2_progress_tracking.json
+v2_tracking_config.json
+github_issue_sync_status.json
