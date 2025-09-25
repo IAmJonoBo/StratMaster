@@ -1,4 +1,5 @@
-"""Experimentation helpers for CUPED and sequential testing."""
+"""Experiment analytics helpers shared across decision-support workflows."""
+
 from __future__ import annotations
 
 import math
@@ -16,10 +17,7 @@ def cuped_adjustment(outcomes: Sequence[float], covariate: Sequence[float]) -> l
     mean_covariate = sum(covariate) / n
     covariance = sum((x - mean_outcome) * (c - mean_covariate) for x, c in zip(outcomes, covariate))
     variance = sum((c - mean_covariate) ** 2 for c in covariate)
-    if variance == 0:
-        theta = 0.0
-    else:
-        theta = covariance / variance
+    theta = covariance / variance if variance else 0.0
     adjusted = [x - theta * (c - mean_covariate) for x, c in zip(outcomes, covariate)]
     return adjusted
 
@@ -58,3 +56,6 @@ def sequential_sprt(alpha: float, beta: float, p0: float, p1: float, samples: It
         if verdict != "continue":
             break
     return verdict
+
+
+__all__ = ["SPRTState", "cuped_adjustment", "sequential_sprt"]

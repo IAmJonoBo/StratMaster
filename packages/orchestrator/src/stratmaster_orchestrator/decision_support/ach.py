@@ -1,4 +1,5 @@
-"""ACH matrix modelling, critique, and serialization utilities."""
+"""ACH matrix modelling, critique orchestration, and serialization utilities."""
+
 from __future__ import annotations
 
 import json
@@ -117,6 +118,17 @@ class ACHMatrix:
         if self.decision.confidence is None:
             self.decision.confidence = self._estimate_confidence()
 
+    def extend_critiques(self, issues: Iterable[str]) -> None:
+        """Append additional critiques without duplicating existing items."""
+
+        existing = set(self.critiques)
+        for issue in issues:
+            if not issue:
+                continue
+            if issue not in existing:
+                self.critiques.append(issue)
+                existing.add(issue)
+
     def _self_consistency_warnings(self) -> Iterable[str]:
         hypothesis_ids = {hyp.id for hyp in self.hypotheses}
         if not hypothesis_ids:
@@ -188,7 +200,10 @@ def update_board(board_path: Path, matrix: ACHMatrix) -> None:
     row = _board_row(matrix)
     board_path.parent.mkdir(parents=True, exist_ok=True)
     if not board_path.exists():
-        board_path.write_text("# ACH Decision Board\n\n| Title | Verdict | Confidence | Last Updated | Critique Issues |\n| --- | --- | --- | --- | --- |\n", encoding="utf-8")
+        board_path.write_text(
+            "# ACH Decision Board\n\n| Title | Verdict | Confidence | Last Updated | Critique Issues |\n| --- | --- | --- | --- | --- |\n",
+            encoding="utf-8",
+        )
     lines = board_path.read_text(encoding="utf-8").splitlines()
     header_end = 0
     for idx, line in enumerate(lines):
@@ -230,3 +245,15 @@ def _board_row(matrix: ACHMatrix) -> str:
 def load_matrix(path: Path) -> ACHMatrix:
     payload = json.loads(path.read_text(encoding="utf-8"))
     return ACHMatrix.from_dict(payload)
+
+
+__all__ = [
+    "ACHMatrix",
+    "Decision",
+    "EvidenceAssessment",
+    "Hypothesis",
+    "export_yaml",
+    "load_matrix",
+    "save_result",
+    "update_board",
+]

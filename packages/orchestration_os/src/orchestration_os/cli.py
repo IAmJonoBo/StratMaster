@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 from typing import Sequence
 
-from .debate import cli as debate_cli
+from stratmaster_orchestrator.decision_support import cli as decision_cli
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -14,8 +14,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    debate_cli.register_ach_commands(subparsers)
-    debate_cli.register_premortem_commands(subparsers)
+    decision_cli.register_ach_commands(subparsers)
+    decision_cli.register_premortem_commands(subparsers)
+    decision_cli.register_bundle_command(subparsers)
 
     return parser
 

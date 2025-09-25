@@ -1,11 +1,11 @@
-"""Pre-mortem scenario modelling utilities."""
+"""Pre-mortem modelling helpers used by the orchestration bundle."""
+
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
 
 
 def _default_risk_triggers() -> list[str]:
@@ -60,7 +60,7 @@ class PreMortemScenario:
             "success_definition": self.success_definition,
             "catastrophe": self.catastrophe,
             "risk_triggers": self.risk_triggers,
-            "mitigations": [mit.__dict__ for mit in self.mitigations],
+            "mitigations": [asdict(mit) for mit in self.mitigations],
             "confidence_score": self.confidence_score,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -87,6 +87,18 @@ class PreMortemScenario:
         lines.append(f"**Confidence Score:** {self.confidence_score:.2f}")
         return "\n".join(lines)
 
+    def identify_gaps(self) -> list[str]:
+        """Highlight missing mitigations or risk triggers for downstream automation."""
+
+        gaps: list[str] = []
+        if self.confidence_score < 0.5:
+            gaps.append("Confidence score below 0.5; capture additional mitigations or telemetry plans.")
+        if not any("rollback" in trigger.lower() for trigger in self.risk_triggers):
+            gaps.append("No rollback trigger defined; ensure recovery scenarios are covered.")
+        if not self.mitigations:
+            gaps.append("No mitigations recorded; assign action owners before launch.")
+        return gaps
+
 
 def save_json(path: Path, scenario: PreMortemScenario) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -101,3 +113,13 @@ def save_markdown(path: Path, scenario: PreMortemScenario) -> None:
 def load_scenario(path: Path) -> PreMortemScenario:
     payload = json.loads(path.read_text(encoding="utf-8"))
     return PreMortemScenario.from_dict(payload)
+
+
+__all__ = [
+    "Mitigation",
+    "PreMortemScenario",
+    "identify_gaps",
+    "load_scenario",
+    "save_json",
+    "save_markdown",
+]

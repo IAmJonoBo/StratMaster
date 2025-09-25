@@ -1,15 +1,25 @@
-"""Minimal multi-agent runner with governance checks."""
+"""Lightweight governance-friendly agent runner utilities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Protocol
 
 
-Tool = Callable[[str], str]
+class Tool(Protocol):
+    """Protocol for tools executed by simple agents."""
+
+    def __call__(self, task: str) -> str:  # pragma: no cover - structural typing
+        """Execute the tool against a natural language task."""
+
+
+default_rounds = 2
 
 
 @dataclass(slots=True)
 class Agent:
+    """Minimal agent wrapper used for orchestration dry-runs."""
+
     name: str
     tool: Tool
     description: str
@@ -20,6 +30,8 @@ class Agent:
 
 @dataclass(slots=True)
 class SafetyState:
+    """Track guardrail and evaluation approvals before deployment."""
+
     human_approved: bool = False
     guardrails_ok: bool = False
     eval_scores: dict[str, float] = field(default_factory=dict)
@@ -32,6 +44,8 @@ class SafetyState:
 
 @dataclass(slots=True)
 class SafeOrchestrator:
+    """Coordinate a round-robin exchange between lightweight agents."""
+
     agents: list[Agent]
     reviewers: list[str]
     safety_state: SafetyState = field(default_factory=SafetyState)
@@ -47,7 +61,7 @@ class SafeOrchestrator:
             raise PermissionError(f"Reviewer {reviewer} is not authorised")
         self.safety_state.human_approved = True
 
-    def run(self, task: str, rounds: int = 2) -> list[str]:
+    def run(self, task: str, rounds: int = default_rounds) -> list[str]:
         """Execute collaborative rounds between agents."""
 
         transcripts: list[str] = []
@@ -59,3 +73,6 @@ class SafeOrchestrator:
 
     def safe_to_merge(self, min_eval_score: float = 0.8) -> bool:
         return self.safety_state.ready_to_deploy(min_eval_score=min_eval_score)
+
+
+__all__ = ["Agent", "SafetyState", "SafeOrchestrator"]

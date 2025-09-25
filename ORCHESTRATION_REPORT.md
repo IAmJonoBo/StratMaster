@@ -6,6 +6,6 @@
 - **Planning Backlog Lead Time**: Refer to `orchestration/planning/planning_backlog.yaml`
 - **Experiments Summary**: Playbooks in `EXPERIMENTS/playbooks/`
 - **AI Governance**: Checklist status at `orchestration/agents/governance_checklist.md`
-- **Refactor Actions**: Boundary report generated via `orchestration_os.refactor.boundary_checker`
+- **Refactor Actions**: Boundary report generated via `stratmaster_orchestrator.decision_support.refactor.check_boundaries`
 
 Update this report after each major orchestration cycle.

@@ -1,8 +1,11 @@
-"""Wardley map utilities."""
+"""Wardley mapping helpers embedded in the decision-support suite."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from pathlib import Path
+
+import yaml
 
 
 @dataclass(slots=True)
@@ -51,6 +54,11 @@ STAGE_COORDINATES = {
 }
 
 
+def load_map(path: Path) -> WardleyMap:
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return WardleyMap.from_dict(payload)
+
+
 def mermaid_diagram(map_: WardleyMap) -> str:
     lines = ["```mermaid", "graph LR", f"  %% Context: {map_.context}"]
     class_defs: set[str] = set()
@@ -74,3 +82,6 @@ def mermaid_diagram(map_: WardleyMap) -> str:
         )
     lines.append("```")
     return "\n".join(lines)
+
+
+__all__ = ["Component", "Link", "WardleyMap", "load_map", "mermaid_diagram"]

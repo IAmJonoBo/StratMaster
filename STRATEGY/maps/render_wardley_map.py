@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from orchestration_os.strategy.wardley import WardleyMap, mermaid_diagram
+from stratmaster_orchestrator.decision_support.strategy import WardleyMap, mermaid_diagram
 
 
 def _load_document(path: Path) -> dict[str, Any]:

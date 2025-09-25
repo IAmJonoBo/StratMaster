@@ -1,4 +1,5 @@
-"""Static import boundary checker for orchestration modules."""
+"""Boundary checker ensuring decision-support modules remain modular."""
+
 from __future__ import annotations
 
 import ast
@@ -17,6 +18,10 @@ class BoundaryIssue:
 
 
 def _iter_python_files(root: Path) -> Iterable[Path]:
+    if root.is_file():
+        if root.suffix == ".py" and not root.name.startswith("test_"):
+            yield root
+        return
     for path in root.rglob("*.py"):
         if path.name.startswith("test_"):
             continue
@@ -39,17 +44,23 @@ def check_boundaries(config_path: Path, repo_root: Path | None = None) -> list[B
     modules: dict[str, dict[str, object]] = config.get("modules", {})
     issues: list[BoundaryIssue] = []
     for name, spec in modules.items():
-        allowed = set(spec.get("allowed_dependencies", [])) | {f"orchestration_os.{name}"}
+        allowed = set(spec.get("allowed_dependencies", [])) | {
+            f"stratmaster_orchestrator.decision_support.{name}"
+        }
         roots = [repo_root / Path(root) for root in spec.get("roots", [])]
         for root in roots:
             if not root.exists():
                 continue
             for file_path in _iter_python_files(root):
                 for import_name in _discover_imports(file_path):
-                    if not import_name.startswith("orchestration_os."):
+                    if not import_name.startswith("stratmaster_orchestrator.decision_support"):
                         continue
-                    imported_module = import_name.split(".")[1]
-                    if f"orchestration_os.{imported_module}" not in allowed:
+                    parts = import_name.split(".")
+                    if len(parts) < 3:
+                        continue
+                    imported_module = parts[2]
+                    qualified = f"stratmaster_orchestrator.decision_support.{imported_module}"
+                    if qualified not in allowed:
                         issues.append(
                             BoundaryIssue(
                                 file_path=file_path.relative_to(repo_root),
@@ -58,3 +69,6 @@ def check_boundaries(config_path: Path, repo_root: Path | None = None) -> list[B
                             )
                         )
     return issues
+
+
+__all__ = ["BoundaryIssue", "check_boundaries"]
