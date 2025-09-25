@@ -103,4 +103,19 @@ X-RateLimit-Reset: 1640995200
 - **[Research MCP](research-mcp.md)** - Research planning and execution
 - **[Knowledge MCP](knowledge-mcp.md)** - Knowledge graph and retrieval
 - **[Router MCP](router-mcp.md)** - Request routing and load balancing
-- **[OpenAPI Specification](openapi.md)** - Complete interactive specification
+- **[OpenAPI Specification](openapi.md)** - Complete interactive specification- [Analytics API](analytics-api.md)
+- [Cache Admin API](cache_admin-api.md)
+- [Collaboration API](collaboration-api.md)
+- [Debate API](debate-api.md)
+- [Enhanced Performance API](enhanced_performance-api.md)
+- [Experts API](experts-api.md)
+- [Export API](export-api.md)
+- [Gateway API](gateway-api.md)
+- [Ingestion API](ingestion-api.md)
+- [Performance API](performance-api.md)
+- [Security API](security-api.md)
+- [Strategy API](strategy-api.md)
+- [Templates API](templates-api.md)
+- [Ui API](ui-api.md)
+- [Ux Quality Gates API](ux_quality_gates-api.md)
+- [Verification API](verification-api.md)

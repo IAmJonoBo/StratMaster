@@ -38,7 +38,8 @@
         {"metric": "cumulative-layout-shift", "budget": 0.1},
         {"metric": "total-blocking-time", "budget": 200},
         {"metric": "interactive", "budget": 3000},
-        {"metric": "speed-index", "budget": 3000}
+        {"metric": "speed-index", "budget": 3000},
+        {"metric": "interaction-to-next-paint", "budget": 200}
       ],
       "resourceSizes": [
         {"resourceType": "script", "budget": 250},

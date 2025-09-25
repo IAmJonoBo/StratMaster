@@ -6,6 +6,7 @@ Implements docs/code parity automation as identified in GAP_ANALYSIS.md
 
 import ast
 import json
+import logging
 import os
 import re
 import sys
@@ -14,6 +15,8 @@ from typing import Dict, Any, List, Set, Optional, Tuple
 import argparse
 import importlib.util
 import inspect
+
+logger = logging.getLogger(__name__)
 
 
 class APIRouteDiscovery:
@@ -52,42 +55,58 @@ class APIRouteDiscovery:
             tree = ast.parse(content)
             
             # Look for FastAPI route decorators
+            functions_found = 0
+            routes_found = 0
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef):
+                # Handle both regular and async function definitions
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    functions_found += 1
                     route_info = self._extract_route_from_function(node, py_file, content)
                     if route_info:
+                        routes_found += 1
                         self.discovered_routes.append(route_info)
+            
+            if routes_found > 0:
+                print(f"  Found {routes_found} routes in {py_file.name}")
                         
         except (SyntaxError, UnicodeDecodeError, IOError) as e:
             print(f"Warning: Could not parse {py_file}: {e}")
     
-    def _extract_route_from_function(self, func_node: ast.FunctionDef, py_file: Path, content: str) -> Optional[Dict[str, Any]]:
+    def _extract_route_from_function(self, func_node, py_file: Path, content: str) -> Optional[Dict[str, Any]]:
         """Extract route information from a function with FastAPI decorators."""
         route_info = None
         
         for decorator in func_node.decorator_list:
             if isinstance(decorator, ast.Call):
-                # Handle decorator calls like @app.get("/path")
-                if (hasattr(decorator.func, 'attr') and 
-                    decorator.func.attr in ['get', 'post', 'put', 'delete', 'patch', 'options', 'head']):
+                # Handle decorator calls like @router.get("/path") or @app.get("/path")
+                if hasattr(decorator.func, 'attr'):
+                    attr = decorator.func.attr
                     
-                    method = decorator.func.attr.upper()
-                    path = None
-                    
-                    # Extract path from decorator arguments
-                    if decorator.args:
-                        if isinstance(decorator.args[0], ast.Constant):
-                            path = decorator.args[0].value
-                        elif isinstance(decorator.args[0], ast.Str):  # Python < 3.8 compatibility
-                            path = decorator.args[0].s
-                    
-                    if path:
-                        route_info = {
-                            'method': method,
-                            'path': path,
-                            'function_name': func_node.name,
-                            'file': str(py_file.relative_to(self.api_package_path)),
-                            'line_number': func_node.lineno,
+                    if attr in ['get', 'post', 'put', 'delete', 'patch', 'options', 'head']:
+                        method = attr.upper()
+                        path = None
+                        
+                        # Extract path from decorator arguments
+                        if decorator.args:
+                            arg = decorator.args[0]
+                            if isinstance(arg, ast.Constant):
+                                path = arg.value
+                            elif isinstance(arg, ast.Str):  # Python < 3.8 compatibility
+                                path = arg.s
+                        
+                        if path:
+                            # Get router prefix if available
+                            router_prefix = self._extract_router_prefix(py_file, content)
+                            
+                            if router_prefix and not path.startswith(router_prefix):
+                                path = router_prefix + path
+                                
+                            route_info = {
+                                'method': method,
+                                'path': path,
+                                'function_name': func_node.name,
+                                'file': str(py_file.relative_to(self.api_package_path)),
+                                'line_number': func_node.lineno,
                             'docstring': ast.get_docstring(func_node),
                             'parameters': [],
                             'response_model': None,
@@ -113,6 +132,28 @@ class APIRouteDiscovery:
                         break
         
         return route_info
+    
+    def _extract_router_prefix(self, py_file: Path, content: str) -> Optional[str]:
+        """Extract router prefix from APIRouter definition."""
+        try:
+            tree = ast.parse(content)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    # Look for router = APIRouter(prefix="/something")
+                    for target in node.targets:
+                        if isinstance(target, ast.Name) and target.id == 'router':
+                            if isinstance(node.value, ast.Call) and hasattr(node.value.func, 'id') and node.value.func.id == 'APIRouter':
+                                # Extract prefix from APIRouter call
+                                for keyword in node.value.keywords:
+                                    if keyword.arg == 'prefix':
+                                        if isinstance(keyword.value, ast.Constant):
+                                            return keyword.value.value
+                                        elif isinstance(keyword.value, ast.Str):
+                                            return keyword.value.s
+        except Exception as e:
+            # Silent fail for debug logging
+            pass
+        return None
     
     def _extract_string_value(self, node: ast.AST) -> Optional[str]:
         """Extract string value from AST node."""

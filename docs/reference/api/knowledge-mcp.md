@@ -98,8 +98,6 @@ Performs semantic search using ColBERT dense embeddings.
 
 #### Sparse Vector Query (SPLADE)
 ```http
-POST /retrieval/splade/query  
-```
 Performs keyword-expansion based sparse retrieval.
 
 #### Hybrid Retrieval
@@ -189,8 +187,6 @@ Extracts entities and relationships from content.
 
 #### Graph Traversal
 ```http
-POST /graph/traverse
-```
 Performs pathfinding and neighborhood analysis.
 
 **Request:**
@@ -208,8 +204,6 @@ Performs pathfinding and neighborhood analysis.
 
 #### Concept Consolidation
 ```http
-POST /knowledge/consolidate
-```
 Merges and deduplicates knowledge from multiple sources.
 
 #### Contradiction Detection
