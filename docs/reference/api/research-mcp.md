@@ -152,8 +152,6 @@ Executes research plan and returns collected evidence.
 
 #### Source Validation
 ```http
-POST /sources/validate
-```
 Validates source credibility and content quality.
 
 **Request:**

@@ -245,3 +245,77 @@ jobs:
           name: mutation-testing-results
           path: /tmp/mutation-results.json
           retention-days: 30
+
+      - name: Validate API Documentation Coverage
+        if: matrix.python-version == '3.13'
+        run: |
+          # Ensure API documentation coverage meets quality threshold (80%)
+          python scripts/api_docs_parity_checker.py \
+            --api-package packages/api/src/stratmaster_api \
+            --docs-path docs/ \
+            --output /tmp/api-coverage-check.json \
+            --fail-threshold 80.0
+          
+          echo "📊 API Documentation Coverage Results:"
+          python -c "
+          import json
+          with open('/tmp/api-coverage-check.json') as f:
+              data = json.load(f)
+          print(f'Coverage: {data.get(\"stats\", {}).get(\"coverage_percentage\", 0):.1f}%')
+          print(f'Documented: {data.get(\"stats\", {}).get(\"documented_routes\", 0)}/{data.get(\"stats\", {}).get(\"total_api_routes\", 0)} routes')
+          "
+        continue-on-error: false  # Fail CI if documentation coverage is below threshold
+
+      - name: Upload API coverage report
+        if: matrix.python-version == '3.13' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage-report
+          path: /tmp/api-coverage-check.json
+          retention-days: 30
+
+      - name: Validate API Documentation Coverage
+        if: matrix.python-version == '3.13'
+        run: |
+          # Ensure API documentation coverage meets quality threshold (80%)
+          python scripts/api_docs_parity_checker.py \
+            --api-package packages/api/src/stratmaster_api \
+            --docs-path docs/ \
+            --output /tmp/api-coverage-check.json \
+            --fail-threshold 80.0
+          
+          echo "📊 API Documentation Coverage Results:"
+          python -c "
+          import json
+          with open('/tmp/api-coverage-check.json') as f:
+              data = json.load(f)
+          print(f'Coverage: {data.get(\"stats\", {}).get(\"coverage_percentage\", 0):.1f}%')
+          print(f'Documented: {data.get(\"stats\", {}).get(\"documented_routes\", 0)}/{data.get(\"stats\", {}).get(\"total_api_routes\", 0)} routes')
+          "
+        continue-on-error: false  # Fail CI if documentation coverage is below threshold
+
+      - name: Upload API coverage report
+        if: matrix.python-version == '3.13' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage-report
+          path: /tmp/api-coverage-check.json
+          retention-days: 30
+
+      - name: Validate API Documentation Parity
+        if: matrix.python-version == '3.13'
+        run: |
+          # Ensure API documentation coverage meets quality threshold
+          python scripts/api_docs_parity_checker.py \
+            --api-package packages/api/src/stratmaster_api \
+            --docs-path docs/ \
+            --output /tmp/api-parity-validation.json \
+            --fail-threshold 80.0
+            
+      - name: Upload API parity validation results
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-parity-validation
+          path: /tmp/api-parity-validation.json
+          retention-days: 30

@@ -56,15 +56,48 @@ jobs:
           python scripts/generate_openapi.py
           
           # Update API reference docs with latest endpoints
-          echo "TODO: Implement automatic API docs update"
+          echo "🔄 Updating API documentation with discovered routes..."
+          python scripts/api_docs_parity_checker.py \
+            --api-package packages/api/src/stratmaster_api \
+            --docs-path docs/ \
+            --output api-discovery.json \
+            --fail-threshold 0.0 || true
+          
+          if [ -f api-discovery.json ]; then
+            echo "📊 API discovery completed, found $(jq '.stats.total_api_routes' api-discovery.json) routes"
+            echo "📝 Documentation coverage: $(jq '.stats.coverage_percentage' api-discovery.json)%"
+          fi
         continue-on-error: true
 
       # Update content from legacy docs if requested
       - name: Extract content from legacy documentation
         if: inputs.update_content == 'true'
         run: |
-          echo "TODO: Implement content extraction from legacy docs"
-          # python scripts/extract_legacy_content.py
+          echo "🔄 Extracting content from legacy documentation..."
+          
+          # Create backup of current docs
+          cp -r docs/ docs.legacy.backup/ || true
+          
+          # Extract README and high-level docs that should be preserved
+          if [ -f README.md ]; then
+            echo "📄 Preserving README.md content"
+            cp README.md docs.new/legacy-readme.md
+          fi
+          
+          # Extract any diagrams from existing docs
+          if [ -d docs/diagrams ]; then
+            echo "📊 Preserving existing diagrams"
+            cp -r docs/diagrams/* docs.new/explanation/diagrams/ 2>/dev/null || true
+          fi
+          
+          # Extract configuration examples
+          find docs/ -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
+            echo "⚙️ Preserving config: $file"
+            mkdir -p docs.new/reference/configuration/
+            cp "$file" docs.new/reference/configuration/ 2>/dev/null || true
+          done
+          
+          echo "✅ Legacy content extraction completed"
         continue-on-error: true
 
       # Build and validate documentation
