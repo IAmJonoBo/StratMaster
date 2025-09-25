@@ -1,0 +1,21 @@
+producer: experimentation-service
+consumer: decision-os
+schema_version: 1
+fields:
+  - name: experiment_id
+    type: string
+    required: true
+  - name: metric
+    type: string
+    required: true
+  - name: value
+    type: float
+    required: true
+  - name: cuped_theta
+    type: float
+    required: false
+quality:
+  freshness_sla_minutes: 15
+  max_null_percentage: 1.0
+validation:
+  - rule: "value >= 0"

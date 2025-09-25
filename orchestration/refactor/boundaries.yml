@@ -1,0 +1,25 @@
+modules:
+  ach:
+    roots:
+      - packages/orchestrator/src/stratmaster_orchestrator/decision_support/ach.py
+    allowed_dependencies:
+      - stratmaster_orchestrator.decision_support.planning
+      - stratmaster_orchestrator.decision_support.experiments
+  planning:
+    roots:
+      - orchestration/planning
+      - packages/orchestrator/src/stratmaster_orchestrator/decision_support/planning.py
+    allowed_dependencies:
+      - stratmaster_orchestrator.decision_support.strategy
+  experiments:
+    roots:
+      - orchestration/experiments
+      - packages/orchestrator/src/stratmaster_orchestrator/decision_support/experiments.py
+    allowed_dependencies:
+      - stratmaster_orchestrator.decision_support.planning
+  strategy:
+    roots:
+      - STRATEGY/maps
+      - packages/orchestrator/src/stratmaster_orchestrator/decision_support/strategy.py
+    allowed_dependencies:
+      - stratmaster_orchestrator.decision_support.planning
