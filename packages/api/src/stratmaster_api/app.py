@@ -54,6 +54,7 @@ from .routers import performance as performance_router
 from .routers import security as security_router
 from .routers import strategy as strategy_router
 from .routers import ui as ui_router
+from .mobile.router import mobile_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -204,6 +205,7 @@ def create_app() -> FastAPI:
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
+    app.include_router(mobile_router)  # Sprint 1: Consolidated mobile API
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
