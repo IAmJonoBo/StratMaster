@@ -1,0 +1,20 @@
+modules:
+  debate:
+    roots:
+      - orchestration/debate
+      - packages/orchestration_os/src/orchestration_os/debate
+    allowed_dependencies:
+      - orchestration_os.planning
+      - orchestration_os.experiments
+  planning:
+    roots:
+      - orchestration/planning
+      - packages/orchestration_os/src/orchestration_os/planning
+    allowed_dependencies:
+      - orchestration_os.strategy
+  experiments:
+    roots:
+      - orchestration/experiments
+      - packages/orchestration_os/src/orchestration_os/experiments
+    allowed_dependencies:
+      - orchestration_os.planning
