@@ -26,7 +26,7 @@ repos:
     rev: v0.41.0
     hooks:
       - id: markdownlint
-        args: ["--fix", "--config", ".trunk/configs/.markdownlint.yaml"]
+        args: ["--fix"]
   - repo: local
     hooks:
       - id: cleanup-appledouble

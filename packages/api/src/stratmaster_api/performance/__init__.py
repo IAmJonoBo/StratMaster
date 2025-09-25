@@ -16,8 +16,7 @@ import gzip
 import logging
 import time
 from functools import wraps
-from collections.abc import Callable
-from typing import Any
+from typing import Any, Callable
 import json
 
 from fastapi import Request, Response
@@ -274,20 +273,3 @@ def setup_performance_middleware(app, config: dict[str, Any] | None = None):
     )
     
     logger.info("Performance optimization middleware enabled")
-
-# Re-export benchmark API to avoid module/package name collisions
-try:  # pragma: no cover - thin re-export
-    from ..performance_benchmark import (
-        PerformanceBenchmark,
-        PerformanceResult,
-        QualityGate,
-        run_performance_benchmark,
-    )
-    __all__ = (
-        "PerformanceBenchmark",
-        "PerformanceResult",
-        "QualityGate",
-        "run_performance_benchmark",
-    )
-except Exception as _e:  # noqa: N816 - external names
-    logger.debug(f"Benchmark components not available: {_e}")

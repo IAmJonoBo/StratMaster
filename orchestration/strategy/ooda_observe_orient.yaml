@@ -1,5 +1,0 @@
-- initiative: Decision OS rollout
-  observe: Instrument adoption metrics and collect qualitative feedback from beta customers.
-  orient: Compare adoption with baseline feature set; review guardrail breaches weekly.
-  decide: Promote rollout to 25% of traffic with canary controls.
-  act: Schedule debate engine review after two weeks for next loop.
