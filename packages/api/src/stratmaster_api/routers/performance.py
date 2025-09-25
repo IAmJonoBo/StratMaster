@@ -1,15 +1,16 @@
 """Performance and benchmarking router for StratMaster API."""
 
-from fastapi import APIRouter, BackgroundTasks
-from typing import Dict, Any
+from typing import Any
 
-from ..performance import run_performance_benchmark
+from fastapi import APIRouter
+
+from ..performance_benchmark import run_performance_benchmark
 
 performance_router = APIRouter(prefix="/performance", tags=["performance"])
 
 
-@performance_router.post("/benchmark", response_model=Dict[str, Any])
-async def run_benchmark() -> Dict[str, Any]:
+@performance_router.post("/benchmark", response_model=dict[str, Any])
+async def run_benchmark() -> dict[str, Any]:
     """Run comprehensive performance benchmark and quality gate validation.
     
     Executes all performance tests as specified in Upgrade.md:
