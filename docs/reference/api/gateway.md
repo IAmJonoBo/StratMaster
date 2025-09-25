@@ -160,8 +160,6 @@ Performs dense retrieval using ColBERT embeddings.
 
 ### SPLADE Query  
 ```http
-POST /retrieval/splade/query
-```
 
 Performs sparse retrieval using SPLADE representations.
 
@@ -185,8 +183,6 @@ Creates an experiment placeholder for tracking research iterations.
 
 ### Create Forecast
 ```http
-POST /forecasts
-```
 
 Generates synthetic forecast objects for scenario planning.
 
