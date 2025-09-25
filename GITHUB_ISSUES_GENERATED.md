@@ -1,21 +1,17 @@
-#!/usr/bin/env python3
-"""
-GitHub Issues Generator for StratMaster Implementation Plan
+# GitHub Issues for StratMaster Implementation Plan
 
-This script generates GitHub issue bodies based on IMPLEMENTATION_PLAN.md
-for tracking the remaining 1% of implementation work.
-"""
+This document contains the issue bodies for creating GitHub issues to track
+implementation work from IMPLEMENTATION_PLAN.md
 
-import json
-from typing import Dict, Any
+## Issue #1: [IMPL] Real-Time Collaboration Engine - Week 4 Priority
 
-ISSUES_DATA = [
-    {
-        "title": "[IMPL] Real-Time Collaboration Engine - Week 4 Priority",
-        "labels": ["enhancement", "implementation-plan", "P0-critical", "collaboration", "websocket"],
-        "priority": "P0",
-        "milestone": "M1: Real-Time Foundation",
-        "body": """## Enhancement Overview
+**Create this issue with:**
+- **Title:** [IMPL] Real-Time Collaboration Engine - Week 4 Priority
+- **Labels:** enhancement, implementation-plan, P0-critical, collaboration, websocket
+
+**Issue Body:**
+```
+## Enhancement Overview
 Implement Yjs WebSocket provider for CRDT-based editing with <150ms latency target as specified in IMPLEMENTATION_PLAN.md section 1.
 
 ## Current State  
@@ -80,15 +76,34 @@ Implement Yjs WebSocket provider for CRDT-based editing with <150ms latency targ
 - Blocks: Advanced caching (issue #4)
 
 ## Roadmap Timeline
-- [x] Week 1-2""",
-    },
-    
-    {
-        "title": "[IMPL] Evidence-Guided Model Recommender Enhancements - Week 2 Priority", 
-        "labels": ["enhancement", "implementation-plan", "P0-critical", "model-routing", "ml"],
-        "priority": "P0", 
-        "milestone": "M1: Real-Time Foundation",
-        "body": """## Enhancement Overview
+- [x] Week 1-2
+---
+
+## Issue Metadata
+**Priority:** P0  
+**Milestone:** M1: Real-Time Foundation  
+**Labels:** `enhancement`, `implementation-plan`, `P0-critical`, `collaboration`, `websocket`
+
+**Generated from:** IMPLEMENTATION_PLAN.md via implementation tracking automation
+**Related Documentation:** 
+- IMPLEMENTATION_PLAN.md
+- IMPLEMENTATION_ISSUES.md  
+- Upgrade.md (roadmap status)
+- Scratch.md (technical specification)
+
+```
+
+---
+
+## Issue #2: [IMPL] Evidence-Guided Model Recommender Enhancements - Week 2 Priority
+
+**Create this issue with:**
+- **Title:** [IMPL] Evidence-Guided Model Recommender Enhancements - Week 2 Priority
+- **Labels:** enhancement, implementation-plan, P0-critical, model-routing, ml
+
+**Issue Body:**
+```
+## Enhancement Overview
 Complete LMSYS Arena and MTEB data integration for intelligent cascade routing as specified in IMPLEMENTATION_PLAN.md section 2.
 
 ## Current State
@@ -153,15 +168,34 @@ Complete LMSYS Arena and MTEB data integration for intelligent cascade routing a
 - Blocks: Retrieval benchmarking (issue #3)
 
 ## Roadmap Timeline
-- [x] Week 1-2""",
-    },
+- [x] Week 1-2
+---
 
-    {
-        "title": "[IMPL] Retrieval Benchmarking & Latency Validation - Week 3 Priority",
-        "labels": ["enhancement", "implementation-plan", "P0-critical", "retrieval", "benchmarking"],
-        "priority": "P0",
-        "milestone": "M2: Performance & Validation", 
-        "body": """## Enhancement Overview
+## Issue Metadata
+**Priority:** P0  
+**Milestone:** M1: Real-Time Foundation  
+**Labels:** `enhancement`, `implementation-plan`, `P0-critical`, `model-routing`, `ml`
+
+**Generated from:** IMPLEMENTATION_PLAN.md via implementation tracking automation
+**Related Documentation:** 
+- IMPLEMENTATION_PLAN.md
+- IMPLEMENTATION_ISSUES.md  
+- Upgrade.md (roadmap status)
+- Scratch.md (technical specification)
+
+```
+
+---
+
+## Issue #3: [IMPL] Retrieval Benchmarking & Latency Validation - Week 3 Priority
+
+**Create this issue with:**
+- **Title:** [IMPL] Retrieval Benchmarking & Latency Validation - Week 3 Priority
+- **Labels:** enhancement, implementation-plan, P0-critical, retrieval, benchmarking
+
+**Issue Body:**
+```
+## Enhancement Overview
 Complete NDCG@10/MRR@10 benchmarking with BEIR datasets as specified in IMPLEMENTATION_PLAN.md section 3.
 
 ## Current State
@@ -226,15 +260,34 @@ Complete NDCG@10/MRR@10 benchmarking with BEIR datasets as specified in IMPLEMEN
 - Blocks: None
 
 ## Roadmap Timeline  
-- [x] Week 3-4""",
-    },
+- [x] Week 3-4
+---
 
-    {
-        "title": "[IMPL] Advanced Caching & Performance Optimisation - Phase 1 Priority",
-        "labels": ["enhancement", "implementation-plan", "P1-important", "performance", "caching"],
-        "priority": "P1",
-        "milestone": "M2: Performance & Validation",
-        "body": """## Enhancement Overview  
+## Issue Metadata
+**Priority:** P0  
+**Milestone:** M2: Performance & Validation  
+**Labels:** `enhancement`, `implementation-plan`, `P0-critical`, `retrieval`, `benchmarking`
+
+**Generated from:** IMPLEMENTATION_PLAN.md via implementation tracking automation
+**Related Documentation:** 
+- IMPLEMENTATION_PLAN.md
+- IMPLEMENTATION_ISSUES.md  
+- Upgrade.md (roadmap status)
+- Scratch.md (technical specification)
+
+```
+
+---
+
+## Issue #4: [IMPL] Advanced Caching & Performance Optimisation - Phase 1 Priority
+
+**Create this issue with:**
+- **Title:** [IMPL] Advanced Caching & Performance Optimisation - Phase 1 Priority
+- **Labels:** enhancement, implementation-plan, P1-important, performance, caching
+
+**Issue Body:**
+```
+## Enhancement Overview  
 Implement multi-tier caching with CDN integration and invalidation policies as specified in IMPLEMENTATION_PLAN.md section 4.
 
 ## Current State
@@ -298,15 +351,34 @@ Implement multi-tier caching with CDN integration and invalidation policies as s
 - Blocks: None
 
 ## Roadmap Timeline
-- [x] Week 2-4""",
-    },
+- [x] Week 2-4
+---
 
-    {
-        "title": "[IMPL] Phase 3 UX Quality Gates - WCAG, Mobile, Lighthouse",
-        "labels": ["enhancement", "implementation-plan", "P1-important", "ux", "accessibility"],
-        "priority": "P1", 
-        "milestone": "M2: Performance & Validation",
-        "body": """## Enhancement Overview
+## Issue Metadata
+**Priority:** P1  
+**Milestone:** M2: Performance & Validation  
+**Labels:** `enhancement`, `implementation-plan`, `P1-important`, `performance`, `caching`
+
+**Generated from:** IMPLEMENTATION_PLAN.md via implementation tracking automation
+**Related Documentation:** 
+- IMPLEMENTATION_PLAN.md
+- IMPLEMENTATION_ISSUES.md  
+- Upgrade.md (roadmap status)
+- Scratch.md (technical specification)
+
+```
+
+---
+
+## Issue #5: [IMPL] Phase 3 UX Quality Gates - WCAG, Mobile, Lighthouse
+
+**Create this issue with:**
+- **Title:** [IMPL] Phase 3 UX Quality Gates - WCAG, Mobile, Lighthouse
+- **Labels:** enhancement, implementation-plan, P1-important, ux, accessibility
+
+**Issue Body:**
+```
+## Enhancement Overview
 Implement automated accessibility audit, responsive testing, and Lighthouse CI as specified in IMPLEMENTATION_PLAN.md section 5.
 
 ## Current State  
@@ -371,22 +443,13 @@ Implement automated accessibility audit, responsive testing, and Lighthouse CI a
 - Blocks: None
 
 ## Roadmap Timeline
-- [x] Week 2-4""",
-    },
-]
-
-def generate_issue_body(issue_data: Dict[str, Any]) -> str:
-    """Generate the complete issue body with metadata."""
-    body = issue_data["body"]
-    
-    # Add metadata section
-    metadata = f"""
+- [x] Week 2-4
 ---
 
 ## Issue Metadata
-**Priority:** {issue_data['priority']}  
-**Milestone:** {issue_data['milestone']}  
-**Labels:** {', '.join([f'`{label}`' for label in issue_data['labels']])}
+**Priority:** P1  
+**Milestone:** M2: Performance & Validation  
+**Labels:** `enhancement`, `implementation-plan`, `P1-important`, `ux`, `accessibility`
 
 **Generated from:** IMPLEMENTATION_PLAN.md via implementation tracking automation
 **Related Documentation:** 
@@ -394,32 +457,8 @@ def generate_issue_body(issue_data: Dict[str, Any]) -> str:
 - IMPLEMENTATION_ISSUES.md  
 - Upgrade.md (roadmap status)
 - Scratch.md (technical specification)
-"""
-    
-    return body + metadata
 
-def main():
-    """Generate all GitHub issues as JSON for import/reference."""
-    print("# GitHub Issues for StratMaster Implementation Plan")
-    print()
-    print("This document contains the issue bodies for creating GitHub issues to track")  
-    print("implementation work from IMPLEMENTATION_PLAN.md")
-    print()
-    
-    for i, issue_data in enumerate(ISSUES_DATA, 1):
-        print(f"## Issue #{i}: {issue_data['title']}")
-        print()
-        print("**Create this issue with:**")
-        print(f"- **Title:** {issue_data['title']}")
-        print(f"- **Labels:** {', '.join(issue_data['labels'])}")
-        print()
-        print("**Issue Body:**")
-        print("```")
-        print(generate_issue_body(issue_data))
-        print("```")
-        print()
-        print("---")
-        print()
+```
 
-if __name__ == "__main__":
-    main()
+---
+

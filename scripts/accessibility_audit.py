@@ -48,7 +48,7 @@ except ImportError:
 # Try to import optional dependencies
 try:
     import playwright
-    from playwright import async_api as playwright_async_api
+    from playwright.async_api import async_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -368,7 +368,7 @@ class AccessibilityQualityGates:
         
         results = []
         
-        async with playwright_async_api.async_playwright() as p:
+        async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             
             for device_name in devices:

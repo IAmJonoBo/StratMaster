@@ -1,14 +1,13 @@
-.PHONY: api.run api.docker build clean clean.macos test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
         assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
         deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate deps.install.robust \
-	setup setup.full setup.dry setup.validate \
+        setup setup.full setup.dry setup.validate \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
         test.advanced test.property test.contract test.load test.integration \
-	health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot \
-	venv.create venv.ensure venv.info venv.clean venv.recreate.dev venv.recreate.prod venv.sync.dev venv.sync.prod venv.sync.remote
+        health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot
 
 dev.up:
 	docker compose up -d
@@ -50,86 +49,6 @@ api.docker:
 clean:
 	rm -rf .venv
 
-# Remove macOS Finder junk and AppleDouble files safely
-clean.macos:
-	@echo "🧹 Cleaning macOS metadata (._*, .DS_Store, __MACOSX, etc.)"
-	bash scripts/cleanup_appledouble.sh
-	@echo "✅ macOS cleanup complete"
-
-# -------------------------------
-# Virtual environment management
-# -------------------------------
-
-# Common pip environment flags for reproducible, non-interactive installs
-export PYTHONNOUSERSITE=1
-export PIP_DISABLE_PIP_VERSION_CHECK=1
-export PIP_NO_INPUT=1
-export PIP_PROGRESS_BAR=off
-
-# Create .venv with the best available Python (prefers 3.13/3.12, falls back to python3)
-venv.create:
-	@echo "🐍 Creating virtual environment at .venv (if missing)"
-	@PY=$$(command -v python3.13 || command -v python3.12 || command -v python3 || command -v python); \
-	  [ -n "$$PY" ] || { echo "❌ No suitable Python found in PATH"; exit 1; }; \
-	  [ -d .venv ] || $$PY -m venv .venv; \
-	  .venv/bin/python -V
-
-# Ensure .venv exists and Python >= 3.11 as per pyproject
-venv.ensure: venv.create
-	@.venv/bin/python -c 'import sys; maj,min=sys.version_info[:2]; req=(3,11); print(f"Python {sys.version.split()[0]} (required >= {req[0]}.{req[1]})"); sys.exit(0 if (maj,min) >= req else 1)' \
-	  || { echo "❌ Python in .venv is older than 3.11. Please recreate with Python 3.11+"; exit 1; };
-	@echo "✅ Python version OK"
-
-# Print venv info
-venv.info: venv.ensure
-	@echo "📦 Pip version:" && .venv/bin/pip -V || true
-	@echo "📚 Top installed packages (trimmed):" && .venv/bin/pip list --format=columns | sed -n '1,20p' || true
-
-# Install development environment (uses lockfile with hashes when available)
-venv.sync.dev: venv.ensure
-	@echo "📥 Syncing development dependencies"
-	@if [ -f requirements-dev.lock ]; then \
-	  echo "➡️  Using requirements-dev.lock with hashes"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install --require-hashes -r requirements-dev.lock || { echo "⚠️  Hash-based install failed, falling back to requirements-dev.txt"; .venv/bin/pip install -r requirements-dev.txt; }; \
-	else \
-	  echo "➡️  Using requirements-dev.txt"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install -r requirements-dev.txt; \
-	fi
-	@bash scripts/install_editable_packages.sh
-	@.venv/bin/pip check || true
-	@echo "✅ Development venv ready"
-
-# Install production/runtime environment (prefer lockfile with hashes)
-venv.sync.prod: venv.ensure
-	@echo "📥 Syncing production/runtime dependencies"
-	@if [ -f requirements.lock ]; then \
-	  echo "➡️  Using requirements.lock with hashes"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install --require-hashes -r requirements.lock || { echo "⚠️  Hash-based install failed, falling back to requirements.txt"; .venv/bin/pip install -r requirements.txt; }; \
-	else \
-	  echo "➡️  Using requirements.txt"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install -r requirements.txt; \
-	fi
-	@echo "📦 Installing API package (editable, no deps)"
-	@.venv/bin/pip install -e packages/api --no-deps
-	@.venv/bin/pip check || true
-	@echo "✅ Production/runtime venv ready"
-
-# Remote setup alias (same as production sync)
-venv.sync.remote: venv.sync.prod
-	@echo "🌐 Remote venv synchronized (runtime)"
-
-# Remove and fully recreate venvs
-venv.clean:
-	rm -rf .venv
-
-venv.recreate.dev: venv.clean venv.sync.dev venv.info
-
-venv.recreate.prod: venv.clean venv.sync.prod venv.info
-
 test:
 	[ -d .venv ] || python3 -m venv .venv
 	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api -e packages/mcp-servers/research-mcp -e packages/mcp-servers/expertise-mcp pytest
@@ -147,7 +66,7 @@ precommit:
 # Quick local lint check (requires ruff and black to be installed)
 lint:
 	.venv/bin/ruff check .
-
+	
 # Auto-format code (requires ruff and black to be installed)
 format:
 	.venv/bin/ruff check --fix .
@@ -231,7 +150,7 @@ telemetry.up:
 	@echo "📊 Starting telemetry services"
 	docker compose up -d prometheus grafana
 
-# Start only collaboration services
+# Start only collaboration services  
 collaboration.up:
 	@echo "🤝 Starting collaboration services"
 	docker compose --profile collaboration up -d collaboration-ws
@@ -251,14 +170,14 @@ dev.monitoring: dev.up monitoring.up
 	@echo ""
 	@echo "Available services:"
 	@echo "  - API: http://localhost:8080"
-	@echo "  - API Docs: http://localhost:8080/docs"
+	@echo "  - API Docs: http://localhost:8080/docs"  
 	@echo "  - Grafana: http://localhost:3001 (admin/admin)"
 	@echo "  - Prometheus: http://localhost:9090"
 	@echo "  - Langfuse: http://localhost:3000"
 	@echo ""
 
 # Easy setup command for non-power-users
-setup:
+setup: 
 	@echo "🚀 Setting up StratMaster for local development"
 	@echo "This will run the user-friendly setup script..."
 	./setup.sh
@@ -270,7 +189,7 @@ health-check:
 	@curl -f http://localhost:8080/healthz 2>/dev/null || echo "  ❌ API not responding"
 	@echo ""
 	@echo "Grafana Health:"
-	@curl -f http://localhost:3001/api/health 2>/dev/null || echo "  ❌ Grafana not responding"
+	@curl -f http://localhost:3001/api/health 2>/dev/null || echo "  ❌ Grafana not responding" 
 	@echo ""
 	@echo "Prometheus Health:"
 	@curl -f http://localhost:9090/-/healthy 2>/dev/null || echo "  ❌ Prometheus not responding"
@@ -298,7 +217,7 @@ assets.plan.dry:
 	python scripts/assets_pull.py --dry-run plan
 
 assets.pull.dry:
-	@echo "🔍 Dry run: Asset download simulation"
+	@echo "🔍 Dry run: Asset download simulation"  
 	python scripts/assets_pull.py --dry-run pull --all
 
 # Dependency Registry System - Scan and register all package dependencies
@@ -357,7 +276,7 @@ deps.upgrade.dry:
 	@echo "🔍 Dry run: Dependency upgrade simulation"
 	python scripts/dependency_upgrade.py --dry-run upgrade --type patch
 
-# Security scanning and vulnerability assessment
+# Security scanning and vulnerability assessment  
 security.scan:
 	@echo "🔒 Running comprehensive security scan..."
 	@echo "Python Security (bandit):"
@@ -432,11 +351,11 @@ test.load.dry:
 	.venv/bin/python scripts/advanced_testing.py --dry-run load-test
 
 # Backward compatibility aliases (deprecated - use monitoring.* targets)
-# TODO: Remove in v0.2.0
+# TODO: Remove in v0.2.0 
 phase2.up: monitoring.up
 	@echo "⚠️  'phase2.up' is deprecated. Use 'monitoring.up' instead."
 
-phase2.down: monitoring.down
+phase2.down: monitoring.down  
 	@echo "⚠️  'phase2.down' is deprecated. Use 'monitoring.down' instead."
 
 phase2.status: monitoring.status
