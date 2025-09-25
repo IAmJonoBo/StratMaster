@@ -81,7 +81,7 @@
   - Introduce automated dependency scanning and update workflows.
   - Ensure runtime compatibility and roll-back strategies.
 - **Issues / Epics**
-  1. `DEP-201` Tier-1 Dependency Upgrades (Python, Django/FastAPI, etc.)
+  1. `DEP-201` Tier-1 Dependency Upgrades (Python, FastAPI, etc.)
   2. `DEP-202` Security & Compliance Tooling (Snyk/Trivy/Dependabot equivalent)
   3. `DEP-203` Compatibility Testing Matrix & Rollback Automation
   4. `OPS-201` Container Base Image Refresh & Slimming
