@@ -1,0 +1,132 @@
+{
+  "flags": {
+    "ENABLE_COLLAB_LIVE": {
+      "issues": [
+        172,
+        161
+      ],
+      "titles": [
+        "Issue 001: Real-Time Collaboration Engine\"   --body-file \"issue_1_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P0-critical\"   --milestone \"M1: Real-Time Foundation\"; then",
+        "02 Impl Realtime Collaboration Engine",
+        "Issue 001: Real-Time Collaboration Engine"
+      ]
+    },
+    "ENABLE_MODEL_RECOMMENDER_V2": {
+      "issues": [
+        173,
+        162
+      ],
+      "titles": [
+        "Issue 002: Evidence-Guided Model Recommender V2\"   --body-file \"issue_2_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P0-critical\"   --milestone \"M1: Real-Time Foundation\"; then",
+        "03 Impl Evidenceguided Model Recommender V2",
+        "Issue 002: Evidence-Guided Model Recommender V2"
+      ]
+    },
+    "ENABLE_RETRIEVAL_BENCHMARKS": {
+      "issues": [
+        174,
+        163
+      ],
+      "titles": [
+        "Issue 003: Retrieval Benchmarking & Latency Validation\"   --body-file \"issue_3_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P0-critical\"   --milestone \"M1: Real-Time Foundation\"; then",
+        "04 Impl Retrieval Benchmarking  Latency Validation",
+        "Issue 003: Retrieval Benchmarking & Latency Validation"
+      ]
+    },
+    "ENABLE_RESPONSE_CACHE_V2": {
+      "issues": [
+        175,
+        164
+      ],
+      "titles": [
+        "Issue 004: Advanced Caching & Performance Optimisation\"   --body-file \"issue_4_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P1-important\"   --milestone \"M2: Performance & Validation\"; then",
+        "05 Impl Advanced Caching  Performance Optimisation",
+        "Issue 004: Advanced Caching & Performance Optimisation"
+      ]
+    },
+    "ENABLE_EDGE_CACHE_HINTS": {
+      "issues": [
+        175,
+        164
+      ],
+      "titles": [
+        "Issue 004: Advanced Caching & Performance Optimisation\"   --body-file \"issue_4_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P1-important\"   --milestone \"M2: Performance & Validation\"; then",
+        "05 Impl Advanced Caching  Performance Optimisation",
+        "Issue 004: Advanced Caching & Performance Optimisation"
+      ]
+    },
+    "ENABLE_PREDICTIVE_ANALYTICS": {
+      "issues": [
+        177,
+        166
+      ],
+      "titles": [
+        "Issue 006: Predictive Strategy Analytics\"   --body-file \"issue_6_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P2-enhancement\"   --milestone \"M3: Advanced Analytics\"; then",
+        "07 Impl Predictive Strategy Analytics",
+        "Issue 006: Predictive Strategy Analytics"
+      ]
+    },
+    "ENABLE_EVENT_STREAMING": {
+      "issues": [
+        178,
+        167
+      ],
+      "titles": [
+        "Issue 007: Event-Driven Microservices Architecture\"   --body-file \"issue_7_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P2-enhancement\"   --milestone \"M3: Advanced Analytics\"; then",
+        "08 Impl Eventdriven Microservices Architecture",
+        "Issue 007: Event-Driven Microservices Architecture"
+      ]
+    },
+    "ENABLE_INDUSTRY_TEMPLATES": {
+      "issues": [
+        179,
+        168
+      ],
+      "titles": [
+        "Issue 008: Industry-Specific Strategy Templates\"   --body-file \"issue_8_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P2-enhancement\"   --milestone \"M3: Advanced Analytics\"; then",
+        "09 Impl Industryspecific Strategy Templates",
+        "Issue 008: Industry-Specific Strategy Templates"
+      ]
+    },
+    "ENABLE_CUSTOM_FINE_TUNING": {
+      "issues": [
+        180,
+        169
+      ],
+      "titles": [
+        "Issue 009: Custom Model Fine-Tuning Platform\"   --body-file \"issue_9_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P2-enhancement\"   --milestone \"M3: Advanced Analytics\"; then",
+        "10 Impl Custom Model Finetuning Platform",
+        "Issue 009: Custom Model Fine-Tuning Platform"
+      ]
+    },
+    "ENABLE_KNOWLEDGE_REASONING": {
+      "issues": [
+        181,
+        170
+      ],
+      "titles": [
+        "Issue 010: Advanced Knowledge Graph Reasoning\"   --body-file \"issue_10_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P2-enhancement\"   --milestone \"M3: Advanced Analytics\"; then",
+        "11 Impl Advanced Knowledge Graph Reasoning",
+        "Issue 010: Advanced Knowledge Graph Reasoning"
+      ]
+    },
+    "ENABLE_LIGHTHOUSE_CI": {
+      "issues": [
+        176,
+        165
+      ],
+      "titles": [
+        "Issue 005: Phase 3 UX Quality Gates\"   --body-file \"issue_5_body.txt\"   --label \"enhancement,SM_REFACTOR_STRAT,implementation,v2,P1-important\"   --milestone \"M2: Performance & Validation\"; then",
+        "06 Impl Phase 3 Ux Quality Gates",
+        "Issue 005: Phase 3 UX Quality Gates"
+      ]
+    }
+  },
+  "unmapped_issues": [
+    6,
+    25,
+    160,
+    171
+  ],
+  "generated_from": "generate_issue_feature_index.py"
+}

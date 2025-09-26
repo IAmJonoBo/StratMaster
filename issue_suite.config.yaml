@@ -1,0 +1,43 @@
+version: 1
+source:
+  file: ISSUES.md
+  id_pattern: "^[0-9]{3}$"
+  milestone_required: true
+  auto_status_label: true
+  milestone_pattern: "^(Sprint 0:|M[0-9]+:)"
+github:
+  repo: null            # Optional explicit owner/name (null -> infer via gh)
+  project:
+    enable: false       # Set true to enable project-sync (stub)
+    number: null        # GitHub Project (v2) number
+    field_mappings:     # Logical field -> GitHub Project field name
+      status: Status
+      priority: Priority
+defaults:
+  inject_labels:
+    - meta:roadmap
+    - managed:declarative
+  ensure_milestones:
+    - Sprint 0: Mobilize & Baseline
+    - M1: Real-Time Foundation
+    - M2: Performance & Validation
+    - M3: Advanced Analytics
+  # Enable automatic creation (preflight) of any missing labels/milestones.
+  # Disabled by default to avoid surprising repository mutations.
+  ensure_labels_enabled: false
+  ensure_milestones_enabled: false
+output:
+  summary_json: issues_summary.json
+  export_json: issues_export.json
+  report_html: issues_report.html
+  hash_state_file: .issues_sync_state.json
+  mapping_file: issues_mapping.json
+behavior:
+  lock_file: .issues_sync.lock
+  truncate_body_diff: 80
+  dry_run_default: false
+ai:
+  emit_change_events: true
+  schema_export_file: issue_export.schema.json
+  schema_summary_file: issue_change_summary.schema.json
+  schema_version: 1

@@ -1,0 +1,12 @@
+{
+  "ENABLE_COLLAB_LIVE": false,
+  "ENABLE_MODEL_RECOMMENDER_V2": false,
+  "ENABLE_PREDICTIVE_ANALYTICS": false,
+  "ENABLE_EVENT_STREAMING": false,
+  "ENABLE_INDUSTRY_TEMPLATES": false,
+  "_meta": {
+    "description": "Example feature flags for StratMaster V2; copy to v2-flags.json and toggle as needed",
+    "version": 1,
+    "updated": "2025-09-25"
+  }
+}

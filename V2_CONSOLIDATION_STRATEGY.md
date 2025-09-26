@@ -14,7 +14,7 @@ This document outlines the intelligent strategy to consolidate all development b
 
 ### Success Metrics (from SM_REFACTOR_STRAT.md)
 - ✅ 30% reduction in build pipeline duration
-- ✅ 90% automated test coverage on core modules  
+- ✅ 90% automated test coverage on core modules
 - ✅ Zero critical security vulnerabilities
 - ✅ 40% reduction in onboarding time
 
@@ -25,7 +25,7 @@ This document outlines the intelligent strategy to consolidate all development b
 StratMaster/
 ├── packages/                    # 26 modular packages
 │   ├── api/                    # FastAPI core service
-│   ├── mcp-servers/           # 8 MCP microservices  
+│   ├── mcp-servers/           # 8 MCP microservices
 │   ├── orchestrator/          # Workflow engine
 │   ├── ui/                    # Frontend components
 │   └── ...                    # Analytics, ML, Security, etc.
@@ -50,13 +50,21 @@ StratMaster/
 
 ## V2 Consolidation Plan
 
+### Current Progress Variance (2025-09-25)
+- V2 branch created and merged with `main` + codex branch (selective merge replaced full discovery automation).
+- Feature flag scaffold added (`configs/v2-flags.example.json`, `feature_flags.py`).
+- Issue synchronization artifacts generated (`create_github_issues.sh`, `github_cli_commands.txt`, `GITHUB_ISSUES_MANUAL.md`).
+- Full automated branch discovery step deferred (manual consolidation deemed sufficient for initial baseline).
+- Next planned: push `v2`, create issues via GH CLI, begin Sprint 0 baseline measurements.
+
 ### Phase 1: Foundation & Discovery (Week 1)
 **Deliverables:**
-- [ ] Comprehensive branch discovery and analysis
-- [ ] V2 branch creation with consolidated code
-- [ ] Feature flag infrastructure for V2 components
-- [ ] Base CI/CD pipeline for V2 branch
-- [ ] Developer migration guide
+- [x] V2 branch creation with consolidated code
+- [x] Feature flag infrastructure for V2 components (scaffold)
+- [x] Issue synchronization artifacts generated
+- [ ] Comprehensive branch discovery and analysis (deferred)
+- [ ] Base CI/CD pipeline for V2 branch (reuse main pipeline; optimization pending)
+- [ ] Developer migration guide (TBD)
 
 **Branch Consolidation Strategy:**
 1. **Discovery**: Scan all remote branches for active development
@@ -97,11 +105,11 @@ StratMaster/
    - Real-time collaboration engine
    - Evidence-guided model recommender V2
    - Retrieval benchmarking & validation
-   
+
 2. **P1-Important (Weeks 2-4)**:
    - Advanced caching & performance optimization
    - Phase 3 UX quality gates
-   
+
 3. **P2-Enhancement (Month 2+)**:
    - Predictive strategy analytics
    - Event-driven microservices

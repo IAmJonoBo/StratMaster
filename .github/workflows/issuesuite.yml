@@ -1,0 +1,65 @@
+name: IssueSuite Validation
+
+on:
+  push:
+    paths:
+      - 'ISSUES.md'
+      - 'issue_suite.config.yaml'
+      - '.github/workflows/issuesuite.yml'
+  pull_request:
+    paths:
+      - 'ISSUES.md'
+      - 'issue_suite.config.yaml'
+
+jobs:
+  issuesuite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dev dependencies
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r requirements-dev.txt
+          # Install IssueSuite (external) – not part of runtime deps
+          if pip install 'issuesuite>=0.1.4'; then
+            echo 'IssueSuite installed from PyPI'
+          else
+            echo 'PyPI install failed; cloning source repo fallback'
+            git clone --depth 1 https://github.com/IAmJonoBo/IssueSuite issuesuite_src
+            (cd issuesuite_src && pip install .)
+          fi
+      - name: IssueSuite validate (structure & IDs)
+        run: |
+          . .venv/bin/activate
+          issuesuite validate --config issue_suite.config.yaml
+      - name: Generate schemas
+        env:
+          ISSUES_SUITE_MOCK: '1'
+        run: |
+          . .venv/bin/activate
+          issuesuite schema --config issue_suite.config.yaml
+      - name: Dry-run sync summary (mock mode)
+        env:
+          ISSUES_SUITE_MOCK: '1'
+        run: |
+          . .venv/bin/activate
+          issuesuite sync --dry-run --update --config issue_suite.config.yaml --summary-json issues_summary.json
+      - name: Human-readable summary (mock mode)
+        env:
+          ISSUES_SUITE_MOCK: '1'
+        run: |
+          . .venv/bin/activate
+          issuesuite summary --config issue_suite.config.yaml
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: issuesuite-artifacts
+          path: |
+            issue_export.schema.json
+            issue_change_summary.schema.json
+            issues_summary.json

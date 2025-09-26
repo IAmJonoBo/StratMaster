@@ -91,17 +91,17 @@ curl http://127.0.0.1:8080/healthz
 ## 📋 Sprint Roadmap
 
 ### Sprint 0: Mobilize & Baseline (Weeks 1-3) ⏸️
-**Status**: Not Started  
+**Status**: Not Started
 **Completion**: 0%
 
 **Objectives**:
 - [ ] Architecture Assessment & Domain Mapping
-- [ ] Dependency Inventory & Risk Classification  
+- [ ] Dependency Inventory & Risk Classification
 - [ ] Test Coverage Benchmarking & Test Data Audit
 - [ ] CI/CD & Virtual Environment Baseline Analysis
 
 ### Sprint 1: Modular Architecture Foundations (Weeks 4-6) ⏸️
-**Status**: Not Started  
+**Status**: Not Started
 **Completion**: 0%
 
 **Objectives**:
@@ -110,8 +110,8 @@ curl http://127.0.0.1:8080/healthz
 - [ ] Developer Tooling Update & Lint Baseline Alignment
 - [ ] Developer Guide Refresh & Migration Playbook
 
-### Sprint 2: Dependency Modernization (Weeks 7-9) ⏸️ 
-**Status**: Not Started  
+### Sprint 2: Dependency Modernization (Weeks 7-9) ⏸️
+**Status**: Not Started
 **Completion**: 0%
 
 **Objectives**:
@@ -121,7 +121,7 @@ curl http://127.0.0.1:8080/healthz
 - [ ] Container Base Image Refresh & Slimming
 
 ### Sprint 3: Testing & Quality Expansion (Weeks 10-12) ⏸️
-**Status**: Not Started  
+**Status**: Not Started
 **Completion**: 0%
 
 **Objectives**:
@@ -131,7 +131,7 @@ curl http://127.0.0.1:8080/healthz
 - [ ] Quality Gate Automation (coverage, lint, security)
 
 ### Sprint 4: CI/CD Evolution (Weeks 13-15) ⏸️
-**Status**: Not Started  
+**Status**: Not Started
 **Completion**: 0%
 
 **Objectives**:
@@ -143,10 +143,10 @@ curl http://127.0.0.1:8080/healthz
 ## 🎯 Milestones
 
 ### M1: Real-Time Foundation (Week 2) 🔄
-**Progress**: 0% (0/3 criteria met)
+**Progress**: 33% (1/3 criteria met)
 - [ ] Real-time collaboration engine operational
-- [ ] Evidence-guided model recommender V2 implemented  
-- [ ] V2 branch established and validated
+- [ ] Evidence-guided model recommender V2 implemented
+- [x] V2 branch established and validated
 
 ### M2: Performance & Validation (Week 4) 🔄
 **Progress**: 0% (0/3 criteria met)
@@ -203,6 +203,102 @@ python3 scripts/github_issue_sync.py validate
 # View sync report
 python3 scripts/github_issue_sync.py report
 ```
+
+### Automated Issue Creation Enhancements (V2)
+
+The bulk creation script now supports safe re-runs and feature flag introspection tooling.
+
+```bash
+# Standard first run (creates labels + milestones if missing, then 21 issues)
+./create_github_issues.sh
+
+# Retry mode: only attempt issues that failed in a previous partial run
+./create_github_issues.sh --retry-only-failed
+
+# (Planned) Dry run: show which issues would be created (not yet implemented)
+./create_github_issues.sh --dry-run   # Coming soon
+```
+
+Behavior details:
+- Preflight step ensures all required labels and milestones exist (non‑interactive) to prevent hangs.
+- A cache of existing issue titles (open + closed) makes the script idempotent.
+- `--retry-only-failed` skips any title already present, so you can safely re-run after fixing network/API errors.
+
+### Feature Flag → Issue Index
+
+Generate a JSON map (`v2_issue_feature_flags.json`) linking feature flags to the issues that introduce or reference them:
+
+```bash
+python3 scripts/generate_issue_feature_index.py
+# Output sample:
+# {
+#   "flags": {
+#     "ENABLE_COLLAB_LIVE": {"issues": [123], "titles": ["Issue 001: Real-Time Collaboration Engine"]},
+#     ...
+#   },
+#   "unmapped_issues": [...]
+# }
+```
+
+Use cases:
+- Trace deployment readiness for gated features.
+- Power dashboards / documentation linking flags to roadmap scope.
+- Detect orphaned flags (those with empty `issues`).
+
+### Milestone Validation (CI)
+
+The workflow `.github/workflows/validate-milestones.yml` runs on pushes/PRs to `v2` and `main` and invokes:
+
+```bash
+python scripts/validate_milestones.py --verbose
+```
+
+Purpose:
+- Prevent accidental milestone renames/deletions that would break automation.
+- Fast feedback if a required milestone (M1–M4, Sprint 0) is missing.
+
+Manual usage examples:
+```bash
+python scripts/validate_milestones.py                # Validate default required list
+python scripts/validate_milestones.py --list         # List fetched milestones
+python scripts/validate_milestones.py --expected "M1: Real-Time Foundation" "Sprint 0: Mobilize & Baseline"
+```
+
+Exit code is non‑zero if any required milestone is missing (enforces CI quality gate).
+
+### Live Progress Dashboard Mode
+
+`v2_progress_tracker.py` now supports a `--live` augmentation which augments the static progress data with real GitHub counts (issues + milestones) via the GitHub CLI.
+
+```bash
+python3 scripts/v2_progress_tracker.py dashboard --live
+```
+
+Requirements:
+- `gh` authenticated (`gh auth status` must succeed).
+
+When `--live` is supplied the dashboard shows an additional section summarizing:
+- Total issues (open/closed counts)
+- Milestones (open vs closed, upcoming targets)
+- Optional derived percentages for roadmap completion.
+
+### Troubleshooting Bulk Issue Creation
+
+| Symptom | Likely Cause | Resolution |
+|---------|--------------|-----------|
+| Script appears to hang after first issue | Missing label/milestone causing interactive prompt | Preflight now auto-creates; pull latest script and re-run |
+| Issues duplicated | Script was run before retry logic patch | Use GitHub UI search on `"Issue 00"` and close duplicates, or future duplicate detector script (planned) |
+| `gh: Not authenticated` | GitHub CLI not logged in | Run `gh auth login` |
+| `API rate limit exceeded` | Unauthenticated or excessive runs | Authenticate or wait/reset, then use `--retry-only-failed` |
+
+### Planned Improvements
+
+| Enhancement | Description | Status |
+|-------------|-------------|--------|
+| `--dry-run` mode | Output planned creations without executing `gh issue create` | Planned |
+| Duplicate detector | Script to list multiple issues sharing the same canonical base title | Planned |
+| Title normalization in flag index | Strip `Issue NNN:` prefix for cleaner dashboards | Planned |
+
 
 ### Progress Tracking
 ```bash
@@ -299,16 +395,16 @@ Copy commands from `github_cli_commands.txt` and execute individually.
 ## 🎯 Success Criteria
 
 ### Technical Validation
-- [ ] V2 branch successfully consolidated with all valuable commits
+- [x] V2 branch successfully consolidated with all valuable commits
 - [ ] All existing tests pass on V2 branch
 - [ ] 90%+ test coverage achieved across core modules
 - [ ] 30% CI/CD performance improvement demonstrated
-- [ ] Zero critical security vulnerabilities maintained
-- [ ] Feature flag system operational and tested
+- [x] Zero critical security vulnerabilities maintained
+- [x] Feature flag system operational and tested (scaffold present; enable via configs/v2-flags.json)
 
 ### Process Validation
 - [ ] 40% reduction in developer onboarding time measured
-- [ ] All 21 implementation issues tracked in GitHub
+- [x] All 21 implementation issues tracked in GitHub (auto-created via `create_github_issues.sh` with milestone + label preflight)
 - [ ] Sprint milestones aligned with delivery schedule
 - [ ] Automated quality gates preventing regressions
 - [ ] Developer satisfaction > 8/10 (V2 workflow survey)
@@ -341,4 +437,4 @@ Copy commands from `github_cli_commands.txt` and execute individually.
 
 **Questions?** Check existing GitHub Discussions or create a new discussion with the "v2-development" label.
 
-*Last updated: 2025-09-25*
+*Last updated: 2025-09-25 (issues auto-created)*

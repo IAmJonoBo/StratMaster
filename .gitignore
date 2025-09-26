@@ -1,3 +1,4 @@
+.pytest_cache/
 # macOS artifacts
 .DS_Store
 ._*
@@ -134,3 +135,11 @@ v2_consolidation_analysis.json
 v2_progress_tracking.json
 v2_tracking_config.json
 github_issue_sync_status.json
+
+# Local nested repos and temporary worktrees (do not commit)
+.issuesuite_tmp/
+IssueSuite/
+
+# Stray version marker files (ignore if present)
+=0.1.4
+=4.23.0

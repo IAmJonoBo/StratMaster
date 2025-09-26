@@ -16,15 +16,6 @@ from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger(__name__)
-
-# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
-try:
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-    OTEL_FASTAPI_AVAILABLE = True
-except ImportError:
-    OTEL_FASTAPI_AVAILABLE = False
-
 from .dependencies import require_idempotency_key
 from .models import RecommendationOutcome
 from .models.requests import (
@@ -48,13 +39,12 @@ from .models.requests import (
 )
 from .models.schema_export import SCHEMA_VERSION
 from .routers import debate as debate_hitl_router
-from .routers import export as export_router  
+from .routers import export as export_router
 from .routers import ingestion as ingestion_router
 from .routers import performance as performance_router
 from .routers import security as security_router
 from .routers import strategy as strategy_router
 from .routers import ui as ui_router
-from .mobile.router import mobile_router
 from .schemas import (
     CompressionConfig,
     EvalsThresholds,
@@ -63,6 +53,25 @@ from .schemas import (
 )
 from .services import orchestrator_stub
 from .tracing import tracing_manager
+
+# Optional mobile router (heavy optional deps: asyncpg, firebase_admin) placed AFTER all imports
+try:  # pragma: no cover - optional dependency block
+    from .mobile.router import mobile_router  # type: ignore
+    _MOBILE_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    mobile_router = None  # type: ignore
+    _MOBILE_AVAILABLE = False
+
+# Logger and optional instrumentation flags (defined after optional imports)
+logger = logging.getLogger(__name__)
+
+# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
+try:  # pragma: no cover - optional
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    OTEL_FASTAPI_AVAILABLE = True
+except ImportError:  # pragma: no cover - instrumentation optional
+    FastAPIInstrumentor = None  # type: ignore
+    OTEL_FASTAPI_AVAILABLE = False
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
 
@@ -155,11 +164,11 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 
 class TracingMiddleware(BaseHTTPMiddleware):
     """Middleware to add trace ID headers and OTEL spans."""
-    
+
     async def dispatch(self, request: Request, call_next):
         # Generate or extract trace ID
         trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
-        
+
         # Get the current span from OTEL
         current_span = trace.get_current_span()
         if current_span:
@@ -167,26 +176,26 @@ class TracingMiddleware(BaseHTTPMiddleware):
             current_span.set_attribute("http.request.trace_id", trace_id)
             current_span.set_attribute("http.method", request.method)
             current_span.set_attribute("http.url", str(request.url))
-        
+
         # Process the request
         response = await call_next(request)
-        
+
         # Add trace ID to response headers
         response.headers["X-Trace-Id"] = trace_id
-        
+
         # Add span attributes for response
         if current_span:
             current_span.set_attribute("http.status_code", response.status_code)
-        
+
         return response
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="StratMaster API", version="0.2.0")
-    
+
     # Add tracing middleware
     app.add_middleware(TracingMiddleware)
-    
+
     # Initialize OTEL instrumentation for FastAPI if available
     if OTEL_FASTAPI_AVAILABLE:
         FastAPIInstrumentor.instrument_app(app)
@@ -205,7 +214,8 @@ def create_app() -> FastAPI:
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
-    app.include_router(mobile_router)  # Sprint 1: Consolidated mobile API
+    if _MOBILE_AVAILABLE:
+        app.include_router(mobile_router)  # Sprint 1: Consolidated mobile API
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -392,11 +402,10 @@ def create_app() -> FastAPI:
     from .collaboration import is_collaboration_enabled
     if is_collaboration_enabled():
         try:
-            from fastapi import WebSocket, WebSocketDisconnect
             from .routers.collaboration import setup_collaboration_websocket
             setup_collaboration_websocket(app)
         except ImportError:
-            logger.warning("WebSocket dependencies not available. Collaboration features disabled.")
+            logger.warning("Collaboration router not available. Collaboration features disabled.")
 
     return app
 
