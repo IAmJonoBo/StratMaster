@@ -213,7 +213,7 @@ services:
           target: /app
 
   postgres:
-    image: postgres:17
+    image: postgres:18
     environment:
       # checkov:skip=CKV_SECRET_4: Dev-only default password
       POSTGRES_PASSWORD: postgres
