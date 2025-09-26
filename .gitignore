@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# Root pattern placeholder intentionally omitted
-=======
-.pytest_cache/
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
+.
 # macOS artifacts
 .DS_Store
 ._*
@@ -141,15 +137,6 @@ IssueSuite/
 # Stray version marker files (ignore if present)
 =0.1.4
 =4.23.0
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 # Local wheel cache for offline installs
 wheels/
-=======
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
-=======
-
-# Local wheel cache for offline installs
-wheels/
->>>>>>> a18c768 (build: add offline wheelhouse + SM_OFFLINE support; ignore wheels/; docs: OFFLINE_SETUP.md; enhance editable install script)

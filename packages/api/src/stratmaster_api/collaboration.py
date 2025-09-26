@@ -19,12 +19,21 @@ from dataclasses import dataclass
 from typing import Any, Dict, Set
 from uuid import uuid4
 
+# Prefer new asyncio API; fallback to legacy for older installations
 try:
-    import websockets
-    from websockets.server import WebSocketServerProtocol
-except ImportError:
-    websockets = None
-    WebSocketServerProtocol = None
+    from websockets.asyncio.server import serve as ws_serve  # type: ignore
+    from websockets.asyncio.client import connect as ws_connect  # type: ignore
+    from websockets.exceptions import ConnectionClosed  # type: ignore
+except Exception:
+    try:
+        # Legacy fallback (deprecated in websockets >=14)
+        from websockets.server import serve as ws_serve  # type: ignore
+        from websockets.client import connect as ws_connect  # type: ignore
+        from websockets.exceptions import ConnectionClosed  # type: ignore
+    except Exception:
+        ws_serve = None  # type: ignore[assignment]
+        ws_connect = None  # type: ignore[assignment]
+        ConnectionClosed = Exception  # type: ignore[assignment]
 
 try:
     import redis.asyncio as redis
@@ -74,10 +83,10 @@ class YjsCollaborationServer:
         self.port = port
         self.redis_url = redis_url
 
-        # In-memory state (would be backed by Redis/PostgreSQL in production)
-        self.documents: Dict[str, Dict[str, Any]] = {}
-        self.document_subscribers: Dict[str, Set[WebSocketServerProtocol]] = {}
-        self.user_presence: Dict[str, Dict[str, UserPresence]] = {}  # doc_id -> user_id -> presence
+    # In-memory state (would be backed by Redis/PostgreSQL in production)
+    self.documents: dict[str, dict[str, Any]] = {}
+    self.document_subscribers: dict[str, set[Any]] = {}
+    self.user_presence: dict[str, dict[str, UserPresence]] = {}  # doc_id -> user_id -> presence
 
         # Redis client for persistence
         self.redis_client = None
@@ -88,8 +97,8 @@ class YjsCollaborationServer:
 
     async def start_server(self):
         """Start the collaborative editing WebSocket server."""
-        if websockets is None:
-            raise RuntimeError("websockets library not installed. Run: pip install websockets")
+        if ws_serve is None:
+            raise RuntimeError("websockets library not installed. Run: pip install websockets>=10")
 
         # Initialize Redis connection
         if redis is not None:
@@ -103,7 +112,7 @@ class YjsCollaborationServer:
 
         logger.info(f"Starting Yjs collaboration server on {self.host}:{self.port}")
 
-        async with websockets.serve(
+    async with ws_serve(
             self.handle_connection,
             self.host,
             self.port,
@@ -114,7 +123,7 @@ class YjsCollaborationServer:
             logger.info(f"✅ Collaboration server running on ws://{self.host}:{self.port}")
             await asyncio.Future()  # Run forever
 
-    async def handle_connection(self, websocket: WebSocketServerProtocol, path: str):
+    async def handle_connection(self, websocket: Any, path: str):
         """Handle new WebSocket connection for collaborative editing."""
         self.connection_count += 1
         connection_id = str(uuid4())
@@ -160,7 +169,7 @@ class YjsCollaborationServer:
                         "message": "Internal server error"
                     }))
 
-        except websockets.exceptions.ConnectionClosed:
+        except ConnectionClosed:
             logger.info(f"Connection closed: {connection_id}")
         except Exception as e:
             logger.error(f"Connection error: {e}")
@@ -170,7 +179,7 @@ class YjsCollaborationServer:
 
     async def handle_message(
         self,
-        websocket: WebSocketServerProtocol,
+        websocket: Any,
         data: dict[str, Any],
         connection_id: str
     ) -> dict[str, Any] | None:
@@ -195,8 +204,8 @@ class YjsCollaborationServer:
 
     async def handle_subscribe(self, data: dict[str, Any]) -> dict[str, Any]:
         """Handle document subscription request."""
-        doc_id = data.get("doc_id")
-        user_id = data.get("user_id", "anonymous")
+    doc_id = data.get("doc_id")
+    user_id = data.get("user_id", "anonymous")
 
         if not doc_id:
             return {"type": "error", "message": "doc_id required"}
@@ -213,7 +222,7 @@ class YjsCollaborationServer:
 
     async def handle_document_update(
         self,
-        websocket: WebSocketServerProtocol,
+        websocket: Any,
         data: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Handle document update with CRDT operations."""
@@ -249,7 +258,7 @@ class YjsCollaborationServer:
 
     async def handle_presence_update(
         self,
-        websocket: WebSocketServerProtocol,
+        websocket: Any,
         data: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Handle user presence update (cursor position, selection, etc.)."""
@@ -291,7 +300,7 @@ class YjsCollaborationServer:
 
     async def subscribe_to_document(
         self,
-        websocket: WebSocketServerProtocol,
+        websocket: Any,
         doc_id: str,
         user_id: str | None
     ):
@@ -315,6 +324,9 @@ class YjsCollaborationServer:
             }
 
         doc = self.documents[doc_id]
+        # Ensure required keys exist
+        doc.setdefault("vector_clock", {})
+        doc.setdefault("operations", [])
 
         # Update vector clock
         for user_id, clock in update.vector_clock.items():
@@ -344,7 +356,7 @@ class YjsCollaborationServer:
 
     async def broadcast_update(
         self,
-        sender: WebSocketServerProtocol,
+        sender: Any,
         doc_id: str,
         message: dict[str, Any]
     ):
@@ -359,7 +371,7 @@ class YjsCollaborationServer:
             if websocket != sender:  # Don't send to sender
                 try:
                     await websocket.send(message_json)
-                except websockets.exceptions.ConnectionClosed:
+                except ConnectionClosed:
                     # Remove closed connection
                     self.document_subscribers[doc_id].discard(websocket)
                 except Exception as e:
@@ -409,7 +421,7 @@ class YjsCollaborationServer:
 
     async def cleanup_connection(
         self,
-        websocket: WebSocketServerProtocol,
+        websocket: Any,
         doc_id: str | None,
         user_id: str | None,
         connection_id: str
@@ -461,11 +473,19 @@ class YjsCollaborationClient:
 
     async def connect(self, doc_id: str):
         """Connect to collaboration server and subscribe to document."""
+<<<<<<< HEAD
         if websockets is None:
             raise RuntimeError("websockets library not installed")
 
         self.doc_id = doc_id
         self.websocket = await websockets.connect(self.server_url)
+=======
+        if ws_connect is None:
+            raise RuntimeError("websockets library not installed. Run: pip install websockets>=10")
+
+        self.doc_id = doc_id
+        self.websocket = await ws_connect(self.server_url)
+>>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
 
         # Subscribe to document
         await self.send_message({

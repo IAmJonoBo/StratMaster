@@ -12,7 +12,6 @@ from typing import Any, cast
 
 import yaml  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
-from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -38,7 +37,13 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
-from .routers import debate as debate_hitl_router
+# Optional debate router (heavy dep: scikit-learn via learning module)
+try:  # pragma: no cover - optional dependency block
+    from .routers import debate as debate_hitl_router  # type: ignore
+    _DEBATE_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    debate_hitl_router = None  # type: ignore
+    _DEBATE_AVAILABLE = False
 from .routers import export as export_router
 from .routers import ingestion as ingestion_router
 from .routers import performance as performance_router
@@ -52,7 +57,7 @@ from .schemas import (
     RetrievalHybridConfig,
 )
 from .services import orchestrator_stub
-from .tracing import tracing_manager
+from .tracing import trace, tracing_manager
 
 # Optional mobile router (heavy optional deps: asyncpg, firebase_admin) placed AFTER all imports
 try:  # pragma: no cover - optional dependency block
@@ -208,7 +213,8 @@ def create_app() -> FastAPI:
     register_model_schema_endpoints(app)
 
     app.include_router(ingestion_router.router)
-    app.include_router(debate_hitl_router.router)
+    if _DEBATE_AVAILABLE:
+        app.include_router(debate_hitl_router.router)
     app.include_router(export_router.export_router)
     app.include_router(performance_router.performance_router)
     app.include_router(ui_router.router)
