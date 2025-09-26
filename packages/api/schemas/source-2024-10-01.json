@@ -1,0 +1,13 @@
+{
+  "$id": "https://schemas.stratmaster.ai/source/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "content": { "type": "string" }
+  },
+  "required": ["id", "title"],
+  "additionalProperties": true
+}

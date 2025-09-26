@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
+import datetime as dt
+import importlib
+import importlib.util as _import_util
 import logging
-from datetime import datetime, timedelta
 from typing import Any
 
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from keycloak import KeycloakOpenID
 from pydantic import BaseModel, Field
+
+# Detect availability without importing at module import time
+KEYCLOAK_AVAILABLE: bool = _import_util.find_spec("keycloak") is not None
 
 logger = logging.getLogger(__name__)
 
@@ -60,21 +64,27 @@ class KeycloakAuth:
 
     def __init__(self, config: OIDCConfig):
         self.config = config
-        self.keycloak_openid = KeycloakOpenID(
+        if not KEYCLOAK_AVAILABLE:
+            raise RuntimeError(
+                "python-keycloak not installed; cannot initialize KeycloakAuth"
+            )
+        # Lazy import to keep dependency optional and avoid static analysis issues
+        keycloak_mod = importlib.import_module("keycloak")
+        self.keycloak_openid = keycloak_mod.KeycloakOpenID(
             server_url=config.server_url,
             client_id=config.client_id,
             realm_name=config.realm_name,
             client_secret_key=config.client_secret,
-            verify=config.verify_ssl
+            verify=config.verify_ssl,
         )
 
         # Cache for public keys (avoid fetching on every request)
         self._public_key_cache: str | None = None
-        self._cache_expires: datetime | None = None
+        self._cache_expires: dt.datetime | None = None
 
-    async def get_public_key(self) -> str:
+    def get_public_key(self) -> str:
         """Get Keycloak public key for JWT verification."""
-        now = datetime.utcnow()
+        now = dt.datetime.now(dt.UTC)
 
         # Use cached key if available and not expired
         if (self._public_key_cache and
@@ -84,30 +94,33 @@ class KeycloakAuth:
 
         try:
             # Get public key from Keycloak
-            public_key = self.keycloak_openid.public_key()
+            public_key = self.keycloak_openid.public_key()  # type: ignore[attr-defined]
 
             # Format as PEM
             pem_key = f"-----BEGIN PUBLIC KEY-----\n{public_key}\n-----END PUBLIC KEY-----"
 
             # Cache for 1 hour
             self._public_key_cache = pem_key
-            self._cache_expires = now + timedelta(hours=1)
+            self._cache_expires = now + dt.timedelta(hours=1)
 
             logger.debug("Retrieved and cached Keycloak public key")
             return pem_key
 
         except Exception as e:
-            logger.error(f"Failed to retrieve Keycloak public key: {e}")
+            logger.error("Failed to retrieve Keycloak public key: %s", e)
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Authentication service unavailable"
-            )
+                detail="Authentication service unavailable",
+            ) from e
 
     async def verify_token(self, token: str) -> UserInfo:
         """Verify and decode JWT token."""
         try:
+            # Import PyJWT lazily to avoid hard dependency at import time
+            import jwt  # type: ignore[import-not-found]
+
             # Get public key for verification
-            public_key = await self.get_public_key()
+            public_key = await asyncio.to_thread(self.get_public_key)
 
             # Configure JWT options
             options = {
@@ -131,29 +144,39 @@ class KeycloakAuth:
             # Extract user information
             user_info = self._extract_user_info(payload)
 
-            logger.debug(f"Successfully verified token for user: {user_info.preferred_username}")
+            logger.debug(
+                "Successfully verified token for user: %s",
+                user_info.preferred_username,
+            )
             return user_info
 
-        except jwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError as e:  # type: ignore[name-defined]
             logger.warning("Token has expired")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
-        except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid token: {e}")
+            ) from e
+        except jwt.InvalidTokenError as e:  # type: ignore[name-defined]
+            logger.warning("Invalid token: %s", e)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
+            ) from e
+        except ModuleNotFoundError as e:
+            # This handles cases where PyJWT is not installed
+            logger.error("Authentication service unavailable: %s", e)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication service unavailable",
+            ) from e
         except Exception as e:
-            logger.error(f"Token verification failed: {e}")
+            logger.error("Token verification failed: %s", e)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Token verification failed"
-            )
+                detail="Token verification failed",
+            ) from e
 
     def _extract_user_info(self, payload: dict[str, Any]) -> UserInfo:
         """Extract user information from JWT payload."""
@@ -167,7 +190,8 @@ class KeycloakAuth:
             given_name=payload.get("given_name"),
             family_name=payload.get("family_name"),
             iat=payload.get("iat"),
-            exp=payload.get("exp")
+            exp=payload.get("exp"),
+            tenant_id=payload.get("tenant_id"),
         )
 
         # Extract roles (from realm_access and resource_access)
@@ -201,22 +225,40 @@ class KeycloakAuth:
 
     def _map_roles_to_permissions(self, roles: list[str]) -> list[str]:
         """Map roles to specific permissions."""
+        READ_ALL = "read:all"
+        WRITE_ALL = "write:all"
+        DELETE_ALL = "delete:all"
+        MANAGE_USERS = "manage:users"
+        MANAGE_TENANTS = "manage:tenants"
+        VIEW_AUDIT_LOGS = "view:audit_logs"
         permission_mapping = {
             "admin": [
-                "read:all", "write:all", "delete:all", "manage:users",
-                "manage:tenants", "view:audit_logs"
+                READ_ALL,
+                WRITE_ALL,
+                DELETE_ALL,
+                MANAGE_USERS,
+                MANAGE_TENANTS,
+                VIEW_AUDIT_LOGS,
             ],
             "manager": [
-                "read:all", "write:own", "create:projects", "manage:team"
+                READ_ALL,
+                "write:own",
+                "create:projects",
+                "manage:team",
             ],
             "analyst": [
-                "read:assigned", "write:own", "create:analysis", "run:research"
+                "read:assigned",
+                "write:own",
+                "create:analysis",
+                "run:research",
             ],
             "viewer": [
-                "read:public", "view:dashboards"
+                "read:public",
+                "view:dashboards",
             ],
             "api_client": [
-                "api:read", "api:write"
+                "api:read",
+                "api:write",
             ]
         }
 
@@ -237,12 +279,14 @@ class KeycloakAuth:
     def require_permission(self, required_permission: str):
         """Decorator/dependency to require specific permission."""
 
-        async def permission_checker(
+        def permission_checker(
             current_user: UserInfo = Depends(self.get_current_user)
         ) -> UserInfo:
             if required_permission not in current_user.permissions:
                 logger.warning(
-                    f"User {current_user.preferred_username} lacks permission: {required_permission}"
+                    "User %s lacks permission: %s",
+                    current_user.preferred_username,
+                    required_permission,
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -255,12 +299,14 @@ class KeycloakAuth:
     def require_role(self, required_role: str):
         """Decorator/dependency to require specific role."""
 
-        async def role_checker(
+        def role_checker(
             current_user: UserInfo = Depends(self.get_current_user)
         ) -> UserInfo:
             if required_role not in current_user.roles:
                 logger.warning(
-                    f"User {current_user.preferred_username} lacks role: {required_role}"
+                    "User %s lacks role: %s",
+                    current_user.preferred_username,
+                    required_role,
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -270,12 +316,16 @@ class KeycloakAuth:
 
         return role_checker
 
-    def optional_auth(self, credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False))) -> UserInfo | None:
+    async def optional_auth(
+        self,
+        credentials: HTTPAuthorizationCredentials | None = Depends(
+            HTTPBearer(auto_error=False)
+        ),
+    ) -> UserInfo | None:
         """Optional authentication dependency."""
         if credentials:
             try:
-                import asyncio
-                return asyncio.create_task(self.verify_token(credentials.credentials))
+                return await self.verify_token(credentials.credentials)
             except HTTPException:
                 return None
         return None
@@ -370,6 +420,9 @@ def init_auth(config: OIDCConfig) -> KeycloakAuth:
     """Initialize global authentication instance."""
     global _keycloak_auth, _rbac
 
+    # Only initialize when Keycloak client library is available
+    if not KEYCLOAK_AVAILABLE:
+        raise RuntimeError("Keycloak library not available; cannot init auth")
     _keycloak_auth = KeycloakAuth(config)
     _rbac = RoleBasedAccessControl(_keycloak_auth)
 

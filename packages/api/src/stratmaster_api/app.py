@@ -48,7 +48,7 @@ from .models.requests import (
 )
 from .models.schema_export import SCHEMA_VERSION
 from .routers import debate as debate_hitl_router
-from .routers import export as export_router  
+from .routers import export as export_router
 from .routers import ingestion as ingestion_router
 from .routers import performance as performance_router
 from .routers import security as security_router
@@ -154,11 +154,11 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 
 class TracingMiddleware(BaseHTTPMiddleware):
     """Middleware to add trace ID headers and OTEL spans."""
-    
+
     async def dispatch(self, request: Request, call_next):
         # Generate or extract trace ID
         trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
-        
+
         # Get the current span from OTEL
         current_span = trace.get_current_span()
         if current_span:
@@ -166,26 +166,26 @@ class TracingMiddleware(BaseHTTPMiddleware):
             current_span.set_attribute("http.request.trace_id", trace_id)
             current_span.set_attribute("http.method", request.method)
             current_span.set_attribute("http.url", str(request.url))
-        
+
         # Process the request
         response = await call_next(request)
-        
+
         # Add trace ID to response headers
         response.headers["X-Trace-Id"] = trace_id
-        
+
         # Add span attributes for response
         if current_span:
             current_span.set_attribute("http.status_code", response.status_code)
-        
+
         return response
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="StratMaster API", version="0.2.0")
-    
+
     # Add tracing middleware
     app.add_middleware(TracingMiddleware)
-    
+
     # Initialize OTEL instrumentation for FastAPI if available
     if OTEL_FASTAPI_AVAILABLE:
         FastAPIInstrumentor.instrument_app(app)
@@ -386,15 +386,15 @@ def create_app() -> FastAPI:
     from .routers.verification import router as verification_router
     app.include_router(verification_router)
 
-    # Add collaboration WebSocket endpoint if enabled
-    from .collaboration import is_collaboration_enabled
-    if is_collaboration_enabled():
-        try:
-            from fastapi import WebSocket, WebSocketDisconnect
-            from .routers.collaboration import setup_collaboration_websocket
-            setup_collaboration_websocket(app)
-        except ImportError:
-            logger.warning("WebSocket dependencies not available. Collaboration features disabled.")
+    # Always register collaboration status endpoint; websocket route only when enabled
+    try:
+        from .routers.collaboration import setup_collaboration_websocket
+        setup_collaboration_websocket(app)
+    except Exception:
+        logger.warning(
+            "Collaboration routes setup failed; status may be unavailable",
+            exc_info=True,
+        )
 
     return app
 
