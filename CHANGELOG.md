@@ -8,17 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added - Phase 3 & 4 Features
-- **Predictive Analytics Platform** with Prophet-based time-series forecasting
-- **HEART Metrics Forecasting** for user experience prediction
-- **Product Performance Forecasting** with trend analysis
-- **Event-Driven Architecture** with Redis Streams and Kafka support
-- **Industry-Specific Strategy Templates** for Technology, Healthcare, Fintech, and Retail
-- **Comprehensive Event Schemas** for audit, analytics, and collaboration
-- **Real-time Event Streaming** with feature flag control
-- **Architectural Mermaid Diagrams** for system visualization
-- **Advanced Documentation Quality Checker** with link validation and accessibility compliance
-- **Diátaxis-Compliant Documentation Structure** validation
-- **API Endpoint Coverage Tracking** for documentation completeness
+
+### Added
+- IssueSuite 0.1.1: optional preflight auto-create flags (`ensure_labels_enabled`, `ensure_milestones_enabled`), README section, parser equivalence & project stub tests.
+- IssueSuite 0.1.2: debug logging via `ISSUESUITE_DEBUG=1` environment variable.
+- IssueSuite 0.1.3: native argparse CLI (`issuesuite`), JSON Schemas helper (`issuesuite.schemas.get_schemas()`), pyproject & publish workflow templates, initial CLI tests.
+- IssueSuite 0.1.4: add true mock mode (`ISSUES_SUITE_MOCK=1`) skipping all GitHub CLI invocations and printing `MOCK` actions.
+
 
 ### Enhanced
 - **Analytics Router** with new HEART and product forecasting endpoints
@@ -50,11 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced API documentation with OpenAPI 3.1 integration
 - Improved configuration management with hierarchical YAML files
 - Updated security practices to enterprise standards
+- Migrated internal IssueSuite implementation to external dependency (`issuesuite>=0.1.4`) and removed embedded package.
 
 ### Fixed
 - Documentation links and cross-references
 - Configuration validation and error handling
 - API endpoint consistency and error responses
+
+### Removed
+- Legacy IssueSuite scripts (`scripts/issue_suite.py`, `issues_lib.py`, sync/validate/export variants) and internal package `packages/issuesuite/` (now sourced from external PyPI distribution).
 
 ## [0.1.0] - 2024-01-15
 
@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FastAPI-based REST API with comprehensive endpoints
 - Multi-database architecture (PostgreSQL, Qdrant, OpenSearch, NebulaGraph)
 - MCP (Model Context Protocol) microservices architecture
-- Temporal workflow orchestration for complex multi-agent processes  
+- Temporal workflow orchestration for complex multi-agent processes
 - Comprehensive observability with Prometheus, Grafana, and OpenTelemetry
 - Multi-tenant isolation with row-level security
 - Authentication and authorization system with JWT and OAuth2
@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - Complete API reference with interactive Swagger UI and ReDoc
-- Developer quick start guide and tutorials  
+- Developer quick start guide and tutorials
 - How-to guides for development setup, deployment, and troubleshooting
 - Architecture overview and system design documentation
 - Security model and compliance framework
@@ -160,7 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Coming in v0.2.0**:
 - Real-time collaboration features
-- Advanced visualization capabilities  
+- Advanced visualization capabilities
 - Enhanced mobile support
 - Additional AI provider integrations
 - Performance optimizations for large-scale deployments
@@ -183,7 +183,7 @@ When contributing changes, please follow these guidelines:
 ### Added
 - New feature description with impact explanation [#123](link-to-issue)
 
-### Changed  
+### Changed
 - Changed feature description explaining what and why [#456](link-to-pr)
 
 ### Fixed
@@ -195,7 +195,7 @@ When contributing changes, please follow these guidelines:
 StratMaster follows [Semantic Versioning](https://semver.org/):
 
 - **MAJOR** version for incompatible API changes
-- **MINOR** version for backwards-compatible functionality additions  
+- **MINOR** version for backwards-compatible functionality additions
 - **PATCH** version for backwards-compatible bug fixes
 
 Examples:

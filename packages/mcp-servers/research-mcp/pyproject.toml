@@ -7,7 +7,7 @@ authors = [{ name = "StratMaster" }]
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3.2", "httpx>=0.28.5"]
+dev = ["pytest>=8.3.2", "httpx>=0.28.1"]
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]

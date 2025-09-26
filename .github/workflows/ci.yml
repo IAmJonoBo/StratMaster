@@ -38,7 +38,7 @@ jobs:
       - name: Install retrieval/reranker test extras for Python 3.12
         if: matrix.python-version == '3.12'
         run: |
-          # Install with timeout protection for network resilience  
+          # Install with timeout protection for network resilience
           timeout 300 pip install -e packages/retrieval/src/splade[test-cli] \
                       -e packages/retrieval/src/colbert[test-cli] \
                       -e packages/rerankers/src/bge[test-cli] || echo "Retrieval/reranker packages timed out - skipping for network resilience"
@@ -49,7 +49,7 @@ jobs:
           # Run core API tests with flake detection and retry
           python scripts/flake_detector.py "python -m pytest packages/api/tests/ -q" || \
           python scripts/flake_detector.py "pytest packages/api/tests/ -q" || true
-          
+
       - name: Upload flake detection results
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,10 +59,6 @@ jobs:
             flaky_tests.json
             flaky_tests_report.json
           retention-days: 30
-          # Try research-mcp tests but continue if they fail due to missing dependencies
-          if [ -d packages/mcp-servers/research-mcp/tests ]; then
-            python -m pytest packages/mcp-servers/research-mcp/tests/ -q || pytest packages/mcp-servers/research-mcp/tests/ -q || echo "Research MCP tests skipped due to missing dependencies"
-          fi
       - name: Security scan with bandit
         run: |
           bandit -c .security.cfg -r packages/ -f json -o bandit-report.json
@@ -89,6 +85,60 @@ jobs:
           helm lint helm/research-mcp
           helm template helm/research-mcp > /dev/null
 
+  lock-test-313:
+    name: Build & Test (3.13 lock-aware)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include_extras: [false, true]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Bootstrap environment
+        run: make bootstrap
+      - name: Venv doctor (clean metadata)
+        run: make venv.doctor
+      - name: Exact sync from lock (dev)
+        run: make venv.sync.dev.exact
+      - name: Install IssueSuite (best-effort)
+        run: |
+          make issuesuite.install || true
+      - name: Install optional extras (matrix)
+        if: matrix.include_extras == true
+        run: |
+          .venv/bin/python -m pip install --disable-pip-version-check -q asyncpg firebase-admin stratmaster-cove
+      - name: Pip check (strict when extras enabled)
+        run: |
+          if [ "${{ matrix.include_extras }}" = "true" ]; then
+            .venv/bin/python -m pip check
+          else
+            .venv/bin/python -m pip check || true
+          fi
+      - name: Run API tests (quiet)
+        run: PYTHONNOUSERSITE=1 .venv/bin/python -m pytest packages/api/tests -q
+
+  lint-type:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install tools
+        run: |
+          pip install ruff mypy
+      - name: Ruff lint (fast)
+        run: |
+          ruff check packages/api || true
+      - name: Mypy (api package only)
+        run: |
+          mypy --install-types --non-interactive packages/api || true
+
   dependency-check:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -113,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: 
+        service:
           - api
           - research-mcp
           - knowledge-mcp
@@ -122,17 +172,17 @@ jobs:
           - compression-mcp
     steps:
       - uses: actions/checkout@v5
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -142,7 +192,7 @@ jobs:
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -159,21 +209,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: [build-test, build-images]
     runs-on: ubuntu-latest
-    environment: development
     steps:
       - uses: actions/checkout@v5
-      
+
       - name: Setup Helm
         uses: azure/setup-helm@v4
-      
+
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
-      
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > kubeconfig
-          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
-      
+
       - name: Deploy to development
         run: |
           ./scripts/deploy.sh deploy-dev \
@@ -181,7 +225,7 @@ jobs:
             --values-file helm/values-development.yaml \
             --wait \
             --timeout 600s
-      
+
       - name: Run smoke tests
         run: |
           # Wait for deployment to be ready
@@ -189,7 +233,7 @@ jobs:
           # Run basic health checks
           python scripts/smoke_api.py --environment development
           python scripts/health_check.py --environment development
-      
+
       - name: Collect DORA Metrics
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -198,35 +242,34 @@ jobs:
           pip install requests
           # Collect and export DORA metrics
           python scripts/dora_metrics.py /tmp/dora_metrics.json
-          
+
       - name: Upload DORA Metrics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dora-metrics-${{ matrix.python-version }}
+          name: dora-metrics
           path: /tmp/dora_metrics.json
           retention-days: 30
-          
+
       - name: Generate SBOM and SLSA Provenance
         run: |
           # Generate SBOM with vulnerability data
           python scripts/generate_sbom.py \
-            --output /tmp/sbom-${{ matrix.python-version }}.json \
-            --provenance /tmp/slsa-provenance-${{ matrix.python-version }}.json \
+            --output /tmp/sbom.json \
+            --provenance /tmp/slsa-provenance.json \
             --include-vulnerabilities
-            
+
       - name: Upload SBOM Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-artifacts-${{ matrix.python-version }}
+          name: sbom-artifacts
           path: |
-            /tmp/sbom-${{ matrix.python-version }}.json
-            /tmp/slsa-provenance-${{ matrix.python-version }}.json
+            /tmp/sbom.json
+            /tmp/slsa-provenance.json
           retention-days: 90
-          
+
       - name: Run mutation testing (sample)
-        if: matrix.python-version == '3.13'
         run: |
           # Run mutation testing on a small sample for CI performance
           python scripts/mutation_testing.py \
@@ -237,9 +280,8 @@ jobs:
             --output /tmp/mutation-results.json \
             --quality-gates
         continue-on-error: true  # Don't fail CI on mutation testing issues
-        
+
       - name: Upload mutation testing results
-        if: matrix.python-version == '3.13'
         uses: actions/upload-artifact@v4
         with:
           name: mutation-testing-results
@@ -247,7 +289,6 @@ jobs:
           retention-days: 30
 
       - name: Validate API Documentation Coverage
-        if: matrix.python-version == '3.13'
         run: |
           # Ensure API documentation coverage meets quality threshold (80%)
           python scripts/api_docs_parity_checker.py \
@@ -255,7 +296,7 @@ jobs:
             --docs-path docs/ \
             --output /tmp/api-coverage-check.json \
             --fail-threshold 80.0
-          
+
           echo "📊 API Documentation Coverage Results:"
           python -c "
           import json
@@ -267,35 +308,7 @@ jobs:
         continue-on-error: false  # Fail CI if documentation coverage is below threshold
 
       - name: Upload API coverage report
-        if: matrix.python-version == '3.13' && always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-coverage-report
-          path: /tmp/api-coverage-check.json
-          retention-days: 30
-
-      - name: Validate API Documentation Coverage
-        if: matrix.python-version == '3.13'
-        run: |
-          # Ensure API documentation coverage meets quality threshold (80%)
-          python scripts/api_docs_parity_checker.py \
-            --api-package packages/api/src/stratmaster_api \
-            --docs-path docs/ \
-            --output /tmp/api-coverage-check.json \
-            --fail-threshold 80.0
-          
-          echo "📊 API Documentation Coverage Results:"
-          python -c "
-          import json
-          with open('/tmp/api-coverage-check.json') as f:
-              data = json.load(f)
-          print(f'Coverage: {data.get(\"stats\", {}).get(\"coverage_percentage\", 0):.1f}%')
-          print(f'Documented: {data.get(\"stats\", {}).get(\"documented_routes\", 0)}/{data.get(\"stats\", {}).get(\"total_api_routes\", 0)} routes')
-          "
-        continue-on-error: false  # Fail CI if documentation coverage is below threshold
-
-      - name: Upload API coverage report
-        if: matrix.python-version == '3.13' && always()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-coverage-report
@@ -303,7 +316,6 @@ jobs:
           retention-days: 30
 
       - name: Validate API Documentation Parity
-        if: matrix.python-version == '3.13'
         run: |
           # Ensure API documentation coverage meets quality threshold
           python scripts/api_docs_parity_checker.py \
@@ -311,9 +323,8 @@ jobs:
             --docs-path docs/ \
             --output /tmp/api-parity-validation.json \
             --fail-threshold 80.0
-            
+
       - name: Upload API parity validation results
-        if: matrix.python-version == '3.13'
         uses: actions/upload-artifact@v4
         with:
           name: api-parity-validation

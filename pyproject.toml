@@ -12,6 +12,9 @@ description = "StratMaster AI-powered Brand Strategy platform"
 requires-python = ">=3.11"
 authors = [{ name = "StratMaster Team" }]
 
+[project.optional-dependencies]
+issues = ["issuesuite>=0.1.4"]
+
 # Workspace definition - list all packages for tools that support monorepo structure
 [tool.setuptools.packages.find]
 where = ["packages/*/src", "apps/*/src"]
@@ -41,7 +44,7 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = [
     "stratmaster_api.*",
-    "research_mcp.*", 
+    "research_mcp.*",
     "knowledge_mcp.*",
     "router_mcp.*",
     "evals_mcp.*",

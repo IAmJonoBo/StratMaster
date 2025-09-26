@@ -25,7 +25,7 @@
 - [Quick Start Tutorial](docs/tutorials/quickstart.md) - 10-minute setup
 - [Your First Analysis](docs/tutorials/first-analysis.md) - Complete walkthrough
 
-### 🔧 [How-to Guides](docs/how-to/)  
+### 🔧 [How-to Guides](docs/how-to/)
 **Problem-solving recipes** - Get things done:
 - [Development Setup](docs/how-to/development-setup.md) - Dev environment
 - [Deployment Guide](docs/how-to/deployment.md) - All environments
@@ -33,7 +33,7 @@
 
 ### 📚 [Reference](docs/reference/)
 **Technical specifications** - Complete API docs:
-- [API Reference](docs/reference/api/) - All endpoints with examples  
+- [API Reference](docs/reference/api/) - All endpoints with examples
 - [CLI Reference](docs/reference/cli/) - Command-line tools
 - [Configuration](docs/reference/configuration/) - All settings
 
@@ -140,7 +140,7 @@ make dev.monitoring
 
 **Available Services** (after `make dev.monitoring`):
 - **API**: http://127.0.0.1:8080 ([Docs](http://127.0.0.1:8080/docs))
-- **Grafana**: http://127.0.0.1:3001 (admin/admin) 
+- **Grafana**: http://127.0.0.1:3001 (admin/admin)
 - **Prometheus**: http://127.0.0.1:9090
 - **Langfuse**: http://127.0.0.1:3000
 
@@ -173,6 +173,107 @@ Knowledge MCP on <http://localhost:8082>, Router MCP on <http://localhost:8083>,
 - **Keycloak**: [http://localhost:8089](http://localhost:8089) (Identity management - admin/admin)
 
 For Python-only development, see the [Development Guide](docs/development.md).
+
+## Declarative Issue Automation (IssueSuite)
+
+Issue automation is now powered by the external [`issuesuite`](https://github.com/IAmJonoBo/IssueSuite) package.
+
+Core capabilities (externalized):
+- Deterministic spec parsing from a single `ISSUES.md`
+- Idempotent sync (create / update / close) with machine-readable summary JSON
+- Dry-run + mock mode (`ISSUES_SUITE_MOCK=1`) to avoid any GitHub mutations
+- Export & summary JSON plus JSON Schemas for automation / AI ingestion
+- Optional preflight creation of labels & milestones (disabled by default)
+
+### Quick CLI Usage
+
+Dry-run sync (no mutations) with summary output:
+
+```bash
+ISSUES_SUITE_MOCK=1 issuesuite sync --dry-run --update --config issue_suite.config.yaml --summary-json issues_summary.json
+```
+
+Validate only:
+
+```bash
+ISSUES_SUITE_MOCK=1 issuesuite validate --config issue_suite.config.yaml
+```
+
+### Installing IssueSuite from a local tarball
+
+For offline use or to pin a specific build, you can install `issuesuite` from a local tarball.
+
+- Example tarball path (macOS): `/Users/jonathanbotha/GitHub/IssueSuite/dist/issuesuite-0.1.10.tar.gz`
+- Install via Make:
+
+```bash
+make issuesuite.install.local TARBALL=/absolute/path/to/issuesuite-0.1.10.tar.gz
+```
+
+- Alternative: set an environment variable and use the standard target:
+
+```bash
+ISSUESUITE_TARBALL=/absolute/path/to/issuesuite-0.1.10.tar.gz make issuesuite.install
+```
+
+On CI/remote runners, set `ISSUESUITE_TARBALL` to a path accessible in that environment before invoking the installer. The installer prefers:
+
+1) `ISSUESUITE_TARBALL` path
+2) Tarballs in `third_party/issuesuite/`, `vendor/issuesuite/`, or `external/issuesuite/`
+3) PyPI `issuesuite>=0.1.10`
+4) Git clone fallback with editable install
+
+Generate schemas:
+
+```bash
+issuesuite schema --config issue_suite.config.yaml
+```
+
+Human-readable summary:
+
+```bash
+issuesuite summary --config issue_suite.config.yaml
+```
+
+### Make Targets
+
+Helper targets (auto-install with PyPI first, then source fallback):
+
+```bash
+make issuesuite.install    # install external CLI
+make issuesuite.validate   # validate (mock by default)
+make issuesuite.schema     # produce schemas
+make issuesuite.sync.dry   # dry-run sync + summary JSON
+make issuesuite.summary    # human-readable summary
+```
+
+To force real operations remove `ISSUES_SUITE_MOCK=1` (ensure `gh auth status` passes).
+
+### Configuration (`issue_suite.config.yaml` excerpt)
+
+```yaml
+defaults:
+  inject_labels: [meta:roadmap, managed:declarative]
+  ensure_milestones: ["Sprint 0: Mobilize & Baseline", "M1: Real-Time Foundation", "M2: Performance & Validation", "M3: Advanced Analytics"]
+  ensure_labels_enabled: false
+  ensure_milestones_enabled: false
+```
+
+### Library API (Optional)
+
+```python
+from issuesuite import IssueSuite
+suite = IssueSuite.from_config_path('issue_suite.config.yaml')
+summary = suite.sync(dry_run=True, update=True, respect_status=True, preflight=False)
+print(summary['totals'])
+```
+
+### Versioning & Schemas
+- Bump `schema_version` only when export/summary JSON shapes change.
+- Update CHANGELOG with migration notes on field changes.
+
+### Debugging
+Set `ISSUESUITE_DEBUG=1` for verbose lifecycle logs (safe with `--dry-run`).
 
 ## Regression guard checklist
 

@@ -21,11 +21,43 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-import asyncpg
-import firebase_admin
+# Optional dependency: asyncpg. Provide a lightweight shim when absent so tests not requiring
+# database connectivity (most API unit tests) can still import the module.
+try:  # pragma: no cover - best effort optional import
+    import asyncpg  # type: ignore
+except Exception:  # noqa: BLE001
+    class _AsyncPGPoolStub:  # minimal placeholder for type references
+        pass
+    class _AsyncPGStubModule:  # exposes Pool attribute expected in annotations
+        Pool = _AsyncPGPoolStub
+    asyncpg = _AsyncPGStubModule()  # type: ignore
+
+try:  # pragma: no cover - optional firebase admin
+    import firebase_admin  # type: ignore
+    from firebase_admin import credentials, messaging  # type: ignore
+except Exception:  # noqa: BLE001
+    class _FirebaseCredsStub:  # minimal credential stub
+        class Certificate:  # noqa: D401 - placeholder
+            pass
+    class _MessagingStub:
+        class Message:  # noqa: D401 - placeholder
+            def __init__(self, **_kwargs):
+                pass
+        class Notification:  # noqa: D401 - placeholder
+            def __init__(self, **_kwargs):
+                pass
+        @staticmethod
+        def send(_msg):  # no-op
+            return "stub"
+    class _FirebaseAdminStub:
+        def initialize_app(self, *_args, **_kwargs):  # no-op
+            return None
+    firebase_admin = _FirebaseAdminStub()  # type: ignore
+    credentials = _FirebaseCredsStub  # type: ignore
+    messaging = _MessagingStub  # type: ignore
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from firebase_admin import credentials, messaging
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -121,11 +153,11 @@ class NotificationRequest(BaseModel):
 
 class PushNotificationManager:
     """Manages push notifications for mobile devices."""
-    
+
     def __init__(self):
         self.firebase_app = None
         self.device_tokens = {}  # user_id -> [device_tokens]
-        
+
     def initialize_firebase(self, credentials_path: str):
         """Initialize Firebase Admin SDK."""
         try:
@@ -134,26 +166,26 @@ class PushNotificationManager:
             logger.info("Firebase initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize Firebase: {e}")
-            
+
     async def register_device(self, user_id: str, device_token: str, platform: str):
         """Register device token for push notifications."""
         if user_id not in self.device_tokens:
             self.device_tokens[user_id] = []
-            
+
         # Remove duplicate tokens
         self.device_tokens[user_id] = [
-            token for token in self.device_tokens[user_id] 
+            token for token in self.device_tokens[user_id]
             if token != device_token
         ]
-        
+
         # Add new token
         self.device_tokens[user_id].append(device_token)
-        
+
         # Keep only last 5 tokens per user
         self.device_tokens[user_id] = self.device_tokens[user_id][-5:]
-        
+
         logger.info(f"Registered device token for user {user_id}")
-    
+
     async def send_approval_notification(
         self,
         user_id: str,
@@ -164,9 +196,9 @@ class PushNotificationManager:
         if not self.firebase_app or user_id not in self.device_tokens:
             logger.warning(f"Cannot send notification to user {user_id}")
             return
-            
+
         tokens = self.device_tokens[user_id]
-        
+
         # Create notification message
         if notification_type == "approval_required":
             title = f"{approval_item.workflow_name} - Approval Required"
@@ -184,7 +216,7 @@ class PushNotificationManager:
         else:
             title = "StratMaster Notification"
             body = "You have a new notification"
-        
+
         # Prepare message
         message = messaging.MulticastMessage(
             tokens=tokens,
@@ -221,45 +253,45 @@ class PushNotificationManager:
                 )
             )
         )
-        
+
         try:
             response = messaging.send_multicast(message)
             logger.info(f"Sent notification to {len(tokens)} devices for user {user_id}")
-            
+
             # Remove invalid tokens
             if response.failure_count > 0:
                 invalid_tokens = []
                 for idx, resp in enumerate(response.responses):
                     if not resp.success:
                         invalid_tokens.append(tokens[idx])
-                        
+
                 for token in invalid_tokens:
                     self.device_tokens[user_id].remove(token)
-                    
+
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
 
 
 class ApprovalWorkflowManager:
     """Manages approval workflows and states."""
-    
-    def __init__(self, db_pool: asyncpg.Pool, notification_manager: PushNotificationManager):
+
+    def __init__(self, db_pool: 'asyncpg.Pool', notification_manager: PushNotificationManager):  # type: ignore[name-defined]
         self.db_pool = db_pool
         self.notification_manager = notification_manager
         self.workflow_definitions = {}
-        
+
     def load_workflow_definitions(self, config_path: str):
         """Load workflow definitions from configuration."""
         try:
             with open(config_path) as f:
                 config = json.load(f)
-            
+
             self.workflow_definitions = config.get("workflows", {})
             logger.info(f"Loaded {len(self.workflow_definitions)} workflow definitions")
-            
+
         except Exception as e:
             logger.error(f"Failed to load workflow definitions: {e}")
-    
+
     async def get_pending_approvals(
         self,
         user_id: str,
@@ -273,7 +305,7 @@ class ApprovalWorkflowManager:
                    u.name as author_name, u.avatar_url as author_avatar_url,
                    s.stage_name, s.stage_description
             FROM approvals a
-            JOIN workflows w ON a.workflow_id = w.id  
+            JOIN workflows w ON a.workflow_id = w.id
             JOIN users u ON a.author_id = u.id
             JOIN approval_stages s ON a.current_stage_id = s.id
             WHERE a.status = 'pending'
@@ -281,27 +313,27 @@ class ApprovalWorkflowManager:
               AND (
                 a.assigned_user_id = $2 OR
                 a.required_roles && (
-                  SELECT array_agg(role) FROM user_roles 
+                  SELECT array_agg(role) FROM user_roles
                   WHERE user_id = $2 AND tenant_id = $1
                 )
               )
             ORDER BY a.priority DESC, a.due_date ASC NULLS LAST
             LIMIT $3 OFFSET $4
         """
-        
+
         async with self.db_pool.acquire() as conn:
             rows = await conn.fetch(query, tenant_id, user_id, limit, offset)
-            
+
             approvals = []
             for row in rows:
                 # Get current stage definition
                 workflow_def = self.workflow_definitions.get(row["workflow_name"], {})
                 stages = workflow_def.get("stages", [])
                 current_stage_def = next(
-                    (s for s in stages if s["id"] == row["current_stage_id"]), 
+                    (s for s in stages if s["id"] == row["current_stage_id"]),
                     {}
                 )
-                
+
                 stage = ApprovalStage(
                     id=current_stage_def.get("id", ""),
                     name=current_stage_def.get("name", row["stage_name"]),
@@ -310,7 +342,7 @@ class ApprovalWorkflowManager:
                     minimum_approvals=current_stage_def.get("minimum_approvals", 1),
                     timeout_hours=current_stage_def.get("timeout_hours", 24)
                 )
-                
+
                 approval = ApprovalItem(
                     id=row["id"],
                     workflow_id=row["workflow_id"],
@@ -331,11 +363,11 @@ class ApprovalWorkflowManager:
                     comments_count=row["comments_count"] or 0,
                     tenant_id=row["tenant_id"]
                 )
-                
+
                 approvals.append(approval)
-            
+
             return approvals
-    
+
     async def process_approval(
         self,
         approval_id: str,
@@ -349,24 +381,24 @@ class ApprovalWorkflowManager:
             async with conn.transaction():
                 # Get approval details
                 approval_row = await conn.fetchrow("""
-                    SELECT * FROM approvals 
+                    SELECT * FROM approvals
                     WHERE id = $1 AND status = 'pending'
                 """, approval_id)
-                
+
                 if not approval_row:
                     raise HTTPException(
                         status_code=404,
                         detail="Approval not found or already processed"
                     )
-                
+
                 # Check user permissions
                 user_roles = await conn.fetch("""
-                    SELECT role FROM user_roles 
+                    SELECT role FROM user_roles
                     WHERE user_id = $1 AND tenant_id = $2
                 """, user_id, approval_row["tenant_id"])
-                
+
                 user_role_names = [r["role"] for r in user_roles]
-                
+
                 # Get workflow definition
                 workflow_def = self.workflow_definitions.get(approval_row["workflow_name"], {})
                 stages = workflow_def.get("stages", [])
@@ -374,13 +406,13 @@ class ApprovalWorkflowManager:
                     (s for s in stages if s["id"] == approval_row["current_stage_id"]),
                     None
                 )
-                
+
                 if not current_stage:
                     raise HTTPException(
                         status_code=422,
                         detail="Invalid workflow state"
                     )
-                
+
                 # Check if user has required role
                 required_roles = current_stage.get("required_roles", [])
                 if not any(role in user_role_names for role in required_roles):
@@ -388,39 +420,39 @@ class ApprovalWorkflowManager:
                         status_code=403,
                         detail="Insufficient permissions for this approval"
                     )
-                
+
                 # Record the approval action
                 await conn.execute("""
-                    INSERT INTO approval_actions 
+                    INSERT INTO approval_actions
                     (approval_id, user_id, action, comment, signature, created_at)
                     VALUES ($1, $2, $3, $4, $5, $6)
-                """, 
+                """,
                 approval_id, user_id, action, comment, signature, datetime.utcnow()
                 )
-                
+
                 # Update approval counts
                 if action == "approve":
                     await conn.execute("""
-                        UPDATE approvals 
+                        UPDATE approvals
                         SET approvers_completed = approvers_completed + 1,
                             updated_at = $2
                         WHERE id = $1
                     """, approval_id, datetime.utcnow())
-                    
+
                     # Check if stage is complete
                     updated_row = await conn.fetchrow("""
                         SELECT * FROM approvals WHERE id = $1
                     """, approval_id)
-                    
+
                     min_approvals = current_stage.get("minimum_approvals", 1)
-                    
+
                     if updated_row["approvers_completed"] >= min_approvals:
                         # Move to next stage or complete
                         current_stage_idx = next(
                             (i for i, s in enumerate(stages) if s["id"] == approval_row["current_stage_id"]),
                             -1
                         )
-                        
+
                         if current_stage_idx < len(stages) - 1:
                             # Move to next stage
                             next_stage = stages[current_stage_idx + 1]
@@ -432,14 +464,14 @@ class ApprovalWorkflowManager:
                                     due_date = $4,
                                     updated_at = $5
                                 WHERE id = $1
-                            """, 
+                            """,
                             approval_id,
                             next_stage["id"],
                             next_stage.get("minimum_approvals", 1),
                             datetime.utcnow() + timedelta(hours=next_stage.get("timeout_hours", 24)),
                             datetime.utcnow()
                             )
-                            
+
                             return ApprovalResponse(
                                 success=True,
                                 message="Approval recorded, moved to next stage",
@@ -455,7 +487,7 @@ class ApprovalWorkflowManager:
                                     updated_at = $2
                                 WHERE id = $1
                             """, approval_id, datetime.utcnow())
-                            
+
                             # Notify author
                             approval_item = await self._get_approval_item(conn, approval_id)
                             await self.notification_manager.send_approval_notification(
@@ -463,7 +495,7 @@ class ApprovalWorkflowManager:
                                 approval_item,
                                 "approval_approved"
                             )
-                            
+
                             return ApprovalResponse(
                                 success=True,
                                 message="Workflow completed successfully",
@@ -475,7 +507,7 @@ class ApprovalWorkflowManager:
                             message="Approval recorded, waiting for additional approvals",
                             approval_status="pending"
                         )
-                        
+
                 elif action == "reject":
                     # Reject the entire workflow
                     await conn.execute("""
@@ -485,7 +517,7 @@ class ApprovalWorkflowManager:
                             updated_at = $2
                         WHERE id = $1
                     """, approval_id, datetime.utcnow())
-                    
+
                     # Notify author
                     approval_item = await self._get_approval_item(conn, approval_id)
                     await self.notification_manager.send_approval_notification(
@@ -493,18 +525,18 @@ class ApprovalWorkflowManager:
                         approval_item,
                         "approval_rejected"
                     )
-                    
+
                     return ApprovalResponse(
                         success=True,
                         message="Workflow rejected",
                         approval_status="rejected"
                     )
-    
+
     async def _get_approval_item(self, conn, approval_id: str) -> ApprovalItem:
         """Get approval item from database connection."""
         # Simplified version - in practice would need full query like in get_pending_approvals
         row = await conn.fetchrow("SELECT * FROM approvals WHERE id = $1", approval_id)
-        
+
         # Create minimal approval item for notification
         return ApprovalItem(
             id=row["id"],
@@ -533,22 +565,22 @@ notification_manager = PushNotificationManager()
 workflow_manager = None  # Initialized with database pool
 
 
-async def initialize_mobile_api(db_pool: asyncpg.Pool):
+async def initialize_mobile_api(db_pool: 'asyncpg.Pool'):  # type: ignore[name-defined]
     """Initialize mobile API components."""
     global workflow_manager
-    
+
     # Initialize Firebase
     firebase_credentials_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
     if firebase_credentials_path:
         notification_manager.initialize_firebase(firebase_credentials_path)
-    
+
     # Initialize workflow manager
     workflow_manager = ApprovalWorkflowManager(db_pool, notification_manager)
-    
+
     # Load workflow definitions
     config_path = os.getenv("MOBILE_CONFIG_PATH", "configs/mobile/mobile-config.yaml")
     workflow_manager.load_workflow_definitions(config_path)
-    
+
     logger.info("Mobile API initialized successfully")
 
 

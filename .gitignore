@@ -1,3 +1,4 @@
+# Root pattern placeholder intentionally omitted
 # macOS artifacts
 .DS_Store
 ._*
@@ -8,12 +9,6 @@ Icon?
 .Trashes
 .fseventsd
 .metadata_never_index
-# macOS
-.DS_Store
-._*
-.AppleDouble
-.Spotlight-V100
-.Trashes
 
 # Python
 __pycache__/
@@ -125,3 +120,23 @@ monitoring_config.json
 .trunk/.state
 .venv-test/
 test_venv/
+
+# Ignore uvicorn pid files
+.uvicorn.pid
+
+# V2 Development Working Files (exclude from commits)
+v2_consolidation_analysis.json
+v2_progress_tracking.json
+v2_tracking_config.json
+github_issue_sync_status.json
+
+# Local nested repos and temporary worktrees (do not commit)
+.issuesuite_tmp/
+IssueSuite/
+
+# Stray version marker files (ignore if present)
+=0.1.4
+=4.23.0
+
+# Local wheel cache for offline installs
+wheels/

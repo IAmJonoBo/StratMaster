@@ -16,12 +16,26 @@ import logging
 import statistics
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List
-import json
+from datetime import datetime
+from typing import Any
+from collections.abc import Callable
 
 from .tracing import trace
-from prometheus_client import Counter, Histogram, Gauge
+# Prometheus metrics (optional)
+try:
+    from prometheus_client import Counter, Histogram, Gauge
+except Exception:  # pragma: no cover - optional dependency fallback
+    class _MockMetric:
+        def labels(self, *args, **kwargs):
+            return self
+        def inc(self, *args, **kwargs):
+            return None
+        def observe(self, *args, **kwargs):
+            return None
+        def set(self, *args, **kwargs):
+            return None
+
+    Counter = Histogram = Gauge = lambda *args, **kwargs: _MockMetric()
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -61,7 +75,7 @@ class PerformanceResult:
     latency_ms: float
     success: bool
     error: str | None = None
-    metadata: Dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -77,12 +91,12 @@ class QualityGate:
 @dataclass
 class BenchmarkSuite:
     """Complete benchmark test suite."""
-    gateway_tests: List[Callable]
-    routing_tests: List[Callable]
-    rag_tests: List[Callable]
-    retrieval_tests: List[Callable]
-    export_tests: List[Callable]
-    integration_tests: List[Callable]
+    gateway_tests: list[Callable]
+    routing_tests: list[Callable]
+    rag_tests: list[Callable]
+    retrieval_tests: list[Callable]
+    export_tests: list[Callable]
+    integration_tests: list[Callable]
 
 
 class PerformanceBenchmark:
@@ -111,10 +125,10 @@ class PerformanceBenchmark:
         ]
 
         # Performance tracking
-        self.results: List[PerformanceResult] = []
-        self.gate_results: Dict[str, bool] = {}
+        self.results: list[PerformanceResult] = []
+        self.gate_results: dict[str, bool] = {}
 
-    async def run_full_benchmark(self) -> Dict[str, Any]:
+    async def run_full_benchmark(self) -> dict[str, Any]:
         """Run complete performance benchmark suite."""
         with tracer.start_as_current_span("full_benchmark") as span:
             logger.info("Starting full performance benchmark suite")
@@ -160,7 +174,7 @@ class PerformanceBenchmark:
 
             return summary
 
-    async def _benchmark_gateway(self) -> List[PerformanceResult]:
+    async def _benchmark_gateway(self) -> list[PerformanceResult]:
         """Benchmark API gateway overhead."""
         results = []
 
@@ -200,7 +214,7 @@ class PerformanceBenchmark:
 
         return results
 
-    async def _benchmark_routing(self) -> List[PerformanceResult]:
+    async def _benchmark_routing(self) -> list[PerformanceResult]:
         """Benchmark model routing decision time."""
         results = []
 
@@ -250,7 +264,7 @@ class PerformanceBenchmark:
 
         return results
 
-    async def _benchmark_rag(self) -> List[PerformanceResult]:
+    async def _benchmark_rag(self) -> list[PerformanceResult]:
         """Benchmark RAG pipeline with RAGAS metrics."""
         results = []
 
@@ -310,7 +324,7 @@ class PerformanceBenchmark:
 
         return results
 
-    async def _benchmark_retrieval(self) -> List[PerformanceResult]:
+    async def _benchmark_retrieval(self) -> list[PerformanceResult]:
         """Benchmark retrieval system performance with real BEIR-style evaluation when enabled."""
         results = []
 
@@ -340,15 +354,17 @@ class PerformanceBenchmark:
                     evaluator = SPLADEEvaluator()
 
                     # Create a simple retrieval function for testing
-                    async def mock_retrieval_function(query_text: str, k: int = 10):
+                    async def mock_retrieval_function(query_text: str, k: int = 10, _start=start):
                         """Mock retrieval function for benchmarking."""
                         # In production, this would call the actual retrieval service
+                        # Yield control to satisfy async function requirements
+                        await asyncio.sleep(0)
                         return {
                             "results": [
                                 {"doc_id": f"doc_{i}", "score": 1.0 - (i * 0.1), "rank": i}
                                 for i in range(k)
                             ],
-                            "latency_ms": (time.perf_counter() - start) * 1000
+                            "latency_ms": (time.perf_counter() - _start) * 1000
                         }
 
                     # Run evaluation
@@ -416,7 +432,7 @@ class PerformanceBenchmark:
 
         return results
 
-    async def _benchmark_export(self) -> List[PerformanceResult]:
+    async def _benchmark_export(self) -> list[PerformanceResult]:
         """Benchmark export functionality and idempotency."""
         results = []
 
@@ -470,7 +486,7 @@ class PerformanceBenchmark:
 
         return results
 
-    async def _benchmark_integration(self) -> List[PerformanceResult]:
+    async def _benchmark_integration(self) -> list[PerformanceResult]:
         """Benchmark end-to-end integration scenarios."""
         results = []
 
@@ -520,7 +536,7 @@ class PerformanceBenchmark:
         results.append(result)
         return results
 
-    def _mock_routing_decision(self, context: Dict[str, Any]) -> str:
+    def _mock_routing_decision(self, context: dict[str, Any]) -> str:
         """Mock routing decision for benchmarking."""
         task_type = context.get("task_type", "chat")
         complexity = context.get("complexity", "medium")
@@ -539,7 +555,7 @@ class PerformanceBenchmark:
 
         return routing_map.get((task_type, complexity), "gpt-4o")
 
-    def _evaluate_quality_gates(self, results: List[PerformanceResult]) -> Dict[str, bool]:
+    def _evaluate_quality_gates(self, results: list[PerformanceResult]) -> dict[str, bool]:
         """Evaluate all quality gates against benchmark results."""
         gate_results = {}
 
@@ -640,7 +656,7 @@ class PerformanceBenchmark:
             logger.error(f"Unknown operator: {operator}")
             return False
 
-    def _group_results_by_component(self, results: List[PerformanceResult]) -> Dict[str, Any]:
+    def _group_results_by_component(self, results: list[PerformanceResult]) -> dict[str, Any]:
         """Group results by component for summary reporting."""
         grouped = {}
 
@@ -673,7 +689,7 @@ class PerformanceBenchmark:
             comp["operations"][result.operation].append(result.latency_ms)
 
         # Calculate averages
-        for component, data in grouped.items():
+        for data in grouped.values():
             if data["total_tests"] > 0:
                 all_latencies = []
                 for latencies in data["operations"].values():
@@ -685,7 +701,7 @@ class PerformanceBenchmark:
 
 
 # FastAPI endpoint for running benchmarks
-async def run_performance_benchmark() -> Dict[str, Any]:
+async def run_performance_benchmark() -> dict[str, Any]:
     """Run comprehensive performance benchmark and return results."""
     benchmark = PerformanceBenchmark()
     return await benchmark.run_full_benchmark()
@@ -708,12 +724,12 @@ async def main():
     print(f"Success Rate: {results['success_rate']:.1%}")
     print(f"Duration: {results['duration_seconds']:.2f}s")
 
-    print(f"\nQuality Gates:")
+    print("\nQuality Gates:")
     for gate_name, passed in results['quality_gates'].items():
         status = "✅ PASS" if passed else "❌ FAIL"
         print(f"  {gate_name}: {status}")
 
-    print(f"\nComponent Summary:")
+    print("\nComponent Summary:")
     for component, data in results['results_by_component'].items():
         print(f"  {component.upper()}:")
         print(f"    Tests: {data['total_tests']}")
