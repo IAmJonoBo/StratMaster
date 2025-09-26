@@ -1,0 +1,132 @@
+# Phase 2 Hybrid Retrieval Configuration per SCRATCH.md
+# Qdrant + OpenSearch hybrid with RRF fusion and cross-encoder reranking
+
+retrieval:
+  # Hybrid search configuration (existing implementation)
+  hybrid_enabled: true
+  fusion_method: "rrf"  # Reciprocal Rank Fusion per SCRATCH.md
+  rrf_k: 60
+  
+  # Weight distribution per SCRATCH.md
+  weights:
+    sparse: 0.3    # SPLADE/BM25 weight
+    dense: 0.7     # Vector embedding weight
+    
+  # Field boosts per SCRATCH.md
+  field_boosts:
+    title: 2.0
+    abstract: 1.5
+    content: 1.0
+
+  # Quality gates per SCRATCH.md
+  quality_gates:
+    ndcg_at_10_uplift: 0.20  # +≥20% nDCG@10 vs dense-only
+    recall_at_50_baseline: true  # recall@50 ≥ baseline
+    max_latency_p95_ms: 500  # p95 latency < 500ms
+
+# Qdrant configuration (dual-vector schema per SCRATCH.md)
+qdrant:
+  enabled: true
+  url: "http://qdrant:6333"
+  collection_name: "stratmaster_hybrid"
+  
+  # Dual vector configuration
+  vectors:
+    dense:
+      size: 1024
+      distance: "Cosine"
+    sparse:
+      index: "enabled"
+      
+  # Performance settings
+  search_params:
+    hnsw_ef: 128
+    exact: false
+    
+# OpenSearch configuration (BM25 + RRF per SCRATCH.md)  
+opensearch:
+  enabled: true
+  url: "http://opensearch:9200"
+  index_name: "stratmaster_docs"
+  
+  # Hybrid search pipeline with RRF
+  pipeline:
+    request_processors:
+      - neural_query_enricher:
+          query_text: "{{q}}"
+      - normalization_processor:
+          technique: "minmax"
+    phase_results_processors:
+      - rrf:
+          rank_window_size: 100
+          rank_constant: 60
+
+# Reranking configuration per SCRATCH.md Phase 2.2
+reranking:
+  enabled: true
+  model: "BAAI/bge-reranker-v2-m3"  # or mxbai-rerank-large-v2
+  service: "tgi"  # or "infinity"
+  endpoint: "http://tgi:8080"
+  
+  # Quality gates per SCRATCH.md
+  quality_gates:
+    ndcg_at_10_improvement: 10  # +≥10 points nDCG@10
+    max_latency_p95_ms: 450     # p95 < 450ms on A100
+    max_latency_p95_cpu_ms: 800 # p95 < 800ms on CPU
+    
+  # Performance settings
+  top_k_candidates: 100
+  batch_size: 32
+  timeout_seconds: 5
+
+# RAG evaluation configuration per SCRATCH.md Phase 2.3
+evaluation:
+  enabled: true
+  framework: "ragas"
+  
+  # Quality gates per SCRATCH.md
+  quality_gates:
+    faithfulness_threshold: 0.75      # ≥0.75
+    context_precision_threshold: 0.6  # ≥0.6
+    drift_tolerance: 0.05             # CI blocks on −5% drift
+    
+  # RAGAS metrics configuration  
+  metrics:
+    - "faithfulness"
+    - "context_precision"
+    - "context_recall"
+    - "answer_relevancy"
+    
+  # Integration settings
+  langfuse:
+    enabled: true
+    project: "stratmaster_rag_eval"
+    
+  # Regression suite
+  golden_dataset_path: "data/rag_eval_golden.jsonl"
+  evaluation_frequency: "nightly"
+
+# Budget controls per SCRATCH.md
+budget:
+  max_passages: 50
+  max_tokens: 8000
+  disagreement_sampling:
+    enabled: false  # Enable only when router policy indicates
+    threshold: 0.3
+
+# Performance monitoring
+monitoring:
+  enabled: true
+  metrics:
+    - "retrieval_latency_p95"
+    - "rerank_latency_p95"  
+    - "ndcg_at_10"
+    - "context_precision"
+    - "faithfulness"
+  alerts:
+    - name: "high_retrieval_latency"
+      threshold: 500
+      metric: "retrieval_latency_p95"
+    - name: "quality_degradation"
+      threshold: -0.05
+      metric: "ndcg_at_10_delta"
