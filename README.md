@@ -199,6 +199,30 @@ Validate only:
 ISSUES_SUITE_MOCK=1 issuesuite validate --config issue_suite.config.yaml
 ```
 
+### Installing IssueSuite from a local tarball
+
+For offline use or to pin a specific build, you can install `issuesuite` from a local tarball.
+
+- Example tarball path (macOS): `/Users/jonathanbotha/GitHub/IssueSuite/dist/issuesuite-0.1.10.tar.gz`
+- Install via Make:
+
+```bash
+make issuesuite.install.local TARBALL=/absolute/path/to/issuesuite-0.1.10.tar.gz
+```
+
+- Alternative: set an environment variable and use the standard target:
+
+```bash
+ISSUESUITE_TARBALL=/absolute/path/to/issuesuite-0.1.10.tar.gz make issuesuite.install
+```
+
+On CI/remote runners, set `ISSUESUITE_TARBALL` to a path accessible in that environment before invoking the installer. The installer prefers:
+
+1) `ISSUESUITE_TARBALL` path
+2) Tarballs in `third_party/issuesuite/`, `vendor/issuesuite/`, or `external/issuesuite/`
+3) PyPI `issuesuite>=0.1.10`
+4) Git clone fallback with editable install
+
 Generate schemas:
 
 ```bash

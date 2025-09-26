@@ -13,14 +13,14 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from opentelemetry import trace
+from ..tracing import trace
 from pydantic import BaseModel, Field
 
 # Import integration clients
 try:
     from ..integrations.export_wizard import (
         ExportConfig,
-        ExportPlatform, 
+        ExportPlatform,
         UnifiedStrategy,
         UnifiedTactic,
         ExportWizard,
@@ -45,7 +45,7 @@ export_router = APIRouter(prefix="/export", tags=["export"])
 
 class NotionExportRequest(BaseModel):
     """Request to export strategy to Notion."""
-    
+
     notion_token: str = Field(..., description="Notion integration token")
     parent_page_id: str = Field(..., description="Parent page ID for strategy")
     strategy_id: str = Field(..., description="StratMaster strategy ID to export")
@@ -54,9 +54,9 @@ class NotionExportRequest(BaseModel):
 
 class TrelloExportRequest(BaseModel):
     """Request to export strategy to Trello."""
-    
+
     api_key: str = Field(..., description="Trello API key")
-    api_token: str = Field(..., description="Trello API token") 
+    api_token: str = Field(..., description="Trello API token")
     board_id: str | None = Field(default=None, description="Board ID (creates new if None)")
     strategy_id: str = Field(..., description="StratMaster strategy ID to export")
     dry_run: bool = Field(default=True, description="Preview without making changes")
@@ -64,7 +64,7 @@ class TrelloExportRequest(BaseModel):
 
 class JiraExportRequest(BaseModel):
     """Request to export strategy to Jira."""
-    
+
     server_url: str = Field(..., description="Jira server URL")
     username: str = Field(..., description="Jira username")
     api_token: str = Field(..., description="Jira API token")
@@ -75,7 +75,7 @@ class JiraExportRequest(BaseModel):
 
 class ExportResult(BaseModel):
     """Result from export operation."""
-    
+
     platform: str = Field(..., description="Export platform")
     success: bool = Field(..., description="Whether export succeeded")
     dry_run: bool = Field(..., description="Whether this was a dry run")
@@ -90,26 +90,26 @@ class ExportResult(BaseModel):
 @export_router.post("/notion", response_model=ExportResult)
 async def export_to_notion(request: NotionExportRequest) -> ExportResult:
     """Export strategy to Notion with pages & blocks, databases for briefs.
-    
+
     Quality gate: Idempotent exports (re-runs update, don't duplicate).
     """
     with tracer.start_as_current_span("notion_export") as span:
         span.set_attribute("strategy_id", request.strategy_id)
         span.set_attribute("dry_run", request.dry_run)
-        
+
         if not INTEGRATIONS_AVAILABLE:
             return await _mock_export_result("notion", request.dry_run)
-        
+
         try:
             # Initialize Notion client
             notion_client = NotionClient(api_token=request.notion_token)
             notion_client.set_dry_run(request.dry_run)
-            
+
             # Get strategy from database (would be implemented)
             strategy_data = await _get_strategy_data(request.strategy_id)
             if not strategy_data:
                 raise HTTPException(status_code=404, detail="Strategy not found")
-            
+
             # Convert to Notion format
             notion_strategy = NotionStrategy(
                 title=strategy_data["title"],
@@ -123,16 +123,16 @@ async def export_to_notion(request: NotionExportRequest) -> ExportResult:
                 owner=strategy_data.get("owner"),
                 tags=strategy_data.get("tags", []),
             )
-            
+
             # Export to Notion
             export_result = await notion_client.export_strategy(
                 strategy=notion_strategy,
                 parent_page_id=request.parent_page_id,
             )
-            
+
             span.set_attribute("items_exported", len(export_result.get("pages", [])))
             span.set_attribute("items_updated", export_result.get("updated_count", 0))
-            
+
             return ExportResult(
                 platform="notion",
                 success=True,
@@ -146,12 +146,12 @@ async def export_to_notion(request: NotionExportRequest) -> ExportResult:
                     "notion_version": "2022-06-28",
                 }
             )
-            
+
         except Exception as e:
             span.record_exception(e)
             span.set_status(trace.StatusCode.ERROR, str(e))
             logger.error(f"Notion export failed: {e}")
-            
+
             return ExportResult(
                 platform="notion",
                 success=False,
@@ -164,16 +164,16 @@ async def export_to_notion(request: NotionExportRequest) -> ExportResult:
 @export_router.post("/trello", response_model=ExportResult)
 async def export_to_trello(request: TrelloExportRequest) -> ExportResult:
     """Export strategy to Trello with cards, lists, labels.
-    
+
     Quality gate: Idempotent exports (re-runs update, don't duplicate).
     """
     with tracer.start_as_current_span("trello_export") as span:
         span.set_attribute("strategy_id", request.strategy_id)
         span.set_attribute("dry_run", request.dry_run)
-        
+
         if not INTEGRATIONS_AVAILABLE:
             return await _mock_export_result("trello", request.dry_run)
-        
+
         try:
             # Initialize Trello client
             trello_client = TrelloClient(
@@ -181,21 +181,21 @@ async def export_to_trello(request: TrelloExportRequest) -> ExportResult:
                 api_token=request.api_token,
             )
             trello_client.set_dry_run(request.dry_run)
-            
+
             # Get strategy from database
             strategy_data = await _get_strategy_data(request.strategy_id)
             if not strategy_data:
                 raise HTTPException(status_code=404, detail="Strategy not found")
-            
+
             # Export to Trello
             export_result = await trello_client.export_strategy(
                 strategy_data=strategy_data,
                 board_id=request.board_id,
             )
-            
+
             span.set_attribute("items_exported", len(export_result.get("cards", [])))
             span.set_attribute("items_updated", export_result.get("updated_count", 0))
-            
+
             return ExportResult(
                 platform="trello",
                 success=True,
@@ -209,14 +209,14 @@ async def export_to_trello(request: TrelloExportRequest) -> ExportResult:
                     "trello_api_version": "1",
                 }
             )
-            
+
         except Exception as e:
             span.record_exception(e)
             span.set_status(trace.StatusCode.ERROR, str(e))
             logger.error(f"Trello export failed: {e}")
-            
+
             return ExportResult(
-                platform="trello", 
+                platform="trello",
                 success=False,
                 dry_run=request.dry_run,
                 items_exported=0,
@@ -227,16 +227,16 @@ async def export_to_trello(request: TrelloExportRequest) -> ExportResult:
 @export_router.post("/jira", response_model=ExportResult)
 async def export_to_jira(request: JiraExportRequest) -> ExportResult:
     """Export strategy to Jira Cloud with issues, JQL search, transitions, links.
-    
+
     Quality gate: Idempotent exports (re-runs update, don't duplicate).
     """
     with tracer.start_as_current_span("jira_export") as span:
         span.set_attribute("strategy_id", request.strategy_id)
         span.set_attribute("dry_run", request.dry_run)
-        
+
         if not INTEGRATIONS_AVAILABLE:
             return await _mock_export_result("jira", request.dry_run)
-        
+
         try:
             # Initialize Jira client
             jira_client = JiraClient(
@@ -245,21 +245,21 @@ async def export_to_jira(request: JiraExportRequest) -> ExportResult:
                 api_token=request.api_token,
             )
             jira_client.set_dry_run(request.dry_run)
-            
+
             # Get strategy from database
             strategy_data = await _get_strategy_data(request.strategy_id)
             if not strategy_data:
                 raise HTTPException(status_code=404, detail="Strategy not found")
-            
+
             # Export to Jira
             export_result = await jira_client.export_strategy(
                 strategy_data=strategy_data,
                 project_key=request.project_key,
             )
-            
+
             span.set_attribute("items_exported", len(export_result.get("issues", [])))
             span.set_attribute("items_updated", export_result.get("updated_count", 0))
-            
+
             return ExportResult(
                 platform="jira",
                 success=True,
@@ -273,12 +273,12 @@ async def export_to_jira(request: JiraExportRequest) -> ExportResult:
                     "jira_api_version": "3",
                 }
             )
-            
+
         except Exception as e:
             span.record_exception(e)
             span.set_status(trace.StatusCode.ERROR, str(e))
             logger.error(f"Jira export failed: {e}")
-            
+
             return ExportResult(
                 platform="jira",
                 success=False,
@@ -297,7 +297,7 @@ async def unified_export(
 ) -> dict[str, ExportResult]:
     """Export to multiple platforms simultaneously with unified configuration."""
     results = {}
-    
+
     for platform in platforms:
         if platform == "notion" and "notion" in configs:
             config = configs["notion"]
@@ -308,7 +308,7 @@ async def unified_export(
                 dry_run=dry_run,
             )
             results["notion"] = await export_to_notion(request)
-            
+
         elif platform == "trello" and "trello" in configs:
             config = configs["trello"]
             request = TrelloExportRequest(
@@ -319,7 +319,7 @@ async def unified_export(
                 dry_run=dry_run,
             )
             results["trello"] = await export_to_trello(request)
-            
+
         elif platform == "jira" and "jira" in configs:
             config = configs["jira"]
             request = JiraExportRequest(
@@ -331,7 +331,7 @@ async def unified_export(
                 dry_run=dry_run,
             )
             results["jira"] = await export_to_jira(request)
-    
+
     return results
 
 

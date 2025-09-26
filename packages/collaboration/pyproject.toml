@@ -9,11 +9,11 @@ description = "Real-time collaboration service for StratMaster debate outcomes"
 requires-python = ">=3.11"
 authors = [{ name = "StratMaster" }]
 dependencies = [
-  "fastapi>=0.117.5",
+  "fastapi>=0.117.1",
   "uvicorn[standard]>=0.36.2",
   "websockets>=13.3",
   "redis>=5.2.5",
-  "pydantic>=2.11.12",
+  "pydantic>=2.11.9",
   "python-socketio>=5.13.0",
 ]
 

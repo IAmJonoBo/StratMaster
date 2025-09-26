@@ -8,7 +8,8 @@
         accessibility.scan accessibility.fix accessibility.test \
         test.advanced test.property test.contract test.load test.integration \
 	health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot \
-	venv.create venv.ensure venv.info venv.clean venv.recreate.dev venv.recreate.prod venv.sync.dev venv.sync.prod venv.sync.remote \
+	venv.create venv.ensure venv.info venv.clean venv.doctor venv.recreate.dev venv.recreate.prod \
+	venv.sync.dev venv.sync.prod venv.sync.dev.exact venv.sync.prod.exact venv.sync.remote \
 	wheelhouse.build.dev wheelhouse.build.prod wheelhouse.build.linux wheelhouse.clean venv.sync.offline.dev venv.sync.offline.prod
 
 # -------------------------------
@@ -19,6 +20,13 @@
 # Install IssueSuite from PyPI; fallback to cloning repo if unavailable
 issuesuite.install: venv.ensure
 	@bash scripts/install_issuesuite.sh
+
+# Install IssueSuite from a local tarball path
+.PHONY: issuesuite.install.local
+issuesuite.install.local: venv.ensure
+	@echo "📦 Installing IssueSuite from local tarball"
+	@[ -n "$(TARBALL)" ] || { echo "❌ Provide tarball path via make var: make issuesuite.install.local TARBALL=/path/to/issuesuite-x.y.z.tar.gz"; exit 1; }
+	@ISSUESUITE_TARBALL="$(TARBALL)" bash scripts/install_issuesuite.sh
 
 issuesuite.validate: issuesuite.install
 	@ISSUES_SUITE_MOCK?=1; . .venv/bin/activate && ISSUES_SUITE_MOCK=$$ISSUES_SUITE_MOCK issuesuite validate --config issue_suite.config.yaml
@@ -43,23 +51,23 @@ dev.logs:
 
 api.run:
 	[ -d .venv ] || python -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) -e packages/api
 	.venv/bin/uvicorn stratmaster_api.app:create_app --factory --reload --host 127.0.0.1 --port 8080
 
 research-mcp.run:
 	[ -d .venv ] || python -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/mcp-servers/research-mcp
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) -e packages/mcp-servers/research-mcp
 	.venv/bin/uvicorn research_mcp.app:create_app --factory --reload --host 127.0.0.1 --port 8081
 
 expertise-mcp.run:
 	[ -d .venv ] || python -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/mcp-servers/expertise-mcp -e packages/api
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) -e packages/mcp-servers/expertise-mcp -e packages/api
 	cd packages/mcp-servers/expertise-mcp && PYTHONPATH=../../../packages/api/src:src python main.py
 
 # Generate JSON schemas for Expert Council models
 expertise-mcp.schemas:
 	[ -d .venv ] || python -m venv .venv
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) -e packages/api
 	PYTHONNOUSERSITE=1 .venv/bin/python packages/api/src/stratmaster_api/models/experts/generate_json_schemas.py
 
 # Start expertise-mcp in Docker
@@ -86,13 +94,19 @@ clean.macos:
 export PYTHONNOUSERSITE=1
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_NO_INPUT=1
-export PIP_PROGRESS_BAR=off
+export PIP_PROGRESS_BAR=on
+export PIP_DEFAULT_TIMEOUT=60
+
+# Reusable flags for pip network resilience and visibility
+PIP_FLAGS=--retries 5 --timeout 60 --progress-bar on
 
 # Offline controls
 # Set SM_OFFLINE=1 to force offline installation using a local wheelhouse directory.
 # Customize wheelhouse directory via WHEELHOUSE (default: wheels)
-export SM_OFFLINE?=$(SM_OFFLINE)
-export WHEELHOUSE?=wheels
+SM_OFFLINE ?= 0
+WHEELHOUSE ?= wheels
+export SM_OFFLINE
+export WHEELHOUSE
 
 # Create .venv with the best available Python (prefers 3.13/3.12, falls back to python3)
 venv.create:
@@ -108,6 +122,16 @@ venv.ensure: venv.create
 	  || { echo "❌ Python in .venv is older than 3.11. Please recreate with Python 3.11+"; exit 1; };
 	@echo "✅ Python version OK"
 
+# Clean common metadata issues inside .venv that cause noisy pip warnings
+venv.doctor: venv.ensure
+	@echo "🩺 Inspecting and cleaning virtualenv"
+	@echo "🧹 Removing AppleDouble (._*) and Finder files inside .venv"
+	@find .venv -type f -name '._*' -print -delete || true
+	@find .venv -type f -name '.DS_Store' -print -delete || true
+	@echo "🔎 Listing dist-info/egg-info directories inside .venv (report only)"
+	@find .venv -type d \( -name '*.dist-info' -o -name '*.egg-info' \) -maxdepth 7 -print | sed 's/^/info: /' || true
+	@echo "✅ venv.doctor completed"
+
 # Print venv info
 venv.info: venv.ensure
 	@echo "📦 Pip version:" && .venv/bin/pip -V || true
@@ -121,12 +145,12 @@ venv.sync.dev: venv.ensure
 	else \
 	  if [ -f requirements-dev.lock ]; then \
 	    echo "➡️  Using requirements-dev.lock with hashes"; \
-	    .venv/bin/pip install --upgrade pip setuptools wheel; \
-	    .venv/bin/pip install --require-hashes -r requirements-dev.lock || { echo "⚠️  Hash-based install failed, falling back to requirements-dev.txt"; .venv/bin/pip install -r requirements-dev.txt; }; \
+	    .venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install $(PIP_FLAGS) --require-hashes -r requirements-dev.lock || { echo "⚠️  Hash-based install failed, falling back to requirements-dev.txt"; .venv/bin/pip install $(PIP_FLAGS) -r requirements-dev.txt; }; \
 	  else \
 	    echo "➡️  Using requirements-dev.txt"; \
-	    .venv/bin/pip install --upgrade pip setuptools wheel; \
-	    .venv/bin/pip install -r requirements-dev.txt; \
+	    .venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install $(PIP_FLAGS) -r requirements-dev.txt; \
 	  fi; \
 	  bash scripts/install_editable_packages.sh; \
 	  .venv/bin/pip check || true; \
@@ -141,18 +165,44 @@ venv.sync.prod: venv.ensure
 	else \
 	  if [ -f requirements.lock ]; then \
 	    echo "➡️  Using requirements.lock with hashes"; \
-	    .venv/bin/pip install --upgrade pip setuptools wheel; \
-	    .venv/bin/pip install --require-hashes -r requirements.lock || { echo "⚠️  Hash-based install failed, falling back to requirements.txt"; .venv/bin/pip install -r requirements.txt; }; \
+	    .venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install $(PIP_FLAGS) --require-hashes -r requirements.lock || { echo "⚠️  Hash-based install failed, falling back to requirements.txt"; .venv/bin/pip install $(PIP_FLAGS) -r requirements.txt; }; \
 	  else \
 	    echo "➡️  Using requirements.txt"; \
-	    .venv/bin/pip install --upgrade pip setuptools wheel; \
-	    .venv/bin/pip install -r requirements.txt; \
+	    .venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install $(PIP_FLAGS) -r requirements.txt; \
 	  fi; \
 	  echo "📦 Installing API package (editable, no deps)"; \
-	  .venv/bin/pip install -e packages/api --no-deps; \
+	  .venv/bin/pip install $(PIP_FLAGS) -e packages/api --no-deps; \
 	  .venv/bin/pip check || true; \
 	  echo "✅ Production/runtime venv ready"; \
 	fi
+
+# Exact sync using pip-tools' pip-sync to remove extras and enforce lock
+venv.sync.dev.exact: venv.ensure
+	@echo "📥 Exact sync (dev) using pip-sync"
+	.venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel 'pip-tools~=7.5.0'
+	@if [ -f requirements-dev.lock ]; then \
+	  .venv/bin/pip-sync -q requirements-dev.lock; \
+	else \
+	  .venv/bin/pip-sync -q requirements-dev.txt; \
+	fi
+	@bash scripts/install_editable_packages.sh || true
+	@.venv/bin/pip check || true
+	@echo "✅ Exact development sync complete"
+
+venv.sync.prod.exact: venv.ensure
+	@echo "📥 Exact sync (prod) using pip-sync"
+	.venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel 'pip-tools~=7.5.0'
+	@if [ -f requirements.lock ]; then \
+	  .venv/bin/pip-sync -q requirements.lock; \
+	else \
+	  .venv/bin/pip-sync -q requirements.txt; \
+	fi
+	@echo "📦 Installing API package (editable, no deps)"
+	@.venv/bin/pip install -e packages/api --no-deps
+	@.venv/bin/pip check || true
+	@echo "✅ Exact production/runtime sync complete"
 
 # Remote setup alias (same as production sync)
 venv.sync.remote: venv.sync.prod
@@ -171,10 +221,10 @@ wheelhouse.build.dev: venv.ensure
 	mkdir -p $(WHEELHOUSE)
 	@if [ -f requirements-dev.lock ]; then \
 	  echo "➡️  Downloading wheels from requirements-dev.lock"; \
-	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements-dev.lock; }; \
+	  .venv/bin/pip download $(PIP_FLAGS) --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download $(PIP_FLAGS) -d $(WHEELHOUSE) -r requirements-dev.lock; }; \
 	else \
 	  echo "➡️  Downloading wheels from requirements-dev.txt"; \
-	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements-dev.txt; }; \
+	  .venv/bin/pip download $(PIP_FLAGS) --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download $(PIP_FLAGS) -d $(WHEELHOUSE) -r requirements-dev.txt; }; \
 	fi
 	@echo "✅ Wheelhouse (dev) ready at $(WHEELHOUSE)"
 
@@ -184,10 +234,10 @@ wheelhouse.build.prod: venv.ensure
 	mkdir -p $(WHEELHOUSE)
 	@if [ -f requirements.lock ]; then \
 	  echo "➡️  Downloading wheels from requirements.lock"; \
-	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements.lock; }; \
+	  .venv/bin/pip download $(PIP_FLAGS) --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download $(PIP_FLAGS) -d $(WHEELHOUSE) -r requirements.lock; }; \
 	else \
 	  echo "➡️  Downloading wheels from requirements.txt"; \
-	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements.txt; }; \
+	  .venv/bin/pip download $(PIP_FLAGS) --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download $(PIP_FLAGS) -d $(WHEELHOUSE) -r requirements.txt; }; \
 	fi
 	@echo "✅ Wheelhouse (prod) ready at $(WHEELHOUSE)"
 
@@ -198,9 +248,9 @@ wheelhouse.build.linux: venv.ensure
 	mkdir -p $(WHEELHOUSE)
 	PLATFORM_FLAGS="--platform manylinux2014_x86_64 --implementation cp --python-version 313 --abi cp313"; \
 	if [ -f requirements.lock ]; then \
-	  .venv/bin/pip download $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock; \
+	  .venv/bin/pip download $(PIP_FLAGS) $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock; \
 	else \
-	  .venv/bin/pip download $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt; \
+	  .venv/bin/pip download $(PIP_FLAGS) $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt; \
 	fi
 	@echo "✅ Linux wheelhouse ready at $(WHEELHOUSE)"
 
@@ -266,9 +316,9 @@ bootstrap:
 	@echo "🚀 StratMaster Bootstrap"
 	[ -d .venv ] || python3 -m venv .venv
 	@echo "📦 Installing core dependencies..."
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install --upgrade pip --timeout=60
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install pydantic fastapi uvicorn pytest --timeout=60
-	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api --timeout=60
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) --upgrade pip
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) pydantic fastapi uvicorn pytest
+	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install $(PIP_FLAGS) -e packages/api
 	@echo "✅ Bootstrap completed. Run 'make setup' for full integrated setup."
 
 # Enhanced bootstrap with integrated setup (registers deps, downloads assets, upgrades)
@@ -300,12 +350,25 @@ lock:
 	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
 
+# Lock variants that include unsafe pins (pip, setuptools, wheel)
+lock-allow-unsafe:
+	[ -d .venv ] || python3 -m venv .venv
+	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
+	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking --allow-unsafe -o requirements.lock requirements.txt
+	. .venv/bin/activate && pip-compile --generate-hashes --resolver=backtracking --allow-unsafe -o requirements-dev.lock requirements-dev.txt
+
 # Upgrade to latest allowed versions and refresh lock files
 lock-upgrade:
 	[ -d .venv ] || python3 -m venv .venv
 	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements.lock requirements.txt
 	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking -o requirements-dev.lock requirements-dev.txt
+
+lock-upgrade-allow-unsafe:
+	[ -d .venv ] || python3 -m venv .venv
+	. .venv/bin/activate && pip install --upgrade pip && pip install 'pip-tools~=7.5.0'
+	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking --allow-unsafe -o requirements.lock requirements.txt
+	. .venv/bin/activate && pip-compile --upgrade --generate-hashes --resolver=backtracking --allow-unsafe -o requirements-dev.lock requirements-dev.txt
 
 # Monitoring and telemetry services
 .PHONY: monitoring.up monitoring.down monitoring.status telemetry.up collaboration.up ml.up
