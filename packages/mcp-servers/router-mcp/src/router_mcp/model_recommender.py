@@ -24,8 +24,11 @@ logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover
     import pandas as pd
+    import numpy as np
+    from sklearn.preprocessing import StandardScaler
 except ImportError:
     pd = None
+    np = None
 
 # Feature flag for Model Recommender V2
 def is_model_recommender_v2_enabled() -> bool:
@@ -48,6 +51,99 @@ class ModelPerformance:
 
 @dataclass
 class TaskContext:
+    """Context information for model selection."""
+    task_type: str = "reasoning"  # reasoning, summarization, tool-use
+    prompt_length: int = 0
+    context_size: int = 0
+    requires_tools: bool = False
+    gpu_available: bool = True
+    tenant_id: str = "default"
+    user_preferences: dict[str, Any] | None = None
+
+
+@dataclass
+class BanditArm:
+    """Bandit arm representing a model choice."""
+    model_name: str
+    provider: str
+    estimated_reward: float = 0.0
+    confidence_bound: float = 0.0
+    selection_count: int = 0
+    total_reward: float = 0.0
+    last_updated: datetime | None = None
+
+
+class UCBBanditSelector:
+    """Upper Confidence Bound (UCB1) bandit for model selection."""
+    
+    def __init__(self, exploration_factor: float = 1.4):
+        self.exploration_factor = exploration_factor
+        self.arms: dict[str, BanditArm] = {}
+        self.total_selections = 0
+        
+    def add_model(self, model_name: str, provider: str) -> None:
+        """Add a model as a bandit arm."""
+        if model_name not in self.arms:
+            self.arms[model_name] = BanditArm(model_name=model_name, provider=provider)
+    
+    def select_model(self, context: TaskContext) -> str:
+        """Select model using UCB1 algorithm."""
+        if not self.arms:
+            raise ValueError("No models available for selection")
+        
+        # If any arm hasn't been tried, select it first
+        unselected = [arm for arm in self.arms.values() if arm.selection_count == 0]
+        if unselected:
+            return unselected[0].model_name
+        
+        # Calculate UCB1 scores for all arms
+        best_model = None
+        best_score = float('-inf')
+        
+        for arm in self.arms.values():
+            if arm.selection_count == 0:
+                # Infinite confidence bound for unselected arms
+                confidence_bound = float('inf')
+            else:
+                # UCB1 formula: mean_reward + exploration_factor * sqrt(ln(total_selections) / arm_selections)
+                if np is not None:
+                    confidence_bound = (
+                        arm.estimated_reward + 
+                        self.exploration_factor * np.sqrt(np.log(self.total_selections) / arm.selection_count)
+                    )
+                else:
+                    # Fallback without numpy
+                    import math
+                    confidence_bound = (
+                        arm.estimated_reward + 
+                        self.exploration_factor * math.sqrt(math.log(self.total_selections) / arm.selection_count)
+                    )
+            
+            if confidence_bound > best_score:
+                best_score = confidence_bound
+                best_model = arm.model_name
+                
+        return best_model or list(self.arms.keys())[0]
+    
+    def update_reward(self, model_name: str, reward: float) -> None:
+        """Update reward for selected model."""
+        if model_name not in self.arms:
+            logger.warning(f"Model {model_name} not found in bandit arms")
+            return
+            
+        arm = self.arms[model_name]
+        arm.selection_count += 1
+        arm.total_reward += reward
+        arm.estimated_reward = arm.total_reward / arm.selection_count
+        arm.last_updated = datetime.utcnow()
+        
+        self.total_selections += 1
+        
+        logger.debug(f"Updated {model_name}: reward={reward:.3f}, avg_reward={arm.estimated_reward:.3f}")
+
+
+@dataclass
+class TaskContext:
     """Context for model selection decision."""
     task_type: str  # "chat", "embed", "reasoning", "summarization" 
     tenant_id: str
@@ -58,7 +154,7 @@ class TaskContext:
 
 
 class ModelRecommender:
-    """Evidence-guided model recommendation engine."""
+    """Evidence-guided model recommendation engine with UCB1 bandit selection."""
     
     def __init__(
         self, 
@@ -70,10 +166,100 @@ class ModelRecommender:
         self.last_cache_update: datetime | None = None
         self.client = httpx.AsyncClient()
         
+        # Bandit selection per task type
+        self.bandits: dict[str, UCBBanditSelector] = {}
+        
         # Persistence layer for Model Recommender V2
         self.store = persistence_store
         if persistence_store and is_model_recommender_v2_enabled():
             logger.info("Model Recommender V2 enabled with persistent storage")
+            
+    def _get_or_create_bandit(self, task_type: str) -> UCBBanditSelector:
+        """Get or create bandit selector for task type."""
+        if task_type not in self.bandits:
+            self.bandits[task_type] = UCBBanditSelector()
+            
+            # Initialize with available models for this task
+            available_models = self._get_available_models_for_task(task_type)
+            for model in available_models:
+                self.bandits[task_type].add_model(model, "local")  # Provider determined by config
+                
+        return self.bandits[task_type]
+    
+    def _get_available_models_for_task(self, task_type: str) -> list[str]:
+        """Get available models for a specific task type."""
+        # Default models per task type from SCRATCH.md
+        model_mapping = {
+            "reasoning": ["together/llama-3.1-70b-instruct", "vllm/gemma-2-27b", "tgi/llama-3.1-8b"],
+            "summarization": ["tgi/llama-3.1-8b", "vllm/gemma-2-27b"],
+            "embedding": ["local/bge-large-en", "local/e5-large"],
+            "reranking": ["local/bge-reranker-v2", "local/mxbai-rerank-large"]
+        }
+        return model_mapping.get(task_type, ["together/llama-3.1-70b-instruct"])
+    
+    async def recommend_model_with_bandit(
+        self, 
+        context: TaskContext, 
+        available_models: list[str] | None = None
+    ) -> tuple[str, list[str]]:
+        """
+        Recommend model using bandit selection with quality gates.
+        
+        Returns:
+            Tuple of (primary_model, fallback_models)
+        """
+        # Get bandit for task type
+        bandit = self._get_or_create_bandit(context.task_type)
+        
+        # Select primary model using UCB1
+        primary_model = bandit.select_model(context)
+        
+        # Create fallback chain based on performance scores
+        candidates = available_models or self._get_available_models_for_task(context.task_type)
+        fallbacks = [model for model in candidates if model != primary_model][:2]  # Top 2 fallbacks
+        
+        logger.info(
+            f"Bandit selected {primary_model} for {context.task_type} "
+            f"(tenant: {context.tenant_id}), fallbacks: {fallbacks}"
+        )
+        
+        return primary_model, fallbacks
+    
+    async def record_outcome(
+        self, 
+        model_name: str, 
+        task_type: str,
+        success: bool, 
+        latency_ms: float, 
+        cost_usd: float,
+        quality_score: float = 0.0
+    ) -> None:
+        """Record outcome for bandit learning (multi-objective reward)."""
+        # Multi-objective reward calculation as per SCRATCH.md
+        # Objectives: [accept_label, -latency_ms, -cost_usd]
+        
+        # Normalize and weight objectives
+        accept_reward = 1.0 if success else 0.0
+        latency_penalty = max(0, (latency_ms - 100) / 1000)  # Penalty above 100ms
+        cost_penalty = cost_usd * 100  # Scale cost to meaningful range
+        
+        # Combined reward (higher is better)
+        reward = accept_reward - 0.5 * latency_penalty - 0.3 * cost_penalty
+        
+        # Add quality score if available
+        if quality_score > 0:
+            reward += 0.2 * quality_score
+            
+        # Update bandit
+        if task_type in self.bandits:
+            self.bandits[task_type].update_reward(model_name, reward)
+            
+        # Log for observability
+        logger.info(
+            f"Recorded outcome for {model_name}/{task_type}: "
+            f"success={success}, latency={latency_ms}ms, cost=${cost_usd:.4f}, "
+            f"quality={quality_score:.3f}, reward={reward:.3f}"
+        )
         
     async def recommend_model(
         self, 

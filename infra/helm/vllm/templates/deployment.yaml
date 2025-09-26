@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vllm.fullname" . }}
+  labels:
+    {{- include "vllm.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "vllm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "vllm.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: vllm
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.server.port }}
+          protocol: TCP
+        args:
+        - "--model"
+        - "{{ .Values.model.name }}"
+        - "--host" 
+        - "{{ .Values.server.host }}"
+        - "--port"
+        - "{{ .Values.server.port }}"
+        {{- if .Values.model.dtype }}
+        - "--dtype"
+        - "{{ .Values.model.dtype }}"
+        {{- end }}
+        {{- if .Values.parallelism.tensorParallel }}
+        - "--tensor-parallel-size"
+        - "{{ .Values.parallelism.tensorParallel }}"
+        {{- end }}
+        {{- if .Values.gpu.memoryFraction }}
+        - "--gpu-memory-utilization"
+        - "{{ .Values.gpu.memoryFraction }}"
+        {{- end }}
+        env:
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        - name: VLLM_LOGGING_LEVEL
+          value: "{{ .Values.server.uvicornLogLevel | upper }}"
+        {{- if .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        {{- end }}
+        {{- if .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- if .Values.securityContext }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}

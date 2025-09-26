@@ -1,0 +1,87 @@
+# vLLM deployment values per SCRATCH.md Phase 1 requirements
+replicaCount: 1
+
+image:
+  repository: vllm/vllm-openai
+  pullPolicy: IfNotPresent
+  tag: "v0.4.0"
+
+# Model configuration
+model:
+  name: "NousResearch/Meta-Llama-3-8B-Instruct"
+  tokenizer: ""
+  revision: ""
+  dtype: "auto"
+  quantization: ""
+
+# vLLM server configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  uvicornLogLevel: "info"
+  
+# Performance tuning
+gpu:
+  enabled: true
+  memoryFraction: 0.9
+  
+parallelism:
+  tensorParallel: 1
+  pipelineParallel: 1
+
+# Resource limits per SCRATCH.md quality gates
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    memory: 24Gi
+    cpu: 4000m
+  requests:
+    nvidia.com/gpu: 1
+    memory: 16Gi
+    cpu: 2000m
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health  
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+# Observability integration
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    labels:
+      prometheus: kube-prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+# Security
+securityContext:
+  runAsNonRoot: false  # GPU access often requires root
+  runAsUser: 1000
+  fsGroup: 1000
+
+nodeSelector: 
+  node-type: gpu
+
+tolerations:
+- key: nvidia.com/gpu
+  operator: Exists
+  effect: NoSchedule
