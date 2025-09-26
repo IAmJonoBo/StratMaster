@@ -199,6 +199,7 @@ Validate only:
 ISSUES_SUITE_MOCK=1 issuesuite validate --config issue_suite.config.yaml
 ```
 
+<<<<<<< HEAD
 ### Installing IssueSuite from a local tarball
 
 For offline use or to pin a specific build, you can install `issuesuite` from a local tarball.
@@ -223,6 +224,8 @@ On CI/remote runners, set `ISSUESUITE_TARBALL` to a path accessible in that envi
 3) PyPI `issuesuite>=0.1.10`
 4) Git clone fallback with editable install
 
+=======
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
 Generate schemas:
 
 ```bash

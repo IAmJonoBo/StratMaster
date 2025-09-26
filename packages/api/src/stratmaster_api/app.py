@@ -16,15 +16,6 @@ from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger(__name__)
-
-# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
-try:
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-    OTEL_FASTAPI_AVAILABLE = True
-except ImportError:
-    OTEL_FASTAPI_AVAILABLE = False
-
 from .dependencies import require_idempotency_key
 from .models import RecommendationOutcome
 from .models.requests import (
@@ -62,6 +53,25 @@ from .schemas import (
 )
 from .services import orchestrator_stub
 from .tracing import tracing_manager
+
+# Optional mobile router (heavy optional deps: asyncpg, firebase_admin) placed AFTER all imports
+try:  # pragma: no cover - optional dependency block
+    from .mobile.router import mobile_router  # type: ignore
+    _MOBILE_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    mobile_router = None  # type: ignore
+    _MOBILE_AVAILABLE = False
+
+# Logger and optional instrumentation flags (defined after optional imports)
+logger = logging.getLogger(__name__)
+
+# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
+try:  # pragma: no cover - optional
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    OTEL_FASTAPI_AVAILABLE = True
+except ImportError:  # pragma: no cover - instrumentation optional
+    FastAPIInstrumentor = None  # type: ignore
+    OTEL_FASTAPI_AVAILABLE = False
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
 
@@ -204,6 +214,11 @@ def create_app() -> FastAPI:
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
+<<<<<<< HEAD
+=======
+    if _MOBILE_AVAILABLE:
+        app.include_router(mobile_router)  # Sprint 1: Consolidated mobile API
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -386,6 +401,7 @@ def create_app() -> FastAPI:
     from .routers.verification import router as verification_router
     app.include_router(verification_router)
 
+<<<<<<< HEAD
     # Always register collaboration status endpoint; websocket route only when enabled
     try:
         from .routers.collaboration import setup_collaboration_websocket
@@ -395,6 +411,16 @@ def create_app() -> FastAPI:
             "Collaboration routes setup failed; status may be unavailable",
             exc_info=True,
         )
+=======
+    # Add collaboration WebSocket endpoint if enabled
+    from .collaboration import is_collaboration_enabled
+    if is_collaboration_enabled():
+        try:
+            from .routers.collaboration import setup_collaboration_websocket
+            setup_collaboration_websocket(app)
+        except ImportError:
+            logger.warning("Collaboration router not available. Collaboration features disabled.")
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
 
     return app
 

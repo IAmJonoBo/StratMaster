@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+<<<<<<< HEAD
 # Configurable inputs
 ISSUESUITE_VERSION_DEFAULT="0.1.10"
 ISSUESUITE_VERSION="${ISSUESUITE_VERSION:-$ISSUESUITE_VERSION_DEFAULT}"
@@ -60,6 +61,12 @@ fi
 
 # 4) Source clone fallback
 if [[ -z "${INSTALLED_FROM:-}" ]]; then
+=======
+echo "Installing IssueSuite (PyPI preferred)"
+if .venv/bin/pip install --disable-pip-version-check "issuesuite>=0.1.4" >/dev/null 2>&1; then
+  echo "IssueSuite installed from PyPI"
+else
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
   echo "PyPI install failed; attempting source clone"
   rm -rf .issuesuite_tmp
   COPYFILE_DISABLE=1 git clone --depth 1 https://github.com/IAmJonoBo/IssueSuite .issuesuite_tmp
@@ -69,14 +76,20 @@ if [[ -z "${INSTALLED_FROM:-}" ]]; then
   echo "Editable install fallback (to avoid AppleDouble wheel duplication)"
   if (cd .issuesuite_tmp && COPYFILE_DISABLE=1 pip install -e .); then
     echo "IssueSuite installed (editable) from source clone"
+<<<<<<< HEAD
     INSTALLED_FROM="git-editable"
+=======
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
   else
     echo "Editable install failed, attempting direct path injection"
     SITE=$(.venv/bin/python -c 'import site,sys; print(site.getsitepackages()[0])')
     mkdir -p "$SITE/issuesuite"
     rsync -a --delete --exclude '__pycache__' .issuesuite_tmp/issuesuite/ "$SITE/issuesuite/"
     echo "[WARNING] Installed by direct file copy; CLI entrypoint may be missing. Use: python -m issuesuite.cli"
+<<<<<<< HEAD
     INSTALLED_FROM="direct-copy"
+=======
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
   fi
   # Ensure CLI script present; fallback shim
   if ! command -v issuesuite >/dev/null 2>&1; then
@@ -88,7 +101,11 @@ fi
 
 # Verification
 if .venv/bin/python -c 'import issuesuite,sys; print(getattr(issuesuite,"__version__","unknown"))' >/dev/null 2>&1; then
+<<<<<<< HEAD
   echo "✅ IssueSuite import OK (${INSTALLED_FROM:-unknown-source})"
+=======
+  echo "IssueSuite import OK"
+>>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
 else
   echo "IssueSuite import FAILED" >&2
   exit 1
