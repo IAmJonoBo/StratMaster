@@ -143,3 +143,6 @@ IssueSuite/
 # Stray version marker files (ignore if present)
 =0.1.4
 =4.23.0
+
+# Local wheel cache for offline installs
+wheels/

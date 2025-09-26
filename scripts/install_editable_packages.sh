@@ -8,6 +8,10 @@ ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT_DIR"
 
 PIP_BIN="${PIP_BIN:-.venv/bin/pip}"
+if [ ! -x "$PIP_BIN" ]; then
+  # fallback to pip on PATH (useful in constrained agents)
+  PIP_BIN="${PIP_BIN_FALLBACK:-pip}"
+fi
 
 echo "📦 Installing local editable packages (monorepo)"
 

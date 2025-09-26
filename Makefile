@@ -1,14 +1,15 @@
 .PHONY: api.run api.docker build clean clean.macos test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
-        assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
+	assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
         deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate deps.install.robust \
 	setup setup.full setup.dry setup.validate \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
         test.advanced test.property test.contract test.load test.integration \
 	health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot \
-	venv.create venv.ensure venv.info venv.clean venv.recreate.dev venv.recreate.prod venv.sync.dev venv.sync.prod venv.sync.remote
+	venv.create venv.ensure venv.info venv.clean venv.recreate.dev venv.recreate.prod venv.sync.dev venv.sync.prod venv.sync.remote \
+	wheelhouse.build.dev wheelhouse.build.prod wheelhouse.build.linux wheelhouse.clean venv.sync.offline.dev venv.sync.offline.prod
 
 # -------------------------------
 # IssueSuite Helper Targets (external CLI)
@@ -87,6 +88,12 @@ export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_NO_INPUT=1
 export PIP_PROGRESS_BAR=off
 
+# Offline controls
+# Set SM_OFFLINE=1 to force offline installation using a local wheelhouse directory.
+# Customize wheelhouse directory via WHEELHOUSE (default: wheels)
+export SM_OFFLINE?=$(SM_OFFLINE)
+export WHEELHOUSE?=wheels
+
 # Create .venv with the best available Python (prefers 3.13/3.12, falls back to python3)
 venv.create:
 	@echo "🐍 Creating virtual environment at .venv (if missing)"
@@ -109,39 +116,120 @@ venv.info: venv.ensure
 # Install development environment (uses lockfile with hashes when available)
 venv.sync.dev: venv.ensure
 	@echo "📥 Syncing development dependencies"
-	@if [ -f requirements-dev.lock ]; then \
-	  echo "➡️  Using requirements-dev.lock with hashes"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install --require-hashes -r requirements-dev.lock || { echo "⚠️  Hash-based install failed, falling back to requirements-dev.txt"; .venv/bin/pip install -r requirements-dev.txt; }; \
+	@if [ "$(SM_OFFLINE)" = "1" ]; then \
+	  $(MAKE) venv.sync.offline.dev; \
 	else \
-	  echo "➡️  Using requirements-dev.txt"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install -r requirements-dev.txt; \
+	  if [ -f requirements-dev.lock ]; then \
+	    echo "➡️  Using requirements-dev.lock with hashes"; \
+	    .venv/bin/pip install --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install --require-hashes -r requirements-dev.lock || { echo "⚠️  Hash-based install failed, falling back to requirements-dev.txt"; .venv/bin/pip install -r requirements-dev.txt; }; \
+	  else \
+	    echo "➡️  Using requirements-dev.txt"; \
+	    .venv/bin/pip install --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install -r requirements-dev.txt; \
+	  fi; \
+	  bash scripts/install_editable_packages.sh; \
+	  .venv/bin/pip check || true; \
+	  echo "✅ Development venv ready"; \
 	fi
-	@bash scripts/install_editable_packages.sh
-	@.venv/bin/pip check || true
-	@echo "✅ Development venv ready"
 
 # Install production/runtime environment (prefer lockfile with hashes)
 venv.sync.prod: venv.ensure
 	@echo "📥 Syncing production/runtime dependencies"
-	@if [ -f requirements.lock ]; then \
-	  echo "➡️  Using requirements.lock with hashes"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install --require-hashes -r requirements.lock || { echo "⚠️  Hash-based install failed, falling back to requirements.txt"; .venv/bin/pip install -r requirements.txt; }; \
+	@if [ "$(SM_OFFLINE)" = "1" ]; then \
+	  $(MAKE) venv.sync.offline.prod; \
 	else \
-	  echo "➡️  Using requirements.txt"; \
-	  .venv/bin/pip install --upgrade pip setuptools wheel; \
-	  .venv/bin/pip install -r requirements.txt; \
+	  if [ -f requirements.lock ]; then \
+	    echo "➡️  Using requirements.lock with hashes"; \
+	    .venv/bin/pip install --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install --require-hashes -r requirements.lock || { echo "⚠️  Hash-based install failed, falling back to requirements.txt"; .venv/bin/pip install -r requirements.txt; }; \
+	  else \
+	    echo "➡️  Using requirements.txt"; \
+	    .venv/bin/pip install --upgrade pip setuptools wheel; \
+	    .venv/bin/pip install -r requirements.txt; \
+	  fi; \
+	  echo "📦 Installing API package (editable, no deps)"; \
+	  .venv/bin/pip install -e packages/api --no-deps; \
+	  .venv/bin/pip check || true; \
+	  echo "✅ Production/runtime venv ready"; \
 	fi
-	@echo "📦 Installing API package (editable, no deps)"
-	@.venv/bin/pip install -e packages/api --no-deps
-	@.venv/bin/pip check || true
-	@echo "✅ Production/runtime venv ready"
 
 # Remote setup alias (same as production sync)
 venv.sync.remote: venv.sync.prod
 	@echo "🌐 Remote venv synchronized (runtime)"
+
+# --------------------------------
+# Offline wheelhouse and installs
+# --------------------------------
+
+wheelhouse.clean:
+	rm -rf $(WHEELHOUSE)
+
+# Build a wheelhouse for development (includes runtime via -r requirements.txt)
+wheelhouse.build.dev: venv.ensure
+	@echo "📦 Building wheelhouse (dev) in $(WHEELHOUSE)"
+	mkdir -p $(WHEELHOUSE)
+	@if [ -f requirements-dev.lock ]; then \
+	  echo "➡️  Downloading wheels from requirements-dev.lock"; \
+	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements-dev.lock; }; \
+	else \
+	  echo "➡️  Downloading wheels from requirements-dev.txt"; \
+	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements-dev.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements-dev.txt; }; \
+	fi
+	@echo "✅ Wheelhouse (dev) ready at $(WHEELHOUSE)"
+
+# Build a wheelhouse for production/runtime
+wheelhouse.build.prod: venv.ensure
+	@echo "📦 Building wheelhouse (prod) in $(WHEELHOUSE)"
+	mkdir -p $(WHEELHOUSE)
+	@if [ -f requirements.lock ]; then \
+	  echo "➡️  Downloading wheels from requirements.lock"; \
+	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements.lock; }; \
+	else \
+	  echo "➡️  Downloading wheels from requirements.txt"; \
+	  .venv/bin/pip download --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt || { echo "⚠️  Strict wheel-only download failed; retrying without only-binary"; .venv/bin/pip download -d $(WHEELHOUSE) -r requirements.txt; }; \
+	fi
+	@echo "✅ Wheelhouse (prod) ready at $(WHEELHOUSE)"
+
+# Cross-platform wheelhouse for Linux (use on macOS to prepare for remote Linux agents)
+# Requires pip>=23 to support --platform/--abi flags
+wheelhouse.build.linux: venv.ensure
+	@echo "🐧 Building Linux wheelhouse in $(WHEELHOUSE) (Python 3.13, manylinux2014_x86_64)"
+	mkdir -p $(WHEELHOUSE)
+	PLATFORM_FLAGS="--platform manylinux2014_x86_64 --implementation cp --python-version 313 --abi cp313"; \
+	if [ -f requirements.lock ]; then \
+	  .venv/bin/pip download $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.lock; \
+	else \
+	  .venv/bin/pip download $$PLATFORM_FLAGS --only-binary=:all: -d $(WHEELHOUSE) -r requirements.txt; \
+	fi
+	@echo "✅ Linux wheelhouse ready at $(WHEELHOUSE)"
+
+# Offline dev install using local wheelhouse
+venv.sync.offline.dev: venv.ensure
+	@echo "📴 Offline install (dev) from $(WHEELHOUSE)"
+	@if [ ! -d "$(WHEELHOUSE)" ]; then echo "❌ Wheelhouse '$(WHEELHOUSE)' not found. Run 'make wheelhouse.build.dev' (or wheelhouse.build.linux) first."; exit 1; fi
+	@if [ -f requirements-dev.lock ]; then \
+	  .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) --require-hashes -r requirements-dev.lock || .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) -r requirements-dev.lock; \
+	else \
+	  .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) -r requirements-dev.txt; \
+	fi
+	@bash scripts/install_editable_packages.sh || true
+	@.venv/bin/pip check || true
+	@echo "✅ Offline development venv ready"
+
+# Offline prod install using local wheelhouse
+venv.sync.offline.prod: venv.ensure
+	@echo "📴 Offline install (prod) from $(WHEELHOUSE)"
+	@if [ ! -d "$(WHEELHOUSE)" ]; then echo "❌ Wheelhouse '$(WHEELHOUSE)' not found. Run 'make wheelhouse.build.prod' (or wheelhouse.build.linux) first."; exit 1; fi
+	@if [ -f requirements.lock ]; then \
+	  .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) --require-hashes -r requirements.lock || .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) -r requirements.lock; \
+	else \
+	  .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) -r requirements.txt; \
+	fi
+	@echo "📦 Installing API package (editable, no deps)"
+	@.venv/bin/pip install -e packages/api --no-deps
+	@.venv/bin/pip check || true
+	@echo "✅ Offline production/runtime venv ready"
 
 # Remove and fully recreate venvs
 venv.clean:
