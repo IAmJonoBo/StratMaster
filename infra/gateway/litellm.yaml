@@ -1,0 +1,70 @@
+# LiteLLM Gateway Configuration per SCRATCH.md Phase 1
+model_list:
+  - model_name: together/llama-3.1-70b-instruct
+    litellm_params: 
+      model: together_ai/llama-3.1-70b-instruct
+      api_key: ${TOGETHER_API_KEY}
+  - model_name: vllm/gemma-2-27b
+    litellm_params: 
+      model: openai/v1
+      api_base: http://vllm:8000/v1
+      api_key: dummy
+  - model_name: tgi/llama-3.1-8b
+    litellm_params: 
+      model: hf/tgi
+      api_base: http://tgi:8080
+      api_key: dummy
+
+router:
+  strategy: ucb1
+  objectives: [accept_label, -latency_ms, -cost_usd]
+
+# Observability hooks per Phase 0 requirements
+general_settings:
+  master_key: ${LITELLM_MASTER_KEY}
+  
+  # OpenTelemetry integration
+  litellm_settings:
+    telemetry: true
+    success_callback: ["otel", "langfuse"]
+    failure_callback: ["otel", "langfuse"]
+    
+  # Langfuse integration for evaluation pipeline
+  langfuse_public_key: ${LANGFUSE_PUBLIC_KEY}
+  langfuse_secret_key: ${LANGFUSE_SECRET_KEY}
+  langfuse_host: ${LANGFUSE_SERVER_URL}
+  
+  # Performance targets from SCRATCH.md quality gates
+  timeout: 30
+  max_budget: 500  # USD per month
+  budget_duration: "1mo"
+  
+  # Quality gates: p95 < 120ms overhead
+  health_check_interval: 30
+  max_fallback_depth: 2
+  
+  # Enable cost/latency/quality telemetry
+  track_cost_per_model: true
+  track_cost_per_tenant: true
+  request_logs: true
+
+# Per-tenant routing and policy enforcement
+litellm_settings:
+  # Redis caching for <20ms routing decisions
+  redis_host: redis
+  redis_port: 6379
+  cache_responses: true
+  cache_params:
+    ttl: 3600
+    
+  # Model recommendation engine integration
+  routing_strategy: "usage-based-routing"
+  enable_model_fallbacks: true
+  
+  # Security controls per Phase 0.2
+  custom_auth: true
+  enforce_user_param: true
+  
+  # Privacy controls integration
+  pii_masking: true
+  log_raw_request: false
