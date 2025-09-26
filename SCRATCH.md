@@ -1,89 +1,263 @@
-@workspace
-BRIEF: Build an adaptive “Orchestration & Decision OS” for StratMaster that plans, debates, decides, and wires improvements across code, docs, UX, AI, and ops—end-to-end, platform-agnostic.
+StratMaster Frontier Upgrade Plan
 
-OBJECTIVE
-- Create a lean, high-leverage system that (1) turns strategy into shippable work, (2) stress-tests decisions with structured debate, and (3) continuously measures outcomes and refactors the codebase to keep the system fast, reliable, and intelligent.
+Copilot/“Condex” implementation brief with quality gates, deliverables, and OSS-first tech
 
-OPERATING PRINCIPLES (embed as checklists in /orchestration/.kernel/)
-- Delivery performance: track DORA metrics (deploy freq, lead time, change failure rate, MTTR). Gate merges on regression. [doc links in NOTES]
-- Reliability: define SLIs/SLOs + error budgets; alert on golden signals only (latency, traffic, errors, saturation). Block risky rollouts via canaries. 
-- Decision hygiene: run ACH matrices + pre-mortems for major changes; log all choices with ADRs.
-- Strategy cadence: map value chains (Wardley), classify context (Cynefin), and iterate tight OODA loops to adapt plans quickly.
-- AI governance: apply NIST AI RMF controls (risk, bias, transparency) to any agentic or ML feature. Fail closed.
+⸻
 
-SCOPE — IMPLEMENT THESE MODULES
-1) Debate Engine (/orchestration/debate/)
-   - Implement Analysis-of-Competing-Hypotheses (ACH) and Pre-Mortem workflows with templates + CLI.
-   - Add “constitutional critique” and self-consistency rounds for AI proposals before they touch code.
-   - Emit machine-readable verdicts (JSON) for pipelines to consume.
+Executive summary (what we’re doing and why)
 
-2) Decision Log (/docs/architecture/adr/)
-   - Enforce ADRs for every material decision; wire a lint that blocks PRs without an ADR reference.
-   - Provide MADR template and index; auto-link ADRs to code diffs and issues.
+We’ll harden StratMaster’s research→reasoning→decision pipeline with (1) an OSS-first model gateway and adaptive model routing, (2) hybrid retrieval with first-class reranking, (3) debate/strategy frameworks that are explicit and auditable, (4) built-in evaluation + observability, and (5) enterprise-grade security and supply-chain controls. All changes are incremental, testable, and reversible; every deliverable ships with quality gates and dashboards.
 
-3) Strategy Mapper (/orchestration/strategy/)
-   - Wardley map skeletons + scripts to render/update maps from a service catalog.
-   - Cynefin triage checklist for each initiative; route to appropriate playbooks (probe-sense-respond for complex, etc.).
-   - OODA loop annotations on roadmaps; require “next observe/orient checkpoint” metadata.
+Key enablers: LiteLLM proxy + vLLM/TGI/Together AI for models, Langfuse + OpenTelemetry for tracing/evals, Qdrant/OpenSearch hybrid search with RRF and cross-encoder rerankers, RAGAS/TruLens for retrieval QA, Keycloak OIDC, Yjs for realtime collab, DoWhy/EconML for causal checks, and SLSA+cosign+SBOM for supply chain.  ￼
 
-4) Planning Engine (/orchestration/planning/)
-   - Converts strategy items → epics → thin vertical slices; supports modular-monolith + hexagonal ports/adapters boundaries.
-   - Event-storming stubs to define domain events; generate pub/sub contracts and message schemas.
-   - Data contracts for shared datasets; validate in CI.
+⸻
 
-5) Experimentation & Insight (/orchestration/experiments/)
-   - Turn feature ideas into tests: A/B (with sequential testing to avoid peeking), CUPED variance reduction, guardrails metrics.
-   - Add causal inference notebook templates (DoWhy/CausalML) for post-experiment learning; export uplift reports.
-   - RAG/LLM evals: add ragas jobs; block deployment on factuality/grounding thresholds.
+Auto-Expert setup (how we’ll work)
+	•	Personas: Platform Architect (gateway, infra, SRE), IR/RAG Researcher (retrieval, rerank, evals), Causality Scientist (DoWhy/EconML), Security Engineer (OIDC/OWASP/SLSA), UX/Realtime Engineer (Yjs/HITL).
+	•	Pre-registered analysis plan: baseline metrics → introduce one subsystem at a time → A/B with holdouts → ship behind flags → promote only on green gates.
+	•	Evidence-gated: each strong change must show ≥2 independent sources (≥1 primary doc/spec) + harms review + counterfactual (“what if we didn’t add it?”) + uncertainty notes.
 
-6) AI Orchestration (/orchestration/agents/)
-   - Provide a minimal multi-agent runner (e.g., LangGraph/AutoGen/CrewAI) for code/​docs tasks with tool use + human-in-the-loop gates.
-   - Register tools for repo ops (search, refactor, tests, docs build), design exports (diagrams), and experiment management.
-   - Enforce safety rails: sandboxed PRs, unit/integration/e2e checks, and governance checklist before merge.
+⸻
 
-7) Developer Platform Hooks (/backstage/ or /platform/)
-   - Expose golden paths via templates: service, job, experiment, ADR, doc page.
-   - Surface live DORA, SLOs, incidents, and experiment status in one portal/dashboard.
+Phase 0 — Foundations (week 0–1)
 
-8) Refactoring Pipeline (/orchestration/refactor/)
-   - Enforce boundaries in a modular-monolith (or service) layout; fail CI on illegal deps.
-   - Generate/verify adapters for UIs, DBs, external APIs (ports/adapters).
-   - Emit “coupling & cohesion” reports; schedule refactor PRs with safety nets.
+0.1 Observability & eval plumbing (must-have before changes)
+	•	Langfuse tracing+experiments (latency, cost, outcome labels). Add request/response anonymisation hooks.  ￼
+	•	OpenTelemetry for FastAPI (auto-instrument) → OTLP → Grafana/Tempo/Prometheus. Gate on traces>95% sampled, RED metrics dashboards.  ￼
+Deliverables: Langfuse project with ingestion keys; opentelemetry-instrument startup; Grafana dashboards; runbooks.
+Quality gates: traces span % ≥95; p50/p95 per endpoint visible; error budget SLOs defined.
 
-9) Branding–Business Interface (/docs/brand/)
-   - Keep brand/strategy docs separate but linked; codify Distinctive Assets + Category Entry Points and track where they influence UX content/flows.
-   - Ensure no brand artefact can alter functional guards or reliability budgets.
+0.2 Security baselines
+	•	Keycloak OIDC integration (Auth Code w/ PKCE), map roles→RBAC.  ￼
+	•	PII guard via Microsoft Presidio (text) in ingress/egress filters for logging/eval payloads.  ￼
+Deliverables: OIDC config, token verification middleware, Presidio service + redaction policy.
+Quality gates: all public endpoints 401/403 on invalid scopes; redaction coverage tests.
 
-AUTOMATION & CI
-- Add GitHub Actions:
-  a) decision-lint: ADR present, ACH/pre-mortem attached for medium/high-impact PRs.
-  b) delivery-gate: DORA/SLO guardrails; block if regression > thresholds.
-  c) experiment-runner: spins up tests (sequential testing), computes CUPED deltas, posts PR comments.
-  d) docs-sync: rebuilds Diátaxis docs, verifies links/snippets/diagrams.
-  e) AI-eval: ragas suite for any LLM/RAG feature; enforce min grounding scores.
-  f) data-contract-check: schema diff + SLAs; break build on incompatible changes.
+⸻
 
-DELIVERABLES
-- New folders + templates as above, plus:
-  1) /DECISIONS/ACH_BOARD.md + CLI to create/update matrices.
-  2) /RELIABILITY/SLOs.yml with SLIs, SLOs, error budgets, alert policies.
-  3) /EXPERIMENTS/playbooks/ with A/B + CUPED + sequential recipes.
-  4) /STRATEGY/maps/ initial Wardley maps + render scripts.
-  5) /docs/… refreshed, release-ready, with diagrams for flows/process/logic.
-  6) Dashboard JSON for Backstage (or plain Grafana) showing DORA, SLOs, experiment velocity, ADR cadence.
+Phase 1 — Model gateway & adaptive routing (week 1–2)
 
-SAFETY & PREFLIGHT (must pass before merge)
-- All tests + CI jobs green locally and on remote; canary passes; no SLO budget breach.
-- AI RMF checklist signed; security scans clean; data contracts valid; diagrams generated; docs build clean.
-- Show diffs and produce ORCHESTRATION_REPORT.md summarising debates, decisions, metrics deltas, and follow-ups.
+1.1 Open model gateway
+	•	Stand up LiteLLM Proxy for one-line, provider-agnostic routing; enable model-per-task config. Wire Together AI (broad hosted models) and HF TGI/vLLM (self-hosted, OpenAI-compatible). Use cost/latency/quality tags.  ￼
+Deliverables: litellm config (providers, rate limits, fallbacks), vLLM/TGI helm releases.
+Quality gates: gateway p95 < 120 ms overhead; fail-open fallbacks verified; per-model cost telemetry in Langfuse.
 
-NOTES (implementation references)
-- DORA metrics & 2023 findings; golden signals & SLOs; canaries.  [oai_citation:0‡dora.dev](https://dora.dev/research/2023/dora-report/?utm_source=chatgpt.com)
-- ADRs + templates; Event Storming; Hexagonal (Ports & Adapters).  [oai_citation:1‡Architectural Decision Records](https://adr.github.io/?utm_source=chatgpt.com)
-- Modular monolith rationale & boundaries.  [oai_citation:2‡Thoughtworks](https://www.thoughtworks.com/en-us/insights/blog/microservices/modular-monolith-better-way-build-software?utm_source=chatgpt.com)
-- Event-driven patterns & domain events; data contracts.  [oai_citation:3‡martinfowler.com](https://martinfowler.com/articles/201701-event-driven.html?utm_source=chatgpt.com)
-- AI agents frameworks (LangGraph, AutoGen, CrewAI) and evals (ragas).  [oai_citation:4‡LangChain AI](https://langchain-ai.github.io/langgraph/?utm_source=chatgpt.com)
-- Decision methods: ACH, pre-mortem; Delphi when needed.  [oai_citation:5‡CIA](https://www.cia.gov/resources/csi/static/Tradecraft-Primer-apr09.pdf?utm_source=chatgpt.com)
-- Strategy lenses: Wardley, Cynefin, OODA.  [oai_citation:6‡Learn Wardley Mapping](https://learnwardleymapping.com/introduction/?utm_source=chatgpt.com)
-- Experiments: sequential testing & CUPED.  [oai_citation:7‡Spotify Engineering](https://engineering.atspotify.com/2023/07/bringing-sequential-testing-to-experiments-with-longitudinal-data-part-1-the-peeking-problem-2-0?utm_source=chatgpt.com)
-- AI governance: NIST AI RMF.  [oai_citation:8‡nvlpubs.nist.gov](https://nvlpubs.nist.gov/nistpubs/ai/nist.ai.100-1.pdf?utm_source=chatgpt.com)
+1.2 Model recommendation engine
+	•	Online bandit (UCB/TS) over candidate models per task-type (drafting, reasoning, tool-use). Arm features: prompt length, context size, tool calls, GPU availability; reward = labelled outcome (HITL accept), speed, cost (multi-objective scalar).
+	•	Offline benchmarking refresh nightly with held-out tasks; anchor to public leaderboards (LMSYS arena for relative strength) & domain evals.  ￼
+Quality gates: ≥10% cost-adjusted utility uplift vs static baseline across two weeks; no regression on p95 latency.
+
+⸻
+
+Phase 2 — Retrieval that wins (week 2–4)
+
+2.1 Hybrid retrieval
+	•	Keep Qdrant, add sparse vectors + dense in same collection; do hybrid scoring and/or upstream OpenSearch BM25 + RRF fusion.  ￼
+	•	Add SPLADE or BGE-M3 sparse generation (fast CPU path) for sparse side when OpenSearch isn’t available. Evaluate on BEIR sets; report nDCG@10/MRR@10 deltas.  ￼
+Deliverables: Qdrant hybrid schema; OpenSearch hybrid pipeline with normalization/RRF; batch indexer.
+Quality gates: +≥20% nDCG@10 vs dense-only on 3 BEIR datasets; recall@50 ≥ baseline.
+
+2.2 First-class reranking
+	•	Serve cross-encoder rerankers (e.g., mxbai-rerank-large-v2 or bge-reranker-v2) via Infinity/TGI; wire to top-k from hybrid retriever.  ￼
+Quality gates: +≥10 points nDCG@10 on BEIR passages after rerank; p95 rerank latency < 450 ms@k=100 on A100 or <800 ms@CPU.
+
+2.3 RAG evaluation loop
+	•	Add RAGAS and TruLens for answer faithfulness, context precision/recall; feed metrics into Langfuse. Ship regression suite with golden Q/A+contexts.  ￼
+Quality gates: Faithfulness ≥0.75; context precision ≥0.6 on internal set; CI gate blocks on −5% drift.
+
+⸻
+
+Phase 3 — Debating & strategising, upgraded (week 3–5)
+
+3.1 Methodology refresh
+	•	Make debates explicit with Toulmin schema (claim/grounds/warrant/backing/qualifier/rebuttal) + argument maps; serialise to JSON for audit/UI overlays.  ￼
+	•	Keep “self-play” but prioritise retrieval-checked, warrant-first reasoning; reroute to domain agents when confidence < threshold.
+
+3.2 Causality & forecasting guardrails
+	•	For strategy recommendations affecting KPIs, require a causal check using DoWhy/EconML (graph→identify→estimate→refute). Add synthetic control for pre/post policy changes when RCTs absent.  ￼
+	•	Report Brier scores for probabilistic forecasts and use conservative extremising only when justified.  ￼
+Quality gates: any “High-impact” recommendation must include causal DAG screenshot + identification result + refutation test passing.
+
+3.3 HITL rubric & collaboration
+	•	Standardise human review rubric (evidence adequacy, warrant strength, risk flags).
+	•	Add real-time co-editing in briefs using Yjs + y-websocket; cursor presence and conflict-free merges.  ￼
+Deliverables: JSON schemas for arguments; causal notebook templates; Yjs provider and UI affordances.
+Quality gates: ≥90% of accepted outputs include structured argument frames; collab latency <150 ms LAN, <400 ms WAN.
+
+⸻
+
+Phase 4 — Exports & enterprise (week 4–5)
+	•	Finish backend exports: Notion (create page/append blocks), Trello (cards), Jira (issues). Include dry-run previews and audit trails.  ￼
+Quality gates: idempotency, retries, rate-limit backoff; integration tests with sandboxes.
+
+⸻
+
+Phase 5 — Performance & reliability (parallel from week 2)
+	•	k6 API load tests in CI (smoke, stress, soak); Locust optional for Pythonic scenarios. SLOs: p50/p95, error rate, saturation.  ￼
+	•	GPU serving: measure vLLM throughput tokens/s and queueing; ensure OpenAI-compatibility across stacks.  ￼
+Quality gates: gateway + retriever p95 under agreed budgets; no head-of-line blocking at >P75 load.
+
+⸻
+
+Phase 6 — Supply chain & platform hardening
+	•	SBOM with Syft; scan with Trivy; sign images with cosign; aim SLSA L3 provenance in CI.  ￼
+	•	Apply OWASP LLM Top-10 controls (prompt injection, data leakage, insecure plugins): red-team tests in CI.  ￼
+Quality gates: 0 critical CVEs at release; signed artifacts enforced at admission; red-team suite green.
+
+⸻
+
+Work packages (assignable to Copilot/“Condex”)
+	1.	Gateway & routing
+
+	•	Files: infra/gateway/litellm.yaml, apps/api/services/model_router.py (UCB/TS), infra/helm/vllm/values.yaml, infra/helm/tgi/values.yaml.
+	•	Tests: unit (routing maths), integration (provider fallback), smoke (OpenAI-compat).
+	•	Dashboards: model mix, reward, cost.
+
+	2.	Retrieval & rerank
+
+	•	Files: retrieval/hybrid.py, retrieval/indexer.py, retrieval/rerank.py.
+	•	Infra: OpenSearch hybrid pipeline with RRF; Qdrant dual-vector schema.  ￼
+	•	Tests: BEIR harness (nDCG/MRR); latency budgets.
+
+	3.	Debate & argumentation
+
+	•	Files: debate/toulmin.py, debate/schemas.py, ui/argument_map.tsx.
+	•	Tests: schema validation; warrant-presence rules.
+
+	4.	Causal & forecast checks
+
+	•	Files: analysis/causal/dag.py, analysis/causal/estimate.py; notebooks for DoWhy/EconML pipelines.  ￼
+	•	Tests: refutation must pass on seeded examples; CI fails on violations.
+
+	5.	RAG evaluation
+
+	•	Files: eval/ragas_suite.py, eval/trulens_suite.py, datasets in eval/data/.  ￼
+	•	CI: regression budget ±5%.
+
+	6.	Observability & HITL
+
+	•	Files: observability/otel.py, observability/dashboards/, ui/collab/yjs-provider.ts.  ￼
+
+	7.	Exports
+
+	•	Files: integrations/notion.py, trello.py, jira.py; end-to-end mocks.  ￼
+
+	8.	Security & supply chain
+
+	•	Files: security/oidc.py, sec/owasp_llm_checks.py, .github/workflows/syft-trivy-cosign.yml.  ￼
+
+⸻
+
+Quality gates (go/no-go)
+	•	Routing: ≥10% cost-adjusted utility gain vs fixed model; fallbacks verified.
+	•	Retrieval: +≥20% nDCG@10 hybrid vs dense-only (BEIR), +≥10 with rerank.  ￼
+	•	RAG: RAGAS faithfulness ≥0.75, precision ≥0.6; no hallucination regressions.  ￼
+	•	Performance: p95 API under budgets from k6 soak; no tail amplification in router.  ￼
+	•	Security: 0 critical CVE; signed artifacts; OWASP LLM checks pass; OIDC tokens enforced.  ￼
+
+⸻
+
+Copy-ready snippets (drop into the repo)
+
+LiteLLM proxy (excerpt)
+
+# infra/gateway/litellm.yaml
+model_list:
+  - model_name: together/llama-3.1-70b-instruct
+    litellm_params: { model: together_ai/llama-3.1-70b-instruct, api_key: ${TOGETHER_API_KEY} }
+  - model_name: vllm/gemma-2-27b
+    litellm_params: { model: openai/v1, api_base: http://vllm:8000/v1, api_key: dummy }
+  - model_name: tgi/llama-3.1-8b
+    litellm_params: { model: hf/tgi, api_base: http://tgi:8080, api_key: dummy }
+router:
+  strategy: ucb1
+  objectives: [accept_label, -latency_ms, -cost_usd]
+
+(Refs: LiteLLM proxy, vLLM OpenAI-compat, TGI.  ￼)
+
+OpenSearch hybrid with RRF (concept)
+
+{
+  "request_processors": [
+    { "neural_query_enricher" : { "query_text" : "{{q}}" } },
+    { "normalization-processor": { "technique": "minmax" } }
+  ],
+  "phase_results_processors": [
+    { "rrf": { "rank_window_size": 100, "rank_constant": 60 } }
+  ]
+}
+
+(OpenSearch hybrid + RRF.  ￼)
+
+Qdrant dual-vector schema (concept)
+	•	Dense: vector: { size: 1024, distance: "Cosine" }
+	•	Sparse: sparse_vectors: { bm25: { index: "enabled" } }
+(Hybrid in Qdrant.  ￼)
+
+k6 CI smoke
+
+import http from 'k6/http'; import { check, sleep } from 'k6';
+export const options = { vus: 10, duration: '1m' };
+export default function () {
+  const r = http.post(`${__ENV.API}/debate/learning/predict`, JSON.stringify({text:"test"}), { headers: {'Content-Type':'application/json'}});
+  check(r, { 'status 200': (res) => res.status === 200 });
+  sleep(1);
+}
+
+(k6 API testing.  ￼)
+
+OTel auto-instrument run
+
+opentelemetry-instrument uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+(FastAPI instrumentation.  ￼)
+
+⸻
+
+Risks, counterfactuals, and safer fallbacks
+	•	Risk: Hybrid search adds infra complexity. Counterfactual: keep dense-only; expect lower recall on jargon. Mitigation: feature flags + per-collection toggles; begin with rerank-only.  ￼
+	•	Risk: Online bandit misroutes early. Mitigation: start with offline eval priors; cap exploration; HITL veto.
+	•	Risk: Rerank latency spikes. Mitigation: serve x-small/base rerankers on CPU, large on GPU; fallback thresholds.  ￼
+
+⸻
+
+Deliverables checklist (what you can expect to land)
+	•	Code: gateway, router, hybrid retriever, reranker service, debate schemas, causal notebooks, export backends.
+	•	Tests: BEIR harness, RAGAS suite, OIDC auth tests, k6 load scripts, OWASP-LLM red-team set.  ￼
+	•	Dashboards: Langfuse dashboards, Grafana RED/Saturation, evaluation trendlines.
+	•	Docs: runbooks, architecture diagrams, SLOs, risk register.
+	•	Compliance: SBOMs, signed images, SLSA provenance, Trivy reports.  ￼
+
+⸻
+
+Evidence-gated protocol (for each major change)
+	•	Data: Langfuse traces/evals, BEIR/MTEB results, k6 outputs.  ￼
+	•	Methods: A/B or shadow, RRF hybrid, cross-encoder rerank, causal refutation where applicable.  ￼
+	•	Key results: nDCG/MRR uplift, faithfulness/precision, latency/cost deltas.
+	•	Uncertainty: domain drift, dataset bias, cost volatility.
+	•	Safer alternative: configuration flag to revert to previous stack.
+
+⸻
+
+Provenance block (top sources)
+	•	Model gateway & serving: LiteLLM proxy; vLLM OpenAI-compat; HF TGI; Together AI API.  ￼
+	•	Observability & evals: Langfuse docs; OpenTelemetry FastAPI; RAGAS; TruLens.  ￼
+	•	Retrieval: Qdrant hybrid/sparse; OpenSearch hybrid + RRF; BEIR; MTEB.  ￼
+	•	Reranking: mxbai-rerank-v2; bge-reranker-v2.  ￼
+	•	Debate frameworks: Toulmin; argument mapping.  ￼
+	•	Causality & forecasting: DoWhy/EconML; synthetic control; Brier & extremising.  ￼
+	•	Security & supply chain: Keycloak OIDC; OWASP LLM Top-10; Syft; Trivy; cosign; SLSA.  ￼
+
+⸻
+
+Next actions (sequenced)
+	1.	Ship Phase-0 observability + OIDC + redaction (small PRs).
+	2.	Deploy LiteLLM + vLLM/TGI + Together AI; flip router behind flag.
+	3.	Introduce hybrid retrieval and reranking; gate on BEIR uplift.
+	4.	Land RAG eval CI + k6 soak; set SLOs.
+	5.	Switch debates to Toulmin JSON; show argument map UI.
+	6.	Wire causal checks for “High-impact” strategies.
+	7.	Finish Notion/Trello/Jira backends; publish marketplace guides.
+	8.	Enforce SBOM + Trivy + cosign + SLSA in CI.
+
+This plan is ready for Copilot to scaffold code and for Condex to run migrations, tests, and infra rollouts with clear pass/fail gates.
