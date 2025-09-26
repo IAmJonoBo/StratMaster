@@ -40,26 +40,7 @@ issuesuite.sync.dry: issuesuite.install
 issuesuite.summary: issuesuite.install
 	@. .venv/bin/activate && ISSUES_SUITE_MOCK=1 issuesuite summary --config issue_suite.config.yaml
 
-# -------------------------------
-# IssueSuite Helper Targets (external CLI)
-# -------------------------------
-.PHONY: issuesuite.install issuesuite.validate issuesuite.schema issuesuite.sync.dry issuesuite.summary
-
-# Install IssueSuite from PyPI; fallback to cloning repo if unavailable
-issuesuite.install: venv.ensure
-	@bash scripts/install_issuesuite.sh
-
-issuesuite.validate: issuesuite.install
-	@ISSUES_SUITE_MOCK?=1; . .venv/bin/activate && ISSUES_SUITE_MOCK=$$ISSUES_SUITE_MOCK issuesuite validate --config issue_suite.config.yaml
-
-issuesuite.schema: issuesuite.install
-	@. .venv/bin/activate && issuesuite schema --config issue_suite.config.yaml
-
-issuesuite.sync.dry: issuesuite.install
-	@. .venv/bin/activate && ISSUES_SUITE_MOCK=1 issuesuite sync --dry-run --update --config issue_suite.config.yaml --summary-json issues_summary.json
-
-issuesuite.summary: issuesuite.install
-	@. .venv/bin/activate && ISSUES_SUITE_MOCK=1 issuesuite summary --config issue_suite.config.yaml
+ 
 
 dev.up:
 	docker compose up -d
