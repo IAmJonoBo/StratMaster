@@ -3,7 +3,7 @@
 import os
 import pytest
 from datetime import datetime
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 
 from router_mcp.model_recommender import (
     ModelRecommender,
@@ -16,10 +16,10 @@ from router_mcp.model_recommender import (
 class TestModelRecommenderV2:
     """Test Model Recommender V2 features."""
     
-    def test_feature_flag_disabled_by_default(self):
-        """Test that V2 is disabled by default."""
+    def test_feature_flag_enabled_by_default(self):
+        """Test that V2 is enabled by default."""
         with patch.dict(os.environ, {}, clear=True):
-            assert not is_model_recommender_v2_enabled()
+            assert is_model_recommender_v2_enabled()
     
     def test_feature_flag_enabled_when_set(self):
         """Test that V2 is enabled when flag is set."""
@@ -116,7 +116,33 @@ class TestModelRecommenderV2:
         
         # Test no match
         assert recommender._normalize_embedding_model_name("unknown-embedding") is None
-    
+
+    @pytest.mark.asyncio
+    async def test_record_outcome_emits_telemetry(self):
+        """Ensure telemetry emit is called with outcome payload."""
+        fake_telemetry = MagicMock()
+        fake_telemetry.emit = MagicMock()
+
+        with patch.dict(os.environ, {"ENABLE_MODEL_RECOMMENDER_V2": "true"}):
+            with patch("router_mcp.model_recommender.build_telemetry_from_env", return_value=fake_telemetry):
+                recommender = ModelRecommender()
+                # ensure bandit entry exists
+                bandit = recommender._get_or_create_bandit("reasoning")
+                # register model if not present
+                if "together/llama-3.1-70b-instruct" not in bandit.arms:
+                    bandit.add_model("together/llama-3.1-70b-instruct", "local")
+
+                await recommender.record_outcome(
+                    model_name="together/llama-3.1-70b-instruct",
+                    task_type="reasoning",
+                    success=True,
+                    latency_ms=120.5,
+                    cost_usd=0.0003,
+                    quality_score=0.8,
+                )
+
+                fake_telemetry.emit.assert_called_once()
+
     @pytest.mark.asyncio
     async def test_performance_cache_update(self):
         """Test performance cache updates with multiple data sources."""

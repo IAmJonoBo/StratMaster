@@ -123,7 +123,7 @@ Complete LMSYS Arena and MTEB data integration for intelligent cascade routing a
 - [ ] **RFC**: Internal design doc if leadership requests
 
 ## Feature Flag & Rollout
-- [x] **Flag**: `ENABLE_MODEL_RECOMMENDER_V2` (default: off)
+- [x] **Flag**: `ENABLE_MODEL_RECOMMENDER_V2` (default: on)
 - [x] **Migration strategy**: Schema migration for SQLite store behind flag, fallback to in-memory stub
 - [x] **Rollback plan**: Toggle flag off, drop SQLite data (stateless), revert CronJob manifest
 

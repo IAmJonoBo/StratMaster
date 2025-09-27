@@ -13,7 +13,7 @@ Deliver the Week 2 roadmap follow-ups by implementing real LMSYS/MTEB ingestion,
 3. Expose admin/debug APIs and ensure cascade routing adheres to utility scoring.
 
 ## Feature Flag
-- `ENABLE_MODEL_RECOMMENDER_V2` (default `false`).
+- `ENABLE_MODEL_RECOMMENDER_V2` (default `true`, set to `false` only for emergency rollback).
 
 ## Acceptance Criteria
 - Nightly job populates recommender store with LMSYS and MTEB scores (verified via metrics dashboard).

@@ -58,10 +58,11 @@ ingress:
 ## Dashboards & metrics
 
 - Starter dashboards live under `infra/langfuse/dashboards/`:
-  - `llm-latency.json` — request latency, tokens, retries.
-  - `agent-success-rate.json` — run success vs. failure by tenant.
-  - `compression-metrics.json` — compression ratio and guardrail violations.
-- Import dashboards via Langfuse UI (`Settings → Import dashboard`).
+  - `router-telemetry.json` — latency, cost, and bandit reward metrics emitted from the router MCP.
+  - `rag-quality.json` — RAGAS faithfulness/precision drift and failing samples.
+- Import dashboards via the Langfuse UI (`Settings → Import dashboard`).
+- Runbooks for operators launch under `infra/langfuse/runbooks/`. See
+  `router-telemetry.md` for alerting thresholds and troubleshooting steps.
 
 ## Observability
 

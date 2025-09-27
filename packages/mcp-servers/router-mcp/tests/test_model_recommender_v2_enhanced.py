@@ -7,6 +7,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
+pytest.importorskip("aiosqlite")
+
 from aiosqlite import connect as aiosqlite_connect
 
 from router_mcp.model_persistence import ModelPerformanceStore
@@ -22,10 +25,10 @@ from router_mcp.model_scheduler import ModelDataScheduler
 class TestModelRecommenderV2:
     """Test enhanced Model Recommender V2 functionality."""
     
-    def test_feature_flag_disabled_by_default(self):
-        """Test that Model Recommender V2 is disabled by default."""
+    def test_feature_flag_enabled_by_default(self):
+        """Test that Model Recommender V2 is enabled by default."""
         with patch.dict(os.environ, {}, clear=True):
-            assert not is_model_recommender_v2_enabled()
+            assert is_model_recommender_v2_enabled()
     
     def test_feature_flag_enabled_when_set(self):
         """Test that Model Recommender V2 is enabled when flag is set."""

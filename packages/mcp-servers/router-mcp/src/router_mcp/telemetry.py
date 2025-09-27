@@ -70,6 +70,10 @@ class RoutingTelemetry:
     def add_emitter(self, emitter: Callable[[dict[str, Any]], None]) -> None:
         self.sink.add_emitter(emitter)
 
+    def emit(self, payload: dict[str, Any]) -> None:
+        """Emit a preconstructed metrics payload."""
+        self.sink.emit(payload)
+
 
 def console_emitter(payload: dict[str, Any]) -> None:
     """Default emitter writing metrics to logger."""

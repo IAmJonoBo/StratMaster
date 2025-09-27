@@ -20,6 +20,8 @@ from typing import Any
 
 import httpx
 
+from .telemetry import build_telemetry_from_env
+
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover
@@ -33,7 +35,7 @@ except ImportError:
 # Feature flag for Model Recommender V2
 def is_model_recommender_v2_enabled() -> bool:
     """Check if Model Recommender V2 is enabled via feature flag."""
-    return os.getenv("ENABLE_MODEL_RECOMMENDER_V2", "false").lower() == "true"
+    return os.getenv("ENABLE_MODEL_RECOMMENDER_V2", "true").lower() == "true"
 
 
 @dataclass 
@@ -165,6 +167,7 @@ class ModelRecommender:
         self.performance_cache: dict[str, ModelPerformance] = {}
         self.last_cache_update: datetime | None = None
         self.client = httpx.AsyncClient()
+        self.telemetry = build_telemetry_from_env()
         
         # Bandit selection per task type
         self.bandits: dict[str, UCBBanditSelector] = {}
@@ -253,13 +256,35 @@ class ModelRecommender:
         # Update bandit
         if task_type in self.bandits:
             self.bandits[task_type].update_reward(model_name, reward)
-            
+        
         # Log for observability
         logger.info(
             f"Recorded outcome for {model_name}/{task_type}: "
             f"success={success}, latency={latency_ms}ms, cost=${cost_usd:.4f}, "
             f"quality={quality_score:.3f}, reward={reward:.3f}"
         )
+
+        try:
+            bandit = self.bandits.get(task_type)
+            selection_count = None
+            if bandit and model_name in bandit.arms:
+                selection_count = bandit.arms[model_name].selection_count
+            self.telemetry.emit(
+                {
+                    "event": "model_recommender.outcome",
+                    "model": model_name,
+                    "task_type": task_type,
+                    "success": success,
+                    "latency_ms": round(latency_ms, 3),
+                    "cost_usd": round(cost_usd, 6),
+                    "quality_score": round(quality_score, 4),
+                    "reward": round(reward, 4),
+                    "bandit_selection_count": selection_count,
+                    "is_v2_enabled": is_model_recommender_v2_enabled(),
+                }
+            )
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("Failed to emit model recommender telemetry")
         
     async def recommend_model(
         self, 

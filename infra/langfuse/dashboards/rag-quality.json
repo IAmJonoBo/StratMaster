@@ -1,0 +1,55 @@
+{
+  "name": "RAG Quality & Drift",
+  "description": "Faithfulness, context metrics, and evaluation drift sourced from ragas evaluations.",
+  "version": 1,
+  "widgets": [
+    {
+      "title": "Faithfulness Trend",
+      "visualization": "timeseries",
+      "event": "ragas_quality_score",
+      "metric": {
+        "field": "faithfulness",
+        "aggregation": "avg"
+      },
+      "group_by": ["dataset"],
+      "filters": []
+    },
+    {
+      "title": "Context Precision / Recall",
+      "visualization": "timeseries",
+      "event": "ragas_quality_score",
+      "metric": {
+        "field": "context_precision",
+        "aggregation": "avg"
+      },
+      "secondary_metric": {
+        "field": "context_recall",
+        "aggregation": "avg"
+      },
+      "group_by": ["model_name"],
+      "filters": []
+    },
+    {
+      "title": "Quality Drift",
+      "visualization": "table",
+      "event": "ragas_quality_score",
+      "columns": [
+        { "field": "dataset", "title": "Dataset" },
+        { "field": "model_name", "title": "Model" },
+        { "field": "quality_score", "title": "Score" },
+        { "field": "passes_quality_gates", "title": "Gates" },
+        { "field": "evaluation_time", "title": "Evaluated" }
+      ],
+      "sort": { "field": "evaluation_time", "order": "desc" },
+      "filters": []
+    },
+    {
+      "title": "Failing Samples",
+      "visualization": "event_feed",
+      "event": "ragas_quality_score",
+      "filters": [
+        { "field": "passes_quality_gates", "operator": "=", "value": false }
+      ]
+    }
+  ]
+}

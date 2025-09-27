@@ -1,0 +1,55 @@
+{
+  "name": "Router Telemetry Overview",
+  "description": "Latency, cost, success rate, and bandit reward trends coming from router.telemetry events.",
+  "version": 1,
+  "widgets": [
+    {
+      "title": "Routing Latency (p95)",
+      "visualization": "timeseries",
+      "event": "router.telemetry",
+      "metric": {
+        "field": "latency_ms",
+        "aggregation": "p95"
+      },
+      "group_by": ["model"],
+      "filters": []
+    },
+    {
+      "title": "Cost Per Call",
+      "visualization": "timeseries",
+      "event": "router.telemetry",
+      "metric": {
+        "field": "cost_usd",
+        "aggregation": "avg"
+      },
+      "group_by": ["provider"],
+      "filters": []
+    },
+    {
+      "title": "Success Rate by Task",
+      "visualization": "bar",
+      "event": "router.telemetry",
+      "metric": {
+        "field": "status",
+        "aggregation": "success_rate"
+      },
+      "group_by": ["task_type", "tenant"],
+      "filters": []
+    },
+    {
+      "title": "Bandit Reward & Selection Count",
+      "visualization": "table",
+      "event": "model_recommender.outcome",
+      "columns": [
+        { "field": "model", "title": "Model" },
+        { "field": "task_type", "title": "Task" },
+        { "field": "reward", "title": "Reward" },
+        { "field": "bandit_selection_count", "title": "Selections" },
+        { "field": "latency_ms", "title": "Latency (ms)" },
+        { "field": "cost_usd", "title": "Cost (USD)" }
+      ],
+      "sort": { "field": "reward", "order": "desc" },
+      "filters": []
+    }
+  ]
+}
