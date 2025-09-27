@@ -140,3 +140,13 @@ IssueSuite/
 
 # Local wheel cache for offline installs
 wheels/
+
+# CI test artifacts
+.test-venv/
+.venv-test/
+ci-test-results.json
+test-artifacts/
+
+# Flake detection reports
+flaky_tests.json
+flaky_tests_report.json
