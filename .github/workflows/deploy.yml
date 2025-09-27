@@ -67,8 +67,52 @@ jobs:
           helm template helm/stratmaster-api -f ${{ steps.validate.outputs.values_file }} > /dev/null
           helm template helm/research-mcp -f ${{ steps.validate.outputs.values_file }} > /dev/null
 
-  deploy:
+  supply-chain-gate:
     needs: validate-deployment
+    runs-on: ubuntu-latest
+    name: supply-chain-verification
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0.15.3
+
+      - name: Generate SBOM
+        run: syft dir:. -o json > sbom.json
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          format: table
+          output: trivy-report.txt
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          scanners: vuln,secret,misconfig,license
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.4.0
+
+      - name: Sign SBOM
+        run: |
+          cosign generate-key-pair --output-key-prefix cosign-temp
+          cosign sign-blob --key cosign-temp.key --output-signature sbom.sig sbom.json
+          cosign verify-blob --key cosign-temp.pub --signature sbom.sig sbom.json
+
+      - name: Upload supply-chain artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-gate
+          path: |
+            sbom.json
+            sbom.sig
+            cosign-temp.pub
+            trivy-report.txt
+
+  deploy:
+    needs: [validate-deployment, supply-chain-gate]
     runs-on: ubuntu-latest
     environment: ${{ needs.validate-deployment.outputs.environment }}
     steps:
@@ -141,7 +185,7 @@ jobs:
           done
 
   notify:
-    needs: [validate-deployment, deploy]
+    needs: [validate-deployment, supply-chain-gate, deploy]
     runs-on: ubuntu-latest
     if: always()
     steps:

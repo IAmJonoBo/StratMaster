@@ -14,6 +14,7 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncGenerator
+import os
 
 import aiosqlite
 
@@ -26,7 +27,9 @@ class ModelPerformanceStore:
     """SQLite-based storage for model performance data."""
     
     def __init__(self, db_path: str = "data/model_performance.db"):
-        self.db_path = Path(db_path)
+        env_path = os.getenv("MODEL_PERFORMANCE_DB_PATH")
+        resolved = Path(env_path) if env_path else Path(db_path)
+        self.db_path = resolved
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         
     async def initialize_schema(self) -> None:

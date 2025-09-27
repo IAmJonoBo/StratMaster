@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "title": "StratMaster RAG Quality Gates",
+  "description": "Tracks RAGAS + TruLens metrics for the hybrid retrieval pipeline.",
+  "tags": ["rag", "quality-gates", "scratch-phase-2"],
+  "panels": [
+    {
+      "id": "faithfulness-trend",
+      "title": "Faithfulness (RAGAS)",
+      "type": "timeseries",
+      "query": {
+        "collection": "evaluation",
+        "metric": "metrics.faithfulness",
+        "filters": {
+          "experiment_name": "rag-regression",
+          "model_name": "*"
+        },
+        "aggregate": "avg",
+        "interval": "1h"
+      },
+      "thresholds": [
+        {"label": "quality-gate", "value": 0.75, "operator": ">="}
+      ]
+    },
+    {
+      "id": "context-precision",
+      "title": "Context Precision vs Recall",
+      "type": "dual-axis",
+      "query": {
+        "collection": "evaluation",
+        "metrics": [
+          {"field": "metrics.context_precision", "aggregate": "avg"},
+          {"field": "metrics.context_recall", "aggregate": "avg"}
+        ],
+        "filters": {
+          "experiment_name": "rag-regression"
+        },
+        "interval": "1h"
+      },
+      "thresholds": [
+        {"label": "precision-min", "value": 0.6, "operator": ">="},
+        {"label": "recall-min", "value": 0.6, "operator": ">="}
+      ]
+    },
+    {
+      "id": "trulens-support",
+      "title": "TruLens Groundedness",
+      "type": "bar",
+      "query": {
+        "collection": "evaluation",
+        "metric": "trulens_metrics.groundedness",
+        "filters": {
+          "experiment_name": "rag-regression"
+        },
+        "group_by": "model_name"
+      },
+      "thresholds": [
+        {"label": "groundedness", "value": 0.75, "operator": ">="}
+      ]
+    },
+    {
+      "id": "quality-gate-summary",
+      "title": "Quality Gate Failures",
+      "type": "table",
+      "query": {
+        "collection": "evaluation",
+        "fields": [
+          "model_name",
+          "evaluation_time",
+          "passes_quality_gates",
+          "failures"
+        ],
+        "filters": {
+          "evaluation_time": {"operator": ">", "value": "now()-7d"}
+        },
+        "limit": 50,
+        "order": {"field": "evaluation_time", "direction": "desc"}
+      }
+    }
+  ]
+}

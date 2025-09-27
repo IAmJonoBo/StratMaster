@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
+
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import JSONResponse
 
 from .config import load_config
+from .model_recommender import is_model_recommender_v2_enabled
+from .model_scheduler import ModelDataScheduler
 from .models import (
     AgentRouteRequest,
     AgentRouteResponse,
@@ -17,14 +21,48 @@ from .models import (
     RerankResponse,
 )
 from .service import RouterService
-from .model_recommender import is_model_recommender_v2_enabled
+
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
     config = load_config()
     service = RouterService(config)
+    scheduler: ModelDataScheduler | None = None
 
     app = FastAPI(title="Router MCP", version="0.1.0")
+
+    @app.on_event("startup")
+    async def _startup() -> None:
+        nonlocal scheduler
+        if not is_model_recommender_v2_enabled():
+            return
+
+        recommender = service.get_model_recommender()
+        if not recommender:
+            return
+
+        try:
+            await recommender.bootstrap_persistence()
+        except Exception as exc:  # pragma: no cover - defensive bootstrap guard
+            logger.warning("Failed to bootstrap model recommender persistence: %s", exc)
+
+        if recommender.store:
+            try:
+                scheduler = ModelDataScheduler(recommender, recommender.store)
+                await scheduler.start()
+            except RuntimeError as exc:  # pragma: no cover - APScheduler missing
+                logger.warning("Model data scheduler unavailable: %s", exc)
+                scheduler = None
+            except Exception as exc:  # pragma: no cover - defensive guard
+                logger.error("Failed to start model data scheduler: %s", exc)
+                scheduler = None
+
+    @app.on_event("shutdown")
+    async def _shutdown() -> None:
+        if scheduler:
+            await scheduler.stop()
+        await service.shutdown()
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
