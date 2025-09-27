@@ -176,7 +176,22 @@ class ModelRecommender:
         self.store = persistence_store
         if persistence_store and is_model_recommender_v2_enabled():
             logger.info("Model Recommender V2 enabled with persistent storage")
-            
+
+    async def bootstrap_persistence(self) -> None:
+        """Ensure persistent storage is ready before serving traffic."""
+        if not (self.store and is_model_recommender_v2_enabled()):
+            return
+
+        await self.store.initialize_schema()
+        await self._load_from_persistent_storage()
+
+    async def aclose(self) -> None:
+        """Close underlying async clients."""
+        try:
+            await self.client.aclose()
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("Failed to close model recommender client")
+
     def _get_or_create_bandit(self, task_type: str) -> UCBBanditSelector:
         """Get or create bandit selector for task type."""
         if task_type not in self.bandits:
@@ -229,13 +244,15 @@ class ModelRecommender:
         return primary_model, fallbacks
     
     async def record_outcome(
-        self, 
-        model_name: str, 
+        self,
+        model_name: str,
         task_type: str,
-        success: bool, 
-        latency_ms: float, 
+        success: bool,
+        latency_ms: float,
         cost_usd: float,
-        quality_score: float = 0.0
+        quality_score: float = 0.0,
+        tenant_id: str | None = None,
+        tokens_used: int | None = None,
     ) -> None:
         """Record outcome for bandit learning (multi-objective reward)."""
         # Multi-objective reward calculation as per SCRATCH.md
@@ -285,6 +302,19 @@ class ModelRecommender:
             )
         except Exception:  # pragma: no cover - defensive
             logger.exception("Failed to emit model recommender telemetry")
+
+        if self.store and is_model_recommender_v2_enabled():
+            cost_per_token = None
+            if tokens_used and tokens_used > 0:
+                cost_per_token = cost_usd / float(tokens_used)
+            await self.store.record_telemetry_event(
+                model_name=model_name,
+                tenant_id=tenant_id,
+                latency_ms=latency_ms,
+                success=success,
+                cost_per_token=cost_per_token,
+                task_type=task_type,
+            )
         
     async def recommend_model(
         self, 

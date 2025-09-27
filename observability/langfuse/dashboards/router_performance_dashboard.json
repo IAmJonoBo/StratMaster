@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "title": "Router MCP Telemetry",
+  "description": "Operational dashboard for model routing cost/latency telemetry.",
+  "tags": ["router", "telemetry", "scratch-phase-1"],
+  "panels": [
+    {
+      "id": "latency-distribution",
+      "title": "Latency (ms) by Model",
+      "type": "histogram",
+      "query": {
+        "collection": "router.telemetry",
+        "metric": "latency_ms",
+        "group_by": "model",
+        "filters": {
+          "timestamp": {"operator": ">", "value": "now()-24h"}
+        }
+      },
+      "thresholds": [
+        {"label": "p95-budget", "value": 1200, "operator": "<="}
+      ]
+    },
+    {
+      "id": "success-rate",
+      "title": "Success Rate by Provider",
+      "type": "stacked-bar",
+      "query": {
+        "collection": "router.telemetry",
+        "metrics": [
+          {"field": "success", "aggregate": "ratio"}
+        ],
+        "group_by": "provider",
+        "filters": {
+          "timestamp": {"operator": ">", "value": "now()-7d"}
+        }
+      },
+      "thresholds": [
+        {"label": "minimum-success", "value": 0.98, "operator": ">="}
+      ]
+    },
+    {
+      "id": "cost-trend",
+      "title": "Cost per 1K Tokens",
+      "type": "timeseries",
+      "query": {
+        "collection": "router.telemetry",
+        "metric": "cost_usd",
+        "filters": {
+          "task_type": "reasoning"
+        },
+        "aggregate": "avg",
+        "interval": "6h"
+      }
+    },
+    {
+      "id": "escalation-tracker",
+      "title": "Cascade Escalation Rate",
+      "type": "stat",
+      "query": {
+        "collection": "router.telemetry",
+        "metric": "metadata.escalated",
+        "filters": {
+          "timestamp": {"operator": ">", "value": "now()-24h"},
+          "task_type": "reasoning"
+        },
+        "aggregate": "avg"
+      },
+      "thresholds": [
+        {"label": "escalation-cap", "value": 0.2, "operator": "<="}
+      ]
+    }
+  ]
+}

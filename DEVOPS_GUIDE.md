@@ -124,6 +124,25 @@ python scripts/system_health_monitor.py report --format json --output health_rep
 python scripts/system_health_monitor.py report --format text
 ```
 
+### k6 Load Testing Baseline
+
+Phase 5 of SCRATCH.md calls for continuous API load testing. The repository now
+includes a reusable smoke profile at `bench/k6/api_smoke.js` that exercises the
+model router, hybrid retrieval, and debate endpoints while tracking RED metrics.
+
+```bash
+# Basic 1 minute smoke against local stack
+API_BASE=http://localhost:8000 k6 run bench/k6/api_smoke.js
+
+# Heavier profile with custom thresholds and authentication
+VUS=25 DURATION=5m API_BASE=https://staging.stratmaster.ai \
+  API_TOKEN=$(cat ~/.config/stratmaster/token) \
+  k6 run bench/k6/api_smoke.js
+```
+
+The script emits a `k6-smoke-summary.json` artifact suitable for trend analysis
+or Grafana ingestion.
+
 **Health Check Categories:**
 - **Service Health**: HTTP endpoint monitoring with timeout detection
 - **Dependency Freshness**: Update availability and security vulnerability scanning
@@ -210,6 +229,70 @@ The enhanced CI/CD workflow (`enhanced-ci-cd.yml`) provides:
     make test  # Validate after updates
 ```
 
+Supplement the upgrade workflow with the environment diff helper to ensure the
+runtime matches production snapshots before deploys:
+
+```bash
+python scripts/dependency_sync.py status --json
+python scripts/dependency_sync.py sync   # exits non-zero when drift remains
+```
+
+### RAG Quality Evaluation (RAGAS + TruLens)
+
+Phase 2.3 requires dual evaluation of retrieval responses using both RAGAS and
+TruLens metrics. The repository ships a golden regression dataset at
+`data/evals/golden_rag_samples.json` alongside the combined evaluator exposed via
+`stratmaster_evals`.
+
+```bash
+# Run the TruLens-backed heuristic on the golden dataset
+python - <<'PY'
+from stratmaster_evals.models import EvaluationRequest
+from stratmaster_evals.trulens import TruLensRAGEvaluator
+import json
+
+payload = json.loads(open("data/evals/golden_rag_samples.json").read())
+request = EvaluationRequest(**payload, experiment_name="golden", model_name="router/test")
+summary = TruLensRAGEvaluator().evaluate(request)
+print(summary.metrics.as_dict())
+print("passes_quality_gates=", summary.passes_quality_gates)
+PY
+```
+
+The `/eval/ragas` endpoint now emits both RAGAS and TruLens metrics to Langfuse,
+keeping SCRATCH quality gates visible inside Grafana dashboards and deployment
+reviews.
+
+#### Langfuse dashboards
+
+Import-ready Langfuse dashboards and runbooks live under
+`observability/langfuse/`. Use them to satisfy the "publish dashboards + runbook"
+gap from SCRATCH.md Phase 0:
+
+```bash
+langfuse dashboards import observability/langfuse/dashboards/rag_quality_dashboard.json
+langfuse dashboards import observability/langfuse/dashboards/router_performance_dashboard.json
+```
+
+The associated runbooks (`observability/langfuse/runbooks/*.md`) list the SLO
+thresholds, on-call actions, and the commands required to collect evidence when
+quality gates fail. Reference `docs/runbooks/langfuse.md` for a consolidated
+index and operational checklist.
+
+#### Deployment supply-chain gate
+
+The deployment workflow now enforces the SCRATCH Phase 6 requirement by running
+Syft, Trivy, and cosign signing as a blocking gate before any Helm release. The
+`deploy.yml` workflow invokes the `supply-chain-gate` job which:
+
+1. Generates an SBOM (`sbom.json`) using Syft
+2. Performs a full filesystem vulnerability scan with Trivy (fails on HIGH/CRITICAL)
+3. Signs the SBOM with cosign and verifies the signature before proceeding
+
+The job uploads the signed SBOM artifacts so the release review can link to
+auditable evidence. If the gate fails, the deploy job is skipped and Slack
+notifications surface the failure.
+
 ### Environment Variables
 
 Configure the system behavior using environment variables:
@@ -225,6 +308,9 @@ export PYTHONNOUSERSITE=1
 # Health monitoring intervals
 export HEALTH_CHECK_INTERVAL=300
 export AUTO_HEAL_ENABLED=true
+
+# Override Model Recommender V2 persistence path (defaults to data/model_performance.db)
+export MODEL_PERFORMANCE_DB_PATH=/var/lib/stratmaster/model-metrics.db
 ```
 
 ## 📊 Monitoring and Alerting

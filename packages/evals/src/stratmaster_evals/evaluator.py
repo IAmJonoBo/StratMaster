@@ -13,7 +13,14 @@ try:
     LANGFUSE_AVAILABLE = True
 except ImportError:
     LANGFUSE_AVAILABLE = False
-    observe = lambda func: func  # No-op decorator
+
+    def observe(*_args, **_kwargs):  # type: ignore[override]
+        """Fallback decorator when Langfuse is unavailable."""
+
+        def decorator(func):
+            return func
+
+        return decorator
 
 try:
     from ragas import evaluate
@@ -28,7 +35,8 @@ try:
 except ImportError:
     RAGAS_AVAILABLE = False
 
-from .models import EvaluationRequest, EvaluationResult, RAGASMetrics
+from .models import EvaluationRequest, EvaluationResult, RAGASMetrics, TruLensMetrics
+from .trulens import TruLensRAGEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +70,9 @@ class RAGASEvaluator:
                 secret_key=langfuse_secret_key or os.getenv("LANGFUSE_SECRET_KEY"),
                 host=langfuse_host or os.getenv("LANGFUSE_HOST", "http://langfuse:3000"),
             )
+
+        # TruLens-inspired evaluator (graceful fallback when dependency missing)
+        self.trulens_evaluator = TruLensRAGEvaluator()
     
     @observe()
     async def evaluate_retrieval(
@@ -156,8 +167,10 @@ class RAGASEvaluator:
                         "passes_quality_gates": passes_gates,
                         "failures": failures,
                     }
-                )
-            
+            )
+
+            trulens_summary = self.trulens_evaluator.evaluate(request)
+
             return EvaluationResult(
                 experiment_id=experiment_id or "mock_experiment",
                 experiment_name=request.experiment_name,
@@ -167,6 +180,9 @@ class RAGASEvaluator:
                 quality_score=quality_score,
                 evaluation_time=datetime.now(),
                 sample_count=len(request.questions),
+                trulens_metrics=trulens_summary.metrics,
+                trulens_passes_quality_gates=trulens_summary.passes_quality_gates,
+                trulens_failures=trulens_summary.failures,
                 individual_scores={
                     "faithfulness": result.get("faithfulness", []),
                     "context_precision": result.get("context_precision", []),
@@ -178,9 +194,10 @@ class RAGASEvaluator:
                     "ragas_version": "0.2.0+",
                     "dataset_size": len(request.questions),
                     "evaluation_duration": "calculated_in_production",
+                    "trulens": trulens_summary.to_metadata(),
                 }
             )
-            
+
         except Exception as e:
             logger.error(f"RAGAS evaluation failed: {e}")
             return self._mock_evaluation_result(request, error=str(e))
@@ -203,6 +220,14 @@ class RAGASEvaluator:
         if error:
             metadata["error"] = error
         
+        mock_trulens = TruLensMetrics(
+            groundedness=0.82,
+            answer_relevance=0.78,
+            context_relevance=0.74,
+            support_coverage=0.80,
+            analysis_latency_ms=5.0,
+        )
+
         return EvaluationResult(
             experiment_id="mock_experiment",
             experiment_name=request.experiment_name,
@@ -212,9 +237,20 @@ class RAGASEvaluator:
             quality_score=mock_metrics.quality_score(),
             evaluation_time=datetime.now(),
             sample_count=len(request.questions),
+            trulens_metrics=mock_trulens,
+            trulens_passes_quality_gates=mock_trulens.passes_quality_gates(),
             individual_scores={},
             failures=[],
-            metadata=metadata,
+            trulens_failures=[],
+            metadata={
+                **metadata,
+                "trulens": {
+                    "backend": "mock",
+                    "metrics": mock_trulens.as_dict(),
+                    "passes_quality_gates": True,
+                    "failures": [],
+                },
+            },
         )
     
     async def evaluate_model_cascade(

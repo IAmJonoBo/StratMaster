@@ -25,6 +25,7 @@ from .models import (
     RerankResult,
 )
 from .providers import ProviderAdapter
+from .model_persistence import ModelPerformanceStore
 from .model_recommender import ModelRecommender, is_model_recommender_v2_enabled
 from .telemetry import build_telemetry_from_env
 
@@ -40,7 +41,8 @@ class RouterService:
         self.model_recommender = None
         if is_model_recommender_v2_enabled():
             try:
-                self.model_recommender = ModelRecommender()
+                store = ModelPerformanceStore()
+                self.model_recommender = ModelRecommender(persistence_store=store)
             except Exception as e:
                 # Log but don't fail startup if recommender fails to initialize
                 import logging
@@ -87,12 +89,15 @@ class RouterService:
             # TODO: pull real provider cost telemetry once gateway exposes it
             cost = float(result.get("cost_usd", 0.0))
             latency = float(result.get("latency_ms", 0.0)) if result.get("latency_ms") else 0.0
+            tokens_used = int(tokens) if tokens else None
             await self.model_recommender.record_outcome(
                 model_name=response.model,
                 task_type=payload.task,
                 success=True,
                 latency_ms=latency,
                 cost_usd=cost,
+                tenant_id=payload.tenant_id,
+                tokens_used=tokens_used,
             )
         return response
 
@@ -131,6 +136,7 @@ class RouterService:
                         success=True,
                         latency_ms=latency_ms,
                         cost_usd=cost,
+                        tenant_id=payload.tenant_id,
                     )
                 )
             except RuntimeError:  # pragma: no cover - fallback when no loop
@@ -141,6 +147,7 @@ class RouterService:
                         success=True,
                         latency_ms=latency_ms,
                         cost_usd=cost,
+                        tenant_id=payload.tenant_id,
                     )
                 )
         return response
@@ -177,6 +184,7 @@ class RouterService:
                         success=True,
                         latency_ms=latency_ms,
                         cost_usd=cost,
+                        tenant_id=payload.tenant_id,
                     )
                 )
             except RuntimeError:  # pragma: no cover
@@ -187,9 +195,15 @@ class RouterService:
                         success=True,
                         latency_ms=latency_ms,
                         cost_usd=cost,
+                        tenant_id=payload.tenant_id,
                     )
                 )
         return response
+
+    async def shutdown(self) -> None:
+        """Release any async resources held by the service."""
+        if self.model_recommender:
+            await self.model_recommender.aclose()
 
     # ------------------------------------------------------------------
     # Policy helpers
