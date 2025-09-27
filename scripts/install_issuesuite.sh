@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
 # Configurable inputs
 ISSUESUITE_VERSION_DEFAULT="0.1.10"
 ISSUESUITE_VERSION="${ISSUESUITE_VERSION:-$ISSUESUITE_VERSION_DEFAULT}"
@@ -64,15 +60,6 @@ fi
 
 # 4) Source clone fallback
 if [[ -z "${INSTALLED_FROM:-}" ]]; then
-<<<<<<< HEAD
-=======
-echo "Installing IssueSuite (PyPI preferred)"
-if .venv/bin/pip install --disable-pip-version-check "issuesuite>=0.1.4" >/dev/null 2>&1; then
-  echo "IssueSuite installed from PyPI"
-else
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
-=======
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
   echo "PyPI install failed; attempting source clone"
   rm -rf .issuesuite_tmp
   COPYFILE_DISABLE=1 git clone --depth 1 https://github.com/IAmJonoBo/IssueSuite .issuesuite_tmp
@@ -82,28 +69,14 @@ else
   echo "Editable install fallback (to avoid AppleDouble wheel duplication)"
   if (cd .issuesuite_tmp && COPYFILE_DISABLE=1 pip install -e .); then
     echo "IssueSuite installed (editable) from source clone"
-<<<<<<< HEAD
-<<<<<<< HEAD
     INSTALLED_FROM="git-editable"
-=======
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
-=======
-    INSTALLED_FROM="git-editable"
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
   else
     echo "Editable install failed, attempting direct path injection"
     SITE=$(.venv/bin/python -c 'import site,sys; print(site.getsitepackages()[0])')
     mkdir -p "$SITE/issuesuite"
     rsync -a --delete --exclude '__pycache__' .issuesuite_tmp/issuesuite/ "$SITE/issuesuite/"
     echo "[WARNING] Installed by direct file copy; CLI entrypoint may be missing. Use: python -m issuesuite.cli"
-<<<<<<< HEAD
-<<<<<<< HEAD
     INSTALLED_FROM="direct-copy"
-=======
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
-=======
-    INSTALLED_FROM="direct-copy"
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
   fi
   # Ensure CLI script present; fallback shim
   if ! command -v issuesuite >/dev/null 2>&1; then
@@ -115,15 +88,7 @@ fi
 
 # Verification
 if .venv/bin/python -c 'import issuesuite,sys; print(getattr(issuesuite,"__version__","unknown"))' >/dev/null 2>&1; then
-<<<<<<< HEAD
-<<<<<<< HEAD
   echo "✅ IssueSuite import OK (${INSTALLED_FROM:-unknown-source})"
-=======
-  echo "IssueSuite import OK"
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
-=======
-  echo "✅ IssueSuite import OK (${INSTALLED_FROM:-unknown-source})"
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
 else
   echo "IssueSuite import FAILED" >&2
   exit 1
