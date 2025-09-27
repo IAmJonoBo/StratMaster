@@ -7,6 +7,7 @@ implementing the Sprint 0 requirement for visible traces.
 
 import logging
 import os
+import re
 import uuid
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -251,7 +252,7 @@ class TracingManager:
         self._privacy_default_workspace = default_workspace
 
         if privacy_manager is None:
-            self.set_metadata_filter(None)
+            self.set_metadata_filter(self._basic_metadata_scrub)
             return
 
         def _filter(payload: dict[str, Any]) -> dict[str, Any]:
@@ -274,7 +275,7 @@ class TracingManager:
     # Internal ---------------------------------------------------------
     def _sanitize_metadata(self, payload: dict[str, Any]) -> dict[str, Any]:
         if not self._privacy_manager:
-            return payload
+            return self._basic_metadata_scrub(payload)
 
         workspace_id = self._privacy_context.get()
         workspace = workspace_id or self._privacy_default_workspace
@@ -303,6 +304,30 @@ class TracingManager:
             sanitized[key] = _scrub(value)
 
         return sanitized
+
+    # ------------------------------------------------------------------
+    # Basic scrubbing fallback (used when Presidio not available)
+    # ------------------------------------------------------------------
+    def _basic_metadata_scrub(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Apply lightweight regex-based scrubbing for common PII."""
+
+        email_re = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+        phone_re = re.compile(r"(?:(?:\+?\d{1,3})?[-. (]*\d{3}[-. )]*\d{3}[-. ]*\d{4})")
+        cc_re = re.compile(r"\b(?:\d[ -]*?){13,16}\b")
+
+        def _scrub(value: Any) -> Any:
+            if isinstance(value, str):
+                scrubbed = email_re.sub("[REDACTED_EMAIL]", value)
+                scrubbed = phone_re.sub("[REDACTED_PHONE]", scrubbed)
+                scrubbed = cc_re.sub("[REDACTED_CARD]", scrubbed)
+                return scrubbed
+            if isinstance(value, dict):
+                return {k: _scrub(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_scrub(item) for item in value]
+            return value
+
+        return {key: _scrub(val) for key, val in (payload or {}).items()}
 
 
 def configure_tracing(

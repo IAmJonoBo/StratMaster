@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import time
 from json import JSONDecodeError
 from typing import Any
 
@@ -83,6 +84,7 @@ class RouterService:
             model=result.get("model", route.model),
         )
         if self.model_recommender:
+            # TODO: pull real provider cost telemetry once gateway exposes it
             cost = float(result.get("cost_usd", 0.0))
             latency = float(result.get("latency_ms", 0.0)) if result.get("latency_ms") else 0.0
             await self.model_recommender.record_outcome(
@@ -105,16 +107,43 @@ class RouterService:
             payload.model or route.model or self.config.default_provider.embedding_model
         )
         adapter = self._adapter_for(route.provider, embedding_model=model_name)
+        start = time.perf_counter()
         result = adapter.embed(payload.input, model=model_name)
+        latency_ms = (time.perf_counter() - start) * 1000
         vectors = [
             EmbeddingVector(index=idx, vector=vec)
             for idx, vec in enumerate(result["embeddings"])
         ]
-        return EmbeddingResponse(
+        response = EmbeddingResponse(
             embeddings=vectors,
             provider=result.get("provider", route.provider),
             model=result.get("model", model_name),
         )
+        if self.model_recommender:
+            # TODO: pull real provider cost telemetry once gateway exposes it
+            cost = float(result.get("cost_usd", 0.0))
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self.model_recommender.record_outcome(
+                        model_name=response.model,
+                        task_type=payload.task,
+                        success=True,
+                        latency_ms=latency_ms,
+                        cost_usd=cost,
+                    )
+                )
+            except RuntimeError:  # pragma: no cover - fallback when no loop
+                asyncio.run(
+                    self.model_recommender.record_outcome(
+                        model_name=response.model,
+                        task_type=payload.task,
+                        success=True,
+                        latency_ms=latency_ms,
+                        cost_usd=cost,
+                    )
+                )
+        return response
 
     def rerank(self, payload: RerankRequest) -> RerankResponse:
         _tenant_policy, task_policy, route = self._select_route(
@@ -125,16 +154,42 @@ class RouterService:
         self._validate_rerank(task_policy, payload)
         docs = [{"id": item.id, "text": item.text} for item in payload.documents]
         adapter = self._adapter_for(route.provider, rerank_model=route.model)
+        start = time.perf_counter()
         result = adapter.rerank(payload.query, docs, payload.top_k, model=route.model)
+        latency_ms = (time.perf_counter() - start) * 1000
         ranked = [
             RerankResult(id=item["id"], score=float(item["score"]), text=item["text"])
             for item in result["results"]
         ]
-        return RerankResponse(
+        response = RerankResponse(
             results=ranked[: payload.top_k],
             provider=result.get("provider", route.provider),
             model=result.get("model", route.model),
         )
+        if self.model_recommender:
+            cost = float(result.get("cost_usd", 0.0))
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self.model_recommender.record_outcome(
+                        model_name=response.model,
+                        task_type=payload.task,
+                        success=True,
+                        latency_ms=latency_ms,
+                        cost_usd=cost,
+                    )
+                )
+            except RuntimeError:  # pragma: no cover
+                asyncio.run(
+                    self.model_recommender.record_outcome(
+                        model_name=response.model,
+                        task_type=payload.task,
+                        success=True,
+                        latency_ms=latency_ms,
+                        cost_usd=cost,
+                    )
+                )
+        return response
 
     # ------------------------------------------------------------------
     # Policy helpers
