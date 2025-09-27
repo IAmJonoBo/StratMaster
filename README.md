@@ -6,15 +6,11 @@
 
 **StratMaster** is an AI-powered Brand Strategy platform that combines evidence-grounded research, multi-agent debate, and constitutional AI to deliver reliable strategic recommendations. Built as a Python monorepo with FastAPI, multiple MCP servers, and comprehensive backing services.
 
-> 🎉 **99%+ Complete**: All core implementations substantially complete with enterprise features and frontier-grade testing. See **[📊 Complete Implementation Status](Upgrade.md)** and **[🚀 Implementation Summary](IMPLEMENTATION_SUMMARY.md)** for verified details.
-
 ## 📖 Documentation
 
 **Quick Start**: Jump to [Quick Start](#quick-start) for immediate setup
 
 **Developer Guide**: [🔧 Developer Quick Reference](DEVELOPER_GUIDE.md) - Commands, endpoints, and troubleshooting
-
-**Implementation Status**: [🚀 Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Complete progress and next steps
 
 **Comprehensive Documentation**: [📚 Full Documentation](docs/) - Complete rebuilt documentation
 
@@ -47,14 +43,9 @@
 
 **Additional Documentation**:
 
-- **[📊 Implementation Status & Roadmap](Upgrade.md)** - **SINGLE SOURCE OF TRUTH** for current status and future plans
-- **[📋 Engineering Blueprint](PROJECT.md)** - Complete technical specification
 - **[🤝 Contributing](CONTRIBUTING.md)** - How to contribute to the project
 - **[🛡️ Security Policy](SECURITY.md)** - Vulnerability reporting
-- **[📊 Project Changelog](docs/changelog.md)** - Version history and updates
-- **[🔍 Frontier Gap Analysis](GAP_ANALYSIS.md)** - Evidence-backed assessment of delivery, reliability, performance, and security gaps
-- **[🛠️ Frontier Implementation Plan](IMPLEMENTATION_PLAN.md)** - Sequenced backlog aligning open issues with the audit
-- **[📈 Operational Diagrams](docs/diagrams/)** - Mermaid diagrams for request flow, data lineage, error handling, and CI/CD
+- **[📊 Project Changelog](CHANGELOG.md)** - Version history and updates
 
 ## Key Features
 
