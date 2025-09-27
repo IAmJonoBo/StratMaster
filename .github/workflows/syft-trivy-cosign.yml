@@ -1,0 +1,76 @@
+name: supply-chain-hardening
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - '**/pyproject.toml'
+      - '**/requirements*.txt'
+      - '.github/workflows/syft-trivy-cosign.yml'
+      - 'Dockerfile*'
+      - '**/Dockerfile*'
+      - 'configs/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+  packages: read
+
+jobs:
+  sbom_scan_and_sign:
+    name: SBOM + Trivy + cosign
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0.15.3
+
+      - name: Generate SBOM (JSON)
+        run: |
+          syft dir:. -o json > sbom.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stratmaster-sbom
+          path: sbom.json
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          format: table
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          scanners: vuln,secret,misconfig,license
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.4.0
+
+      - name: Generate temporary cosign key pair
+        run: |
+          cosign generate-key-pair --output-key-prefix cosign-temp
+
+      - name: Sign SBOM artifact with cosign
+        run: |
+          cosign sign-blob --key cosign-temp.key --output-signature sbom.sig sbom.json
+
+      - name: Verify SBOM signature
+        run: |
+          cosign verify-blob --key cosign-temp.pub --signature sbom.sig sbom.json
+
+      - name: Upload cosign artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-signature
+          path: |
+            cosign-temp.pub
+            sbom.sig

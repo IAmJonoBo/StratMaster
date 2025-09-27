@@ -7,8 +7,14 @@ import re
 from enum import Enum
 from typing import Any
 
-from presidio_analyzer import AnalyzerEngine
-from presidio_anonymizer import AnonymizerEngine
+try:  # pragma: no cover - optional dependency gate
+    from presidio_analyzer import AnalyzerEngine
+    from presidio_anonymizer import AnonymizerEngine
+    PRESIDIO_AVAILABLE = True
+except Exception:  # pragma: no cover - allow running without Presidio
+    AnalyzerEngine = None  # type: ignore
+    AnonymizerEngine = None  # type: ignore
+    PRESIDIO_AVAILABLE = False
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -88,9 +94,15 @@ class PIIRedactor:
 
     def __init__(self):
         """Initialize Presidio analyzer and anonymizer engines."""
+        if not PRESIDIO_AVAILABLE:
+            logger.warning("Presidio libraries not installed; PII redaction disabled")
+            self.analyzer = None
+            self.anonymizer = None
+            return
+
         try:
-            self.analyzer = AnalyzerEngine()
-            self.anonymizer = AnonymizerEngine()
+            self.analyzer = AnalyzerEngine()  # type: ignore[call-arg]
+            self.anonymizer = AnonymizerEngine()  # type: ignore[call-arg]
             logger.info("Initialized Presidio PII redaction engines")
         except Exception as e:
             logger.error(f"Failed to initialize Presidio engines: {e}")

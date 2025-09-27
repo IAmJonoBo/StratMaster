@@ -11,6 +11,7 @@ Implements conflict-free collaborative editing with:
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -34,6 +35,15 @@ except Exception:
         ws_serve = None  # type: ignore[assignment]
         ws_connect = None  # type: ignore[assignment]
         ConnectionClosed = Exception  # type: ignore[assignment]
+
+try:  # pragma: no cover - optional dependency
+    from y_py import YDoc, apply_update, encode_state_as_update
+    YPY_AVAILABLE = True
+except Exception:  # pragma: no cover - fall back when y-py not installed
+    YDoc = None  # type: ignore
+    apply_update = None  # type: ignore
+    encode_state_as_update = None  # type: ignore
+    YPY_AVAILABLE = False
 
 try:
     import redis.asyncio as redis
@@ -86,6 +96,8 @@ class YjsCollaborationServer:
         self.documents: dict[str, dict[str, Any]] = {}
         self.document_subscribers: dict[str, set[Any]] = {}
         self.user_presence: dict[str, dict[str, UserPresence]] = {}  # doc_id -> user_id -> presence
+        # Yjs document store (CRDT) per doc_id when y-py is available
+        self.ydocs: dict[str, Any] = {}
 
         # Redis client for persistence
         self.redis_client = None
@@ -121,6 +133,130 @@ class YjsCollaborationServer:
         ):
             logger.info(f"✅ Collaboration server running on ws://{self.host}:{self.port}")
             await asyncio.Future()  # Run forever
+
+    # ------------------------------------------------------------------
+    # Yjs helpers
+    # ------------------------------------------------------------------
+    def _get_or_create_ydoc(self, doc_id: str) -> Any | None:
+        """Return a YDoc for the document when y-py is available."""
+        if not YPY_AVAILABLE:
+            return None
+        if doc_id not in self.ydocs:
+            self.ydocs[doc_id] = YDoc()
+        return self.ydocs[doc_id]
+
+    def _sync_ydoc_from_text(self, doc_id: str, text: str) -> None:
+        """Ensure the YDoc content matches the provided text."""
+        if not YPY_AVAILABLE:
+            return
+        doc = self._get_or_create_ydoc(doc_id)
+        if doc is None:
+            return
+        with doc.begin_transaction() as txn:
+            ytext = doc.get_text("content")
+            length = ytext.length(txn)
+            if length:
+                ytext.delete_range(txn, 0, length)
+            if text:
+                ytext.insert(txn, 0, text)
+
+    def _extract_text_from_ydoc(self, doc_id: str) -> str:
+        """Read the current document text from the YDoc."""
+        if not YPY_AVAILABLE:
+            return self.documents.get(doc_id, {}).get("content", "")
+        doc = self._get_or_create_ydoc(doc_id)
+        if doc is None:
+            return self.documents.get(doc_id, {}).get("content", "")
+        with doc.begin_transaction() as txn:
+            ytext = doc.get_text("content")
+            return ytext.to_string(txn)
+
+    def _encode_full_update(self, doc_id: str) -> str | None:
+        """Encode the current YDoc state as a base64 update for broadcasting."""
+        if not YPY_AVAILABLE:
+            return None
+        doc = self._get_or_create_ydoc(doc_id)
+        if doc is None:
+            return None
+        update_bytes = encode_state_as_update(doc, b"")
+        return base64.b64encode(update_bytes).decode("ascii")
+
+    def _apply_operation_to_ydoc(self, doc_id: str, operation: dict[str, Any]) -> None:
+        """Apply a high-level operation (insert/delete) to the YDoc text."""
+        if not YPY_AVAILABLE:
+            return
+        doc = self._get_or_create_ydoc(doc_id)
+        if doc is None:
+            return
+
+        op_type = operation.get("type")
+        if op_type not in {"insert", "delete"}:
+            return
+
+        position = int(operation.get("position", 0))
+        if position < 0:
+            position = 0
+
+        with doc.begin_transaction() as txn:
+            ytext = doc.get_text("content")
+            text_length = ytext.length(txn)
+            if position > text_length:
+                position = text_length
+
+            if op_type == "insert":
+                text = operation.get("text", "")
+                if text:
+                    ytext.insert(txn, position, text)
+            elif op_type == "delete":
+                length = int(operation.get("length", 0))
+                if length > 0:
+                    length = min(length, text_length - position)
+                    if length > 0:
+                        ytext.delete_range(txn, position, length)
+
+    async def _apply_y_update(
+        self,
+        doc_id: str,
+        update_base64: str,
+        user_id: str,
+        timestamp: float,
+    ) -> None:
+        """Apply a base64-encoded Yjs update to the stored document."""
+        if not YPY_AVAILABLE:
+            return
+        try:
+            update_bytes = base64.b64decode(update_base64)
+        except Exception:
+            logger.warning("Invalid Yjs update payload; falling back to no-op")
+            return
+
+        doc = self._get_or_create_ydoc(doc_id)
+        if doc is None:
+            return
+
+        apply_update(doc, update_bytes)
+
+        # Update in-memory metadata for compatibility with existing API/tests
+        state = self.documents.get(doc_id)
+        if not state:
+            state = {
+                "content": "",
+                "vector_clock": {},
+                "operations": [],
+                "version": 0,
+            }
+            self.documents[doc_id] = state
+
+        state["vector_clock"][user_id] = state["vector_clock"].get(user_id, 0) + 1
+        state["version"] = state.get("version", 0) + 1
+        state["content"] = self._extract_text_from_ydoc(doc_id)
+        state.setdefault("operations", []).append({
+            "type": "y_update",
+            "user_id": user_id,
+            "timestamp": timestamp,
+        })
+
+        await self.save_document_state(doc_id, state)
 
     async def handle_connection(self, websocket: Any, path: str):
         """Handle new WebSocket connection for collaborative editing."""
@@ -211,12 +347,14 @@ class YjsCollaborationServer:
 
         # Load document state
         doc_state = await self.load_document_state(doc_id)
+        y_update_base64 = self._encode_full_update(doc_id)
 
         return {
             "type": "document_state",
             "doc_id": doc_id,
             "state": doc_state,
-            "presence": list(self.user_presence.get(doc_id, {}).values())
+            "presence": list(self.user_presence.get(doc_id, {}).values()),
+            "y_update_base64": y_update_base64,
         }
 
     async def handle_document_update(
@@ -228,9 +366,13 @@ class YjsCollaborationServer:
         doc_id = data.get("doc_id")
         user_id = data.get("user_id", "anonymous")
         operations = data.get("operations", [])
+        y_update_base64 = data.get("y_update_base64")
 
-        if not doc_id or not operations:
+        if not doc_id:
             return {"type": "error", "message": "doc_id and operations required"}
+
+        if not operations and not y_update_base64:
+            return {"type": "error", "message": "operations or y_update_base64 required"}
 
         # Create update object
         update = DocumentUpdate(
@@ -241,8 +383,11 @@ class YjsCollaborationServer:
             timestamp=time.time()
         )
 
-        # Apply operations (simplified CRDT)
-        await self.apply_document_update(update)
+        # Apply operations via Yjs when possible, otherwise fall back to legacy handler
+        if y_update_base64 and YPY_AVAILABLE:
+            await self._apply_y_update(doc_id, y_update_base64, user_id, update.timestamp)
+        else:
+            await self.apply_document_update(update)
 
         # Broadcast to all subscribers except sender
         await self.broadcast_update(websocket, doc_id, {
@@ -250,7 +395,8 @@ class YjsCollaborationServer:
             "doc_id": doc_id,
             "user_id": user_id,
             "operations": operations,
-            "timestamp": update.timestamp
+            "timestamp": update.timestamp,
+            "y_update_base64": y_update_base64 or self._encode_full_update(doc_id),
         })
 
         return None  # No direct response needed
@@ -313,45 +459,59 @@ class YjsCollaborationServer:
     async def apply_document_update(self, update: DocumentUpdate):
         """Apply CRDT operations to document state."""
         doc_id = update.doc_id
+        state = self.documents.setdefault(
+            doc_id,
+            {"content": "", "vector_clock": {}, "operations": [], "version": 0},
+        )
 
-        # Initialize document if it doesn't exist
-        if doc_id not in self.documents:
-            self.documents[doc_id] = {
-                "content": "",
-                "vector_clock": {},
-                "operations": []
-            }
-
-        doc = self.documents[doc_id]
-        # Ensure required keys exist
-        doc.setdefault("vector_clock", {})
-        doc.setdefault("operations", [])
-
-        # Update vector clock
-        for user_id, clock in update.vector_clock.items():
-            doc["vector_clock"][user_id] = max(
-                doc["vector_clock"].get(user_id, 0),
-                clock
-            )
-
-        # Apply operations (simplified - real implementation would use Yjs)
+        # Apply high-level operations to Yjs document when available
         for op in update.operations:
-            doc["operations"].append({
-                "user_id": update.user_id,
-                "operation": op,
-                "timestamp": update.timestamp
-            })
+            self._apply_operation_to_ydoc(doc_id, op)
 
-        # Persist to Redis if available
-        if self.redis_client:
-            try:
-                await self.redis_client.set(
-                    f"doc:{doc_id}",
-                    json.dumps(doc),
-                    ex=3600 * 24  # Expire after 24 hours
-                )
-            except Exception as e:
-                logger.warning(f"Failed to persist document to Redis: {e}")
+        # Update vector clock metadata
+        for user_id, clock in update.vector_clock.items():
+            state["vector_clock"][user_id] = max(
+                state["vector_clock"].get(user_id, 0),
+                clock,
+            )
+        state["vector_clock"][update.user_id] = (
+            state["vector_clock"].get(update.user_id, 0) + 1
+        )
+
+        # Persist recent operations for audit/debug (trim to avoid unbounded growth)
+        operation_record = {
+            "user_id": update.user_id,
+            "operation": update.operations,
+            "timestamp": update.timestamp,
+        }
+        state.setdefault("operations", []).append(operation_record)
+        if len(state["operations"]) > 100:
+            state["operations"] = state["operations"][-100:]
+
+        # Refresh materialised content + version counter
+        if YPY_AVAILABLE:
+            state["content"] = self._extract_text_from_ydoc(doc_id)
+        else:
+            # Fallback to naive application if Yjs unavailable
+            for op in update.operations:
+                if op.get("type") == "insert":
+                    text = op.get("text", "")
+                    position = max(int(op.get("position", 0)), 0)
+                    content = state.get("content", "")
+                    state["content"] = (
+                        content[:position] + text + content[position:]
+                    )
+                elif op.get("type") == "delete":
+                    length = int(op.get("length", 0))
+                    position = max(int(op.get("position", 0)), 0)
+                    content = state.get("content", "")
+                    state["content"] = (
+                        content[:position] + content[position + length :]
+                    )
+
+        state["version"] = state.get("version", 0) + 1
+
+        await self.save_document_state(doc_id, state)
 
     async def broadcast_update(
         self,
@@ -383,13 +543,25 @@ class YjsCollaborationServer:
             try:
                 doc_json = await self.redis_client.get(f"doc:{doc_id}")
                 if doc_json:
-                    return json.loads(doc_json)
+                    state = json.loads(doc_json)
+                    if not isinstance(state, dict):
+                        state = {"content": "", "version": 0}
+                    state.setdefault("content", "")
+                    state.setdefault("vector_clock", {})
+                    state.setdefault("operations", [])
+                    state.setdefault("version", 0)
+                    self.documents[doc_id] = state
+                    self._sync_ydoc_from_text(doc_id, state["content"])
+                    return {"content": state["content"], "version": state["version"]}
             except Exception as e:
                 logger.warning(f"Failed to load document from Redis: {e}")
 
         # Try in-memory storage
         if doc_id in self.documents:
-            return self.documents[doc_id]
+            state = self.documents[doc_id]
+            if YPY_AVAILABLE:
+                self._sync_ydoc_from_text(doc_id, state.get("content", ""))
+            return {"content": state.get("content", ""), "version": state.get("version", 0)}
 
         # Create new document (store full state, return minimal view for compatibility)
         new_doc_full = {
@@ -399,20 +571,37 @@ class YjsCollaborationServer:
             "version": 0,
         }
         self.documents[doc_id] = new_doc_full
+        if YPY_AVAILABLE:
+            self._sync_ydoc_from_text(doc_id, "")
         # For initial load of a brand-new document, return a compact state expected by clients/tests
         return {"content": "", "version": 0}
 
     async def save_document_state(self, doc_id: str, state: dict[str, Any]):
         """Save document state to storage."""
-        # Update in-memory storage
-        self.documents[doc_id] = state
+        # Ensure required keys exist for compatibility
+        state.setdefault("content", "")
+        state.setdefault("vector_clock", {})
+        state.setdefault("operations", [])
+        state.setdefault("version", 0)
+
+        # Keep Yjs document in sync with materialised content
+        if YPY_AVAILABLE:
+            self._sync_ydoc_from_text(doc_id, state["content"])
+
+        # Update in-memory storage (store a shallow copy to avoid external mutation)
+        self.documents[doc_id] = {
+            "content": state["content"],
+            "vector_clock": dict(state.get("vector_clock", {})),
+            "operations": list(state.get("operations", [])),
+            "version": state.get("version", 0),
+        }
 
         # Persist to Redis if available
         if self.redis_client:
             try:
                 await self.redis_client.set(
                     f"doc:{doc_id}",
-                    json.dumps(state),
+                    json.dumps(self.documents[doc_id]),
                     ex=3600 * 24  # Expire after 24 hours
                 )
             except Exception as e:

@@ -457,19 +457,14 @@ def create_app() -> FastAPI:
     app.include_router(verification_router)
 
     try:
-        from .collaboration import is_collaboration_enabled
-    except Exception:  # pragma: no cover - optional feature flag
-        is_collaboration_enabled = lambda: False  # type: ignore
+        from .routers.collaboration import setup_collaboration_websocket
 
-    if is_collaboration_enabled():
-        try:
-            from .routers.collaboration import setup_collaboration_websocket
-            setup_collaboration_websocket(app)
-        except Exception:
-            logger.warning(
-                "Collaboration routes setup failed; status may be unavailable",
-                exc_info=True,
-            )
+        setup_collaboration_websocket(app)
+    except Exception:  # pragma: no cover - optional feature
+        logger.warning(
+            "Collaboration routes setup failed; status may be unavailable",
+            exc_info=True,
+        )
 
     return app
 
