@@ -10,6 +10,7 @@ from opentelemetry import trace
 
 from .evaluator import RAGASEvaluator
 from .models import EvaluationRequest, EvaluationResult
+from .trulens import TRULENS_AVAILABLE
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -59,10 +60,25 @@ async def evaluate_with_ragas(
             span.set_attribute("faithfulness", result.metrics.faithfulness)
             span.set_attribute("context_precision", result.metrics.context_precision)
             span.set_attribute("context_recall", result.metrics.context_recall)
-            
+            if result.trulens_metrics:
+                span.set_attribute("trulens_groundedness", result.trulens_metrics.groundedness)
+                span.set_attribute("trulens_answer_relevance", result.trulens_metrics.answer_relevance)
+                span.set_attribute("trulens_support_coverage", result.trulens_metrics.support_coverage)
+                span.set_attribute(
+                    "trulens_passes_quality_gates",
+                    bool(result.trulens_passes_quality_gates),
+                )
+
             if not result.passes_quality_gates:
                 span.set_attribute("failures", ",".join(result.failures))
                 logger.warning(f"Quality gates failed for {request.model_name}: {result.failures}")
+            if result.trulens_failures:
+                span.set_attribute("trulens_failures", ",".join(result.trulens_failures))
+                logger.warning(
+                    "TruLens quality gates failed for %s: %s",
+                    request.model_name,
+                    result.trulens_failures,
+                )
             
             return result
             
@@ -80,10 +96,12 @@ async def health_check() -> dict[str, Any]:
         "status": "healthy",
         "ragas_available": True,  # Would check actual availability
         "langfuse_available": True,  # Would check actual availability
+        "trulens_available": TRULENS_AVAILABLE,
         "quality_gates": {
             "faithfulness_threshold": 0.8,
             "precision_threshold": 0.7,
             "recall_threshold": 0.7,
+            "groundedness_threshold": 0.75,
         }
     }
 

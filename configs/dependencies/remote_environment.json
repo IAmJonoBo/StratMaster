@@ -1,0 +1,11 @@
+{
+  "environment": "production",
+  "generated_at": "2024-10-01T00:00:00Z",
+  "python": "3.11",
+  "packages": [
+    {"name": "fastapi", "version": "0.117.1"},
+    {"name": "httpx", "version": "0.28.1"},
+    {"name": "issuesuite", "version": "0.1.4"},
+    {"name": "uvicorn", "version": "0.37.0"}
+  ]
+}

@@ -100,6 +100,7 @@
 - **👥 Collaboration Ready**: Yjs CRDT infrastructure for real-time co-editing
 - **🔍 Observability**: OpenTelemetry tracing with Prometheus metrics integration
 - **🏆 Quality Assurance**: Production-ready performance monitoring and validation
+- **🧭 RAG Quality Loop**: RAGAS + TruLens evaluations with golden regression set for SCRATCH Phase 2.3
 
 ## Quick Start
 
@@ -192,6 +193,17 @@ Dry-run sync (no mutations) with summary output:
 ```bash
 ISSUES_SUITE_MOCK=1 issuesuite sync --dry-run --update --config issue_suite.config.yaml --summary-json issues_summary.json
 ```
+
+Python automation (CI, agents) can invoke the thin wrapper at
+`scripts/issuesuite_bridge.py` which proxies to the IssueSuite CLI while
+capturing structured stdout/stderr for downstream processing:
+
+```bash
+python scripts/issuesuite_bridge.py report --mock
+```
+
+The `report` command runs `validate` + `summary` and emits a JSON payload that is
+safe to archive as an artifact or feed into follow-up tooling.
 
 Validate only:
 
