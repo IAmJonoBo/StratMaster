@@ -12,19 +12,10 @@ from typing import Any, cast
 
 import yaml  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
-from opentelemetry import trace
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger(__name__)
-
-# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
-try:
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-    OTEL_FASTAPI_AVAILABLE = True
-except ImportError:
-    OTEL_FASTAPI_AVAILABLE = False
-
+from .config import load_app_config
 from .dependencies import require_idempotency_key
 from .models import RecommendationOutcome
 from .models.requests import (
@@ -47,8 +38,14 @@ from .models.requests import (
     RetrievalQueryResponse,
 )
 from .models.schema_export import SCHEMA_VERSION
-from .routers import debate as debate_hitl_router
-from .routers import export as export_router  
+# Optional debate router (heavy dep: scikit-learn via learning module)
+try:  # pragma: no cover - optional dependency block
+    from .routers import debate as debate_hitl_router  # type: ignore
+    _DEBATE_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    debate_hitl_router = None  # type: ignore
+    _DEBATE_AVAILABLE = False
+from .routers import export as export_router
 from .routers import ingestion as ingestion_router
 from .routers import performance as performance_router
 from .routers import security as security_router
@@ -61,7 +58,31 @@ from .schemas import (
     RetrievalHybridConfig,
 )
 from .services import orchestrator_stub
-from .tracing import tracing_manager
+from .tracing import configure_tracing, trace, tracing_manager
+from .middleware.auth import setup_auth_middleware
+from .middleware.privacy import PrivacyRedactionMiddleware
+from .middleware.security_middleware import SecurityMiddleware
+from .security.audit_logger import AuditLogger
+from .security.privacy_controls import WorkspacePrivacyManager
+
+# Optional mobile router (heavy optional deps: asyncpg, firebase_admin) placed AFTER all imports
+try:  # pragma: no cover - optional dependency block
+    from .mobile.router import mobile_router  # type: ignore
+    _MOBILE_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    mobile_router = None  # type: ignore
+    _MOBILE_AVAILABLE = False
+
+# Logger and optional instrumentation flags (defined after optional imports)
+logger = logging.getLogger(__name__)
+
+# Optional OTEL FastAPI instrumentation - fallback gracefully if not available
+try:  # pragma: no cover - optional
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    OTEL_FASTAPI_AVAILABLE = True
+except ImportError:  # pragma: no cover - instrumentation optional
+    FastAPIInstrumentor = None  # type: ignore
+    OTEL_FASTAPI_AVAILABLE = False
 
 ALLOWED_SECTIONS = {"router", "retrieval", "evals", "privacy", "compression"}
 
@@ -154,11 +175,11 @@ VALIDATORS: dict[str, Callable[[Any], dict[str, Any]]] = {
 
 class TracingMiddleware(BaseHTTPMiddleware):
     """Middleware to add trace ID headers and OTEL spans."""
-    
+
     async def dispatch(self, request: Request, call_next):
         # Generate or extract trace ID
         trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
-        
+
         # Get the current span from OTEL
         current_span = trace.get_current_span()
         if current_span:
@@ -166,29 +187,75 @@ class TracingMiddleware(BaseHTTPMiddleware):
             current_span.set_attribute("http.request.trace_id", trace_id)
             current_span.set_attribute("http.method", request.method)
             current_span.set_attribute("http.url", str(request.url))
-        
+
         # Process the request
         response = await call_next(request)
-        
+
         # Add trace ID to response headers
         response.headers["X-Trace-Id"] = trace_id
-        
+
         # Add span attributes for response
         if current_span:
             current_span.set_attribute("http.status_code", response.status_code)
-        
+
         return response
 
 
 def create_app() -> FastAPI:
+    config = load_app_config()
     app = FastAPI(title="StratMaster API", version="0.2.0")
-    
-    # Add tracing middleware
+
+    setup_auth_middleware(
+        app,
+        {
+            "enabled": config.security.oidc.enabled,
+            "server_url": config.security.oidc.server_url,
+            "realm_name": config.security.oidc.realm_name,
+            "client_id": config.security.oidc.client_id,
+            "client_secret": config.security.oidc.client_secret,
+            "verify_ssl": config.security.oidc.verify_ssl,
+        },
+    )
+
+    privacy_manager = WorkspacePrivacyManager()
+    audit_logger = AuditLogger(
+        redis_url=config.security.audit_redis_url,
+        log_to_file=config.security.audit_log_to_file,
+        log_file_path=config.security.audit_log_path,
+    )
+
+    app.state.audit_logger = audit_logger
+    app.state.privacy_manager = privacy_manager
+
+    app.add_middleware(
+        PrivacyRedactionMiddleware,
+        privacy_manager=privacy_manager,
+        default_workspace=config.security.default_workspace_id,
+    )
+    app.add_middleware(
+        SecurityMiddleware,
+        audit_logger=audit_logger,
+        privacy_manager=privacy_manager,
+    )
     app.add_middleware(TracingMiddleware)
-    
-    # Initialize OTEL instrumentation for FastAPI if available
-    if OTEL_FASTAPI_AVAILABLE:
+
+    if config.observability.enable_fastapi_instrumentation and OTEL_FASTAPI_AVAILABLE:
         FastAPIInstrumentor.instrument_app(app)
+
+    configure_tracing(
+        service_name=config.observability.service_name,
+        endpoint=config.observability.otlp_endpoint,
+        headers=config.observability.otlp_headers or {},
+        sample_ratio=config.observability.sample_ratio,
+    )
+
+    if config.security.enable_redaction:
+        tracing_manager.enable_privacy_sanitiser(
+            privacy_manager=privacy_manager,
+            default_workspace=config.security.default_workspace_id,
+        )
+    else:
+        tracing_manager.enable_privacy_sanitiser(None)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
@@ -198,12 +265,15 @@ def create_app() -> FastAPI:
     register_model_schema_endpoints(app)
 
     app.include_router(ingestion_router.router)
-    app.include_router(debate_hitl_router.router)
+    if _DEBATE_AVAILABLE:
+        app.include_router(debate_hitl_router.router)
     app.include_router(export_router.export_router)
     app.include_router(performance_router.performance_router)
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
+    if _MOBILE_AVAILABLE:
+        app.include_router(mobile_router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -386,15 +456,20 @@ def create_app() -> FastAPI:
     from .routers.verification import router as verification_router
     app.include_router(verification_router)
 
-    # Add collaboration WebSocket endpoint if enabled
-    from .collaboration import is_collaboration_enabled
+    try:
+        from .collaboration import is_collaboration_enabled
+    except Exception:  # pragma: no cover - optional feature flag
+        is_collaboration_enabled = lambda: False  # type: ignore
+
     if is_collaboration_enabled():
         try:
-            from fastapi import WebSocket, WebSocketDisconnect
             from .routers.collaboration import setup_collaboration_websocket
             setup_collaboration_websocket(app)
-        except ImportError:
-            logger.warning("WebSocket dependencies not available. Collaboration features disabled.")
+        except Exception:
+            logger.warning(
+                "Collaboration routes setup failed; status may be unavailable",
+                exc_info=True,
+            )
 
     return app
 

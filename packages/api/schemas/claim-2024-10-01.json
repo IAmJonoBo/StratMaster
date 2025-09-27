@@ -1,0 +1,14 @@
+{
+  "$id": "https://schemas.stratmaster.ai/claim/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "statement": {"type": "string"},
+    "evidence_grade": {"type": "string"},
+    "provenance_ids": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["id", "statement", "evidence_grade", "provenance_ids"],
+  "additionalProperties": true
+}

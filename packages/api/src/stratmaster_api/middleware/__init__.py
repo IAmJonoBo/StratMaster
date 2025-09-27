@@ -1,5 +1,12 @@
-"""StratMaster API middleware package."""
+"""StratMaster API middleware package.
 
-from .auth import OIDCAuthMiddleware, setup_auth_middleware
+Avoid importing heavy optional dependencies at package import time. Import
+middleware classes/functions directly from their modules when needed, e.g.:
 
-__all__ = ["OIDCAuthMiddleware", "setup_auth_middleware"]
+from stratmaster_api.middleware.auth import OIDCAuthMiddleware, setup_auth_middleware
+from stratmaster_api.middleware.performance_cache import ResponseCachingMiddleware
+"""
+
+__all__: list[str] = [
+	# intentionally empty to avoid side effects on import
+]

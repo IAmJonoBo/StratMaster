@@ -40,8 +40,6 @@ issuesuite.sync.dry: issuesuite.install
 issuesuite.summary: issuesuite.install
 	@. .venv/bin/activate && ISSUES_SUITE_MOCK=1 issuesuite summary --config issue_suite.config.yaml
 
-
-
 dev.up:
 	docker compose up -d
 

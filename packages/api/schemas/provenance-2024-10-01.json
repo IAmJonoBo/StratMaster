@@ -1,0 +1,16 @@
+{
+  "$id": "https://schemas.stratmaster.ai/provenance/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Provenance",
+  "type": "object",
+  "properties": {
+    "source": {"type": "object"},
+    "fetch_time_utc": {"type": "string"},
+    "original_timezone": {"type": "string"},
+    "sha256": {"type": "string"},
+    "parser_version": {"type": "string"},
+    "crawl_policy_snapshot": {"type": ["string", "null"]}
+  },
+  "required": ["source", "fetch_time_utc", "sha256", "parser_version"],
+  "additionalProperties": true
+}

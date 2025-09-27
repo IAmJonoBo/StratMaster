@@ -49,7 +49,7 @@ def create_app() -> FastAPI:
 
     @tools.post("/complete", response_model=CompletionResponse)
     async def complete(payload: CompletionRequest) -> CompletionResponse:
-        return service.complete(payload)
+        return await service.complete(payload)
 
     @tools.post("/embed", response_model=EmbeddingResponse)
     async def embed(payload: EmbeddingRequest) -> EmbeddingResponse:

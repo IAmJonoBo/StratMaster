@@ -8,31 +8,41 @@ from enum import Enum
 from typing import Any
 
 import redis
-import structlog
+try:  # structlog is optional; fall back to stdlib logging when unavailable
+    import structlog  # type: ignore[import-untyped]
+    STRUCTLOG_AVAILABLE = True
+except Exception:  # pragma: no cover - import guard
+    structlog = None  # type: ignore[assignment]
+    STRUCTLOG_AVAILABLE = False
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-audit_logger = structlog.get_logger("audit")
+if STRUCTLOG_AVAILABLE:
+    # Configure structured logging
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+    audit_logger = structlog.get_logger("audit")
+    _base_audit_logger = logging.getLogger("audit")
+else:
+    # Fallback to stdlib logging-only logger
+    audit_logger = logging.getLogger("audit")
+    _base_audit_logger = audit_logger
 
 
 class AuditEventType(str, Enum):
@@ -147,7 +157,7 @@ class AuditLogger:
         buffer_size: int = 100
     ):
         """Initialize audit logger.
-        
+
         Args:
             redis_url: Redis URL for event streaming
             log_to_file: Whether to log to file
@@ -177,7 +187,9 @@ class AuditLogger:
                 file_handler.setFormatter(
                     logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
                 )
-                audit_logger.addHandler(file_handler)
+                # Attach handler to the underlying stdlib logger. When structlog is in use,
+                # audit_logger is a BoundLogger that doesn't expose addHandler.
+                _base_audit_logger.addHandler(file_handler)
                 logger.info(f"Audit logging to file: {log_file_path}")
             except Exception as e:
                 logger.error(f"Failed to setup file logging: {e}")

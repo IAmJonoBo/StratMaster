@@ -1,0 +1,12 @@
+{
+  "$id": "https://schemas.stratmaster.ai/decision-brief/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision Brief",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "summary": {"type": "string"}
+  },
+  "required": ["id"],
+  "additionalProperties": true
+}

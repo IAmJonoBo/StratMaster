@@ -1,0 +1,12 @@
+{
+  "$id": "https://schemas.stratmaster.ai/graph-artifacts/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Graph Artifacts",
+  "type": "object",
+  "properties": {
+    "nodes": {"type": "array"},
+    "edges": {"type": "array"}
+  },
+  "required": [],
+  "additionalProperties": true
+}

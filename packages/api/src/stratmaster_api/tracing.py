@@ -5,10 +5,16 @@ This module provides OTEL and Langfuse integration for the StratMaster API,
 implementing the Sprint 0 requirement for visible traces.
 """
 
+import logging
 import os
 import uuid
+from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Any
+from contextvars import ContextVar
+
+# Module-level logger for optional diagnostics
+logger = logging.getLogger(__name__)
 
 # OTEL may be optional at runtime in some environments (e.g., minimal test envs)
 try:  # pragma: no cover - import guard
@@ -44,6 +50,18 @@ except Exception:  # noqa: BLE001 - broad to ensure safe fallback
     # Expose a shim with the same symbol name used by the app
     trace = _NoopTraceModule()  # type: ignore
 
+# Optional OTLP tracing configuration pieces
+try:  # pragma: no cover - optional instrumentation bits
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+    OTEL_SDK_AVAILABLE = True
+except Exception:  # noqa: BLE001 - keep optional
+    OTEL_SDK_AVAILABLE = False
+    OTLPSpanExporter = None  # type: ignore
+
 # Optional Langfuse client - fallback gracefully if not available
 try:
     from langfuse import Langfuse
@@ -52,12 +70,25 @@ except ImportError:
     LANGFUSE_AVAILABLE = False
 
 
+try:  # pragma: no cover - optional dependency
+    from .security.privacy_controls import DataSource
+except Exception:  # noqa: BLE001 - privacy controls optional in some environments
+    class DataSource:  # type: ignore[override]
+        API_RESPONSES = "api_responses"
+
+
 class TracingManager:
     """Central tracing manager for OTEL and Langfuse integration."""
 
     def __init__(self):
         self.tracer = trace.get_tracer(__name__)
         self.langfuse_client = self._init_langfuse() if LANGFUSE_AVAILABLE else None
+        self._metadata_filter: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+        self._privacy_manager: Any | None = None
+        self._privacy_default_workspace: str = "system"
+        self._privacy_context: ContextVar[str | None] = ContextVar(
+            "stratmaster_privacy_workspace", default=None
+        )
 
     def _init_langfuse(self) -> Any | None:
         """Initialize Langfuse client if configured."""
@@ -81,10 +112,27 @@ class TracingManager:
                 return None
         return None
 
+    def set_metadata_filter(
+        self,
+        filter_fn: Callable[[dict[str, Any]], dict[str, Any]] | None,
+    ) -> None:
+        """Register a callable to scrub tracing metadata before export."""
+        self._metadata_filter = filter_fn
+
+    def _apply_metadata_filter(self, metadata: dict[str, Any]) -> dict[str, Any]:
+        if not metadata or not self._metadata_filter:
+            return metadata
+        try:
+            return self._metadata_filter(metadata)
+        except Exception:  # pragma: no cover - defensive guard
+            logger.exception("Tracing metadata filter raised an exception")
+            return metadata
+
     @contextmanager
     def trace_operation(self, operation_name: str, metadata: dict[str, Any] | None = None):
         """Create both OTEL and Langfuse spans for an operation."""
         metadata = metadata or {}
+        metadata = self._apply_metadata_filter(metadata)
         trace_id = str(uuid.uuid4())
 
         # Start OTEL span
@@ -187,6 +235,100 @@ class TracingManager:
             "result": result
         }) as context:
             return context
+
+
+    # ------------------------------------------------------------------
+    # Privacy-aware metadata helpers
+    # ------------------------------------------------------------------
+    def enable_privacy_sanitiser(
+        self,
+        privacy_manager: Any,
+        default_workspace: str = "system",
+    ) -> None:
+        """Enable privacy-aware metadata filtering using the supplied manager."""
+
+        self._privacy_manager = privacy_manager
+        self._privacy_default_workspace = default_workspace
+
+        if privacy_manager is None:
+            self.set_metadata_filter(None)
+            return
+
+        def _filter(payload: dict[str, Any]) -> dict[str, Any]:
+            return self._sanitize_metadata(payload)
+
+        self.set_metadata_filter(_filter)
+
+    def push_privacy_context(self, workspace_id: str | None):
+        """Bind workspace context for subsequent metadata sanitisation."""
+        return self._privacy_context.set(workspace_id)
+
+    def reset_privacy_context(self, token) -> None:
+        """Reset workspace context token returned by push_privacy_context."""
+        if token is not None:
+            try:
+                self._privacy_context.reset(token)
+            except Exception:  # pragma: no cover - defensive
+                logger.exception("Failed to reset privacy context")
+
+    # Internal ---------------------------------------------------------
+    def _sanitize_metadata(self, payload: dict[str, Any]) -> dict[str, Any]:
+        if not self._privacy_manager:
+            return payload
+
+        workspace_id = self._privacy_context.get()
+        workspace = workspace_id or self._privacy_default_workspace
+
+        def _scrub(value: Any) -> Any:
+            if isinstance(value, str):
+                try:
+                    result = self._privacy_manager.process_text_for_privacy(
+                        workspace_id=workspace,
+                        text=value,
+                        data_source=DataSource.API_RESPONSES,
+                        language="en",
+                    )
+                    return result.get("processed_text", value)
+                except Exception:
+                    logger.exception("Failed to sanitize tracing metadata value")
+                    return value
+            if isinstance(value, dict):
+                return {k: _scrub(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_scrub(item) for item in value]
+            return value
+
+        sanitized = {}
+        for key, value in payload.items():
+            sanitized[key] = _scrub(value)
+
+        return sanitized
+
+
+def configure_tracing(
+    service_name: str,
+    endpoint: str | None = None,
+    headers: dict[str, str] | None = None,
+    sample_ratio: float = 1.0,
+) -> bool:
+    """Configure the global tracer provider with OTLP export if available."""
+    if not (OTEL_AVAILABLE and OTEL_SDK_AVAILABLE):
+        return False
+
+    try:
+        resource = Resource.create({SERVICE_NAME: service_name})
+        sampler = TraceIdRatioBased(min(max(sample_ratio, 0.0), 1.0))
+        provider = TracerProvider(resource=resource, sampler=sampler)
+
+        if endpoint:
+            exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers or {})
+            provider.add_span_processor(BatchSpanProcessor(exporter))
+
+        trace.set_tracer_provider(provider)
+        return True
+    except Exception:  # pragma: no cover - configuration is best effort
+        logger.exception("Failed to configure OpenTelemetry tracing")
+        return False
 
 
 # Global tracing manager instance

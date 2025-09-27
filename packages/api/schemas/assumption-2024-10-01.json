@@ -1,0 +1,14 @@
+{
+  "$id": "https://schemas.stratmaster.ai/assumption/2024-10-01",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Assumption",
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "statement": {"type": "string"},
+    "confidence": {"type": "number"},
+    "provenance_ids": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["id", "statement", "confidence", "provenance_ids"],
+  "additionalProperties": true
+}

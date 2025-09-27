@@ -1,13 +1,13 @@
-.PHONY: api.run api.docker build clean clean.macos test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
+.PHONY: api.run api.docker build clean test precommit-install precommit bootstrap bootstrap-full dev.up dev.down dev.logs lock lock-upgrade \
         index.colbert index.splade lint format expertise-mcp.run expertise-mcp.schemas experts.mcp.up \
         monitoring.up monitoring.down monitoring.full monitoring.status telemetry.up collaboration.up ml.up dev.monitoring setup health-check \
 	assets.plan assets.pull assets.verify assets.required assets.plan.dry assets.pull.dry \
         deps.check deps.plan deps.upgrade deps.upgrade.safe deps.register deps.scan deps.validate deps.install.robust \
-	setup setup.full setup.dry setup.validate \
+        setup setup.full setup.dry setup.validate \
         security.scan security.install security.baseline security.check \
         accessibility.scan accessibility.fix accessibility.test \
         test.advanced test.property test.contract test.load test.integration \
-	health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot \
+        health.monitor health.check health.report heal.auto heal.analyze heal.recover heal.rollback system.snapshot \
 	venv.create venv.ensure venv.info venv.clean venv.doctor venv.recreate.dev venv.recreate.prod \
 	venv.sync.dev venv.sync.prod venv.sync.dev.exact venv.sync.prod.exact venv.sync.remote \
 	wheelhouse.build.dev wheelhouse.build.prod wheelhouse.build.linux wheelhouse.clean venv.sync.offline.dev venv.sync.offline.prod
@@ -15,14 +15,13 @@
 # -------------------------------
 # IssueSuite Helper Targets (external CLI)
 # -------------------------------
-.PHONY: issuesuite.install issuesuite.validate issuesuite.schema issuesuite.sync.dry issuesuite.summary
+.PHONY: issuesuite.install issuesuite.validate issuesuite.schema issuesuite.sync.dry issuesuite.summary issuesuite.install.local
 
-# Install IssueSuite from PyPI; fallback to cloning repo if unavailable
+# Install IssueSuite from best available source (local tarball/vendor/PyPI/git)
 issuesuite.install: venv.ensure
 	@bash scripts/install_issuesuite.sh
 
 # Install IssueSuite from a local tarball path
-.PHONY: issuesuite.install.local
 issuesuite.install.local: venv.ensure
 	@echo "📦 Installing IssueSuite from local tarball"
 	@[ -n "$(TARBALL)" ] || { echo "❌ Provide tarball path via make var: make issuesuite.install.local TARBALL=/path/to/issuesuite-x.y.z.tar.gz"; exit 1; }
@@ -39,8 +38,6 @@ issuesuite.sync.dry: issuesuite.install
 
 issuesuite.summary: issuesuite.install
 	@. .venv/bin/activate && ISSUES_SUITE_MOCK=1 issuesuite summary --config issue_suite.config.yaml
-
-
 
 dev.up:
 	docker compose up -d
@@ -154,7 +151,7 @@ venv.sync.dev: venv.ensure
 	    .venv/bin/pip install $(PIP_FLAGS) --upgrade pip setuptools wheel; \
 	    .venv/bin/pip install $(PIP_FLAGS) -r requirements-dev.txt; \
 	  fi; \
-	  bash scripts/install_editable_packages.sh; \
+	  if [ -f scripts/install_editable_packages.sh ]; then bash scripts/install_editable_packages.sh; else echo "ℹ️  scripts/install_editable_packages.sh not found; skipping"; fi; \
 	  .venv/bin/pip check || true; \
 	  echo "✅ Development venv ready"; \
 	fi
@@ -189,7 +186,7 @@ venv.sync.dev.exact: venv.ensure
 	else \
 	  .venv/bin/pip-sync -q requirements-dev.txt; \
 	fi
-	@bash scripts/install_editable_packages.sh || true
+	@if [ -f scripts/install_editable_packages.sh ]; then bash scripts/install_editable_packages.sh; else echo "ℹ️  scripts/install_editable_packages.sh not found; skipping"; fi
 	@.venv/bin/pip check || true
 	@echo "✅ Exact development sync complete"
 
@@ -265,7 +262,7 @@ venv.sync.offline.dev: venv.ensure
 	else \
 	  .venv/bin/pip install --no-index --find-links $(WHEELHOUSE) -r requirements-dev.txt; \
 	fi
-	@bash scripts/install_editable_packages.sh || true
+	@if [ -f scripts/install_editable_packages.sh ]; then bash scripts/install_editable_packages.sh; else echo "ℹ️  scripts/install_editable_packages.sh not found; skipping"; fi
 	@.venv/bin/pip check || true
 	@echo "✅ Offline development venv ready"
 
@@ -290,7 +287,6 @@ venv.clean:
 venv.recreate.dev: venv.clean venv.sync.dev venv.info
 
 venv.recreate.prod: venv.clean venv.sync.prod venv.info
-
 test:
 	[ -d .venv ] || python3 -m venv .venv
 	PYTHONNOUSERSITE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 .venv/bin/python -m pip install -e packages/api -e packages/mcp-servers/research-mcp -e packages/mcp-servers/expertise-mcp pytest

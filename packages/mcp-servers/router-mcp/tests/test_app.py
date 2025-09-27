@@ -35,12 +35,14 @@ def test_complete_endpoint(client=client()):
 
 def test_complete_endpoint_with_provider(monkeypatch):
     class DummyProvider:
-        def complete(self, prompt, max_tokens, model=None, temperature=None):
+        async def complete(self, prompt, max_tokens, model=None, temperature=None, **kwargs):
             return {
                 "text": "provider text",
                 "tokens": 10,
                 "provider": "litellm",
                 "model": model or "gpt",
+                "cost_usd": 0.01,
+                "latency_ms": 12.5,
             }
 
         def embed(self, inputs, model=None):
@@ -53,7 +55,9 @@ def test_complete_endpoint_with_provider(monkeypatch):
     from router_mcp import service as service_module
 
     monkeypatch.setattr(
-        service_module, "ProviderAdapter", lambda config: DummyProvider()
+        service_module,
+        "ProviderAdapter",
+        lambda config, **kwargs: DummyProvider(),
     )
     resp = client().post(
         "/tools/complete",
@@ -68,6 +72,62 @@ def test_complete_endpoint_with_provider(monkeypatch):
     body = resp.json()
     assert body["provider"] == "litellm"
     assert body["text"].startswith("{")
+
+
+def test_complete_bandit_record(monkeypatch):
+    events: list[dict] = []
+
+    class DummyTelemetry:
+        def record_attempt(self, **kwargs):
+            class _Ctx:
+                def __enter__(self_inner):
+                    return {"latency_ms": 42}
+
+                def __exit__(self_inner, exc_type, exc, tb):
+                    events.append(kwargs)
+
+            return _Ctx()
+
+    class DummyChoice:
+        def __init__(self, text: str) -> None:
+            self.message = {"content": text}
+
+    class DummyCompletionResponse:
+        def __init__(self) -> None:
+            self.choices = [DummyChoice("ok")]
+            self.usage = {"total_tokens": 5}
+            self.model = "test-model"
+            self.cost = 0.02
+
+    class DummyLitellm:
+        def completion(self, *args, **kwargs):
+            return DummyCompletionResponse()
+
+    from router_mcp import providers as providers_module
+    monkeypatch.setattr(providers_module, "litellm", DummyLitellm())
+
+    from router_mcp import telemetry as telemetry_module
+
+    def _factory():
+        return telemetry_module.RoutingTelemetry(
+            telemetry_module.MetricSink([lambda payload: events.append(payload)])
+        )
+
+    monkeypatch.setattr(telemetry_module, "build_telemetry_from_env", _factory)
+    from router_mcp import service as service_module
+    monkeypatch.setattr(service_module, "build_telemetry_from_env", _factory)
+
+    resp = client().post(
+        "/tools/complete",
+        json={
+            "tenant_id": "tenant-a",
+            "prompt": "short",
+            "max_tokens": 20,
+            "task": "reasoning",
+        },
+    )
+    assert resp.status_code == 200
+    assert events, "Expected telemetry to capture events"
 
 
 def test_embed_endpoint(client=client()):

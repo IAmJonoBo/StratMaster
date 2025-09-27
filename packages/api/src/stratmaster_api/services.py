@@ -321,7 +321,7 @@ class OrchestratorService:
         self.knowledge_client = knowledge_client or KnowledgeMCPClient()
         self.router_client = router_client or RouterMCPClient()
         self.evals_client = evals_client or EvalsMCPClient()
-        
+
         # Initialize ingestion services if available
         if INGESTION_AVAILABLE:
             self.ingestion_service = ingestion_service or IngestionCoordinator()
@@ -362,8 +362,17 @@ class OrchestratorService:
                 )
 
     def _build_pipeline(self) -> Pipeline:
-        # Lazy-import LangGraph to avoid hard dependency and import-order lint issues
-        if importlib.util.find_spec("langgraph.graph") is None:
+        # Lazy-import LangGraph to avoid hard dependency and import-order lint issues.
+        # Note: importlib.util.find_spec("pkg.sub") may import the parent package and
+        # raise ModuleNotFoundError when the top-level package is missing. Guard it.
+        try:
+            langgraph_present = importlib.util.find_spec("langgraph") is not None and (
+                importlib.util.find_spec("langgraph.graph") is not None
+            )
+        except ModuleNotFoundError:
+            langgraph_present = False
+
+        if not langgraph_present:
             return _SequentialPipeline(
                 self._graph_research,
                 self._graph_eval,
@@ -408,7 +417,7 @@ class OrchestratorService:
     ) -> list[dict[str, object]]:
         if not INGESTION_AVAILABLE or not self.clarification_service:
             raise RuntimeError("Clarification service not available")
-            
+
         inputs = [
             ClarificationInput(
                 chunk_id=str(item.get("id", "")),
@@ -703,17 +712,17 @@ class OrchestratorService:
     def create_experiment(self, tenant_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Create a strategic experiment with proper validation and risk assessment."""
         from datetime import datetime
-        
+
         experiment_id = f"exp-{uuid4().hex[:8]}"
         created_at = datetime.now(UTC).isoformat()
-        
+
         # AI-assess hypothesis confidence based on keywords and structure
         hypothesis = payload.get("hypothesis", "")
         hypothesis_confidence = self._assess_hypothesis_confidence(hypothesis)
-        
+
         # Identify risk factors based on experiment parameters
         risk_factors = self._identify_experiment_risks(payload)
-        
+
         return {
             "experiment_id": experiment_id,
             "tenant_id": tenant_id,
@@ -729,13 +738,13 @@ class OrchestratorService:
         """Create a predictive forecast with model performance metrics."""
         import asyncio
         from .predictive import create_forecast
-        
+
         # Extract parameters
         forecast_type = payload.get("forecast_type", "usage")
-        horizon = payload.get("horizon", "monthly")  
+        horizon = payload.get("horizon", "monthly")
         variables = payload.get("variables", ["value"])
         confidence_intervals = payload.get("confidence_intervals", [50, 80, 95])
-        
+
         # Generate forecast using predictive engine
         try:
             # Run async function in sync context
@@ -751,16 +760,16 @@ class OrchestratorService:
                 )
             )
             loop.close()
-            
+
             # Create core forecast object for compatibility
             if forecast_result["predictions"]:
                 first_prediction = forecast_result["predictions"][0]
                 metric = Metric(
-                    id=f"metric-{forecast_result['forecast_id']}", 
-                    name=variables[0], 
+                    id=f"metric-{forecast_result['forecast_id']}",
+                    name=variables[0],
                     definition=forecast_type
                 )
-                
+
                 # Convert predictions to forecast intervals
                 intervals = []
                 for ci in confidence_intervals:
@@ -772,7 +781,7 @@ class OrchestratorService:
                             lower=lower,
                             upper=upper
                         ))
-                
+
                 core_forecast = Forecast(
                     id=forecast_result["forecast_id"],
                     metric=metric,
@@ -780,19 +789,19 @@ class OrchestratorService:
                     intervals=intervals,
                     horizon_days=forecast_result["horizon_days"],
                 )
-                
+
                 forecast_result["forecast"] = core_forecast
-            
+
             return forecast_result
-            
+
         except Exception as e:
             # Fallback to original random implementation on error
             from datetime import datetime
             import random
-            
+
             forecast_id = f"forecast-{uuid4().hex[:8]}"
             created_at = datetime.now(UTC).isoformat()
-            
+
             # Generate simple predictions
             predictions = []
             for variable in variables:
@@ -802,16 +811,16 @@ class OrchestratorService:
                     "predicted_value": round(base_value, 2),
                     "confidence_intervals": {}
                 }
-                
+
                 for ci in confidence_intervals:
                     margin = base_value * (1 - ci/100) * 0.5
                     prediction["confidence_intervals"][f"{ci}%"] = [
                         round(base_value - margin, 2),
                         round(base_value + margin, 2)
                     ]
-                
+
                 predictions.append(prediction)
-            
+
             # Mock performance metrics
             model_performance = {
                 "accuracy": round(random.uniform(0.75, 0.95), 3),
@@ -820,7 +829,7 @@ class OrchestratorService:
                 "r_squared": round(random.uniform(0.70, 0.90), 3),
                 "fallback": True
             }
-            
+
             # Create core forecast object for compatibility
             metric = Metric(id=f"metric-{forecast_id}", name=variables[0], definition=forecast_type)
             core_forecast = Forecast(
@@ -833,7 +842,7 @@ class OrchestratorService:
                 ],
                 horizon_days=30,
             )
-            
+
             return {
                 "forecast_id": forecast_id,
                 "predictions": predictions,
@@ -1294,10 +1303,10 @@ class OrchestratorService:
     def _assess_hypothesis_confidence(self, hypothesis: str) -> float:
         """Assess hypothesis confidence based on text analysis."""
         import re
-        
+
         # Simple heuristic-based confidence assessment
         confidence = 0.5  # Base confidence
-        
+
         # Positive indicators
         positive_patterns = [
             r'\b(data shows?|research indicates?|studies suggest|proven|validated)\b',
@@ -1305,74 +1314,74 @@ class OrchestratorService:
             r'\b(increase|improve|enhance|boost|optimize)\b',
             r'\b(\d+%|percent|percentage)\b'  # Quantified claims
         ]
-        
+
         # Negative indicators (uncertainty)
         negative_patterns = [
             r'\b(might|may|could|possibly|perhaps|maybe)\b',
             r'\b(uncertain|unclear|ambiguous|vague)\b',
             r'\b(assume|guess|believe|think)\b'
         ]
-        
+
         for pattern in positive_patterns:
             if re.search(pattern, hypothesis, re.IGNORECASE):
                 confidence += 0.1
-        
+
         for pattern in negative_patterns:
             if re.search(pattern, hypothesis, re.IGNORECASE):
                 confidence -= 0.05
-        
+
         # Length and structure bonus
         if len(hypothesis) > 50:
             confidence += 0.05
         if len(hypothesis.split('.')) > 1:  # Multiple sentences
             confidence += 0.05
-        
+
         return max(0.1, min(0.95, round(confidence, 2)))
-    
+
     def _identify_experiment_risks(self, payload: dict[str, Any]) -> list[str]:
         """Identify potential risks in the experiment design."""
         risks = []
-        
+
         duration_weeks = payload.get("duration_weeks", 1)
         confidence_threshold = payload.get("confidence_threshold", 0.8)
         success_metrics = payload.get("success_metrics", [])
-        
+
         # Duration-based risks
         if duration_weeks < 2:
             risks.append("Short duration may not capture seasonal effects")
         elif duration_weeks > 26:
             risks.append("Extended duration increases external factor influence")
-        
+
         # Confidence threshold risks
         if confidence_threshold > 0.9:
             risks.append("High confidence threshold may delay decision making")
         elif confidence_threshold < 0.7:
             risks.append("Low confidence threshold may lead to false positives")
-        
+
         # Metrics risks
         if len(success_metrics) < 2:
             risks.append("Limited metrics may provide incomplete picture")
         elif len(success_metrics) > 5:
             risks.append("Too many metrics may complicate interpretation")
-        
+
         # Hypothesis analysis
         hypothesis = payload.get("hypothesis", "")
         if "conversion" in hypothesis.lower() and duration_weeks < 4:
             risks.append("Conversion experiments typically need 4+ weeks")
-        
+
         return risks[:5]  # Limit to top 5 risks
-    
+
     def _determine_forecast_methodology(self, forecast_type: str) -> str:
         """Determine appropriate forecasting methodology based on type."""
         methodologies = {
             "sales": "ARIMA with seasonal decomposition",
-            "traffic": "Linear regression with trend analysis", 
+            "traffic": "Linear regression with trend analysis",
             "conversion": "Bayesian inference with A/B test data",
             "revenue": "Exponential smoothing with economic indicators",
             "engagement": "Machine learning ensemble (RF + XGBoost)",
             "churn": "Survival analysis with Cox regression"
         }
-        
+
         return methodologies.get(forecast_type.lower(), "Time series analysis with trend detection")
 
 
