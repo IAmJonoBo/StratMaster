@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from .config import load_app_config
 from .dependencies import require_idempotency_key
 from .models import RecommendationOutcome
 from .models.requests import (
@@ -57,7 +58,12 @@ from .schemas import (
     RetrievalHybridConfig,
 )
 from .services import orchestrator_stub
-from .tracing import trace, tracing_manager
+from .tracing import configure_tracing, trace, tracing_manager
+from .middleware.auth import setup_auth_middleware
+from .middleware.privacy import PrivacyRedactionMiddleware
+from .middleware.security_middleware import SecurityMiddleware
+from .security.audit_logger import AuditLogger
+from .security.privacy_controls import WorkspacePrivacyManager
 
 # Optional mobile router (heavy optional deps: asyncpg, firebase_admin) placed AFTER all imports
 try:  # pragma: no cover - optional dependency block
@@ -196,14 +202,60 @@ class TracingMiddleware(BaseHTTPMiddleware):
 
 
 def create_app() -> FastAPI:
+    config = load_app_config()
     app = FastAPI(title="StratMaster API", version="0.2.0")
 
-    # Add tracing middleware
+    setup_auth_middleware(
+        app,
+        {
+            "enabled": config.security.oidc.enabled,
+            "server_url": config.security.oidc.server_url,
+            "realm_name": config.security.oidc.realm_name,
+            "client_id": config.security.oidc.client_id,
+            "client_secret": config.security.oidc.client_secret,
+            "verify_ssl": config.security.oidc.verify_ssl,
+        },
+    )
+
+    privacy_manager = WorkspacePrivacyManager()
+    audit_logger = AuditLogger(
+        redis_url=config.security.audit_redis_url,
+        log_to_file=config.security.audit_log_to_file,
+        log_file_path=config.security.audit_log_path,
+    )
+
+    app.state.audit_logger = audit_logger
+    app.state.privacy_manager = privacy_manager
+
+    app.add_middleware(
+        PrivacyRedactionMiddleware,
+        privacy_manager=privacy_manager,
+        default_workspace=config.security.default_workspace_id,
+    )
+    app.add_middleware(
+        SecurityMiddleware,
+        audit_logger=audit_logger,
+        privacy_manager=privacy_manager,
+    )
     app.add_middleware(TracingMiddleware)
 
-    # Initialize OTEL instrumentation for FastAPI if available
-    if OTEL_FASTAPI_AVAILABLE:
+    if config.observability.enable_fastapi_instrumentation and OTEL_FASTAPI_AVAILABLE:
         FastAPIInstrumentor.instrument_app(app)
+
+    configure_tracing(
+        service_name=config.observability.service_name,
+        endpoint=config.observability.otlp_endpoint,
+        headers=config.observability.otlp_headers or {},
+        sample_ratio=config.observability.sample_ratio,
+    )
+
+    if config.security.enable_redaction:
+        tracing_manager.enable_privacy_sanitiser(
+            privacy_manager=privacy_manager,
+            default_workspace=config.security.default_workspace_id,
+        )
+    else:
+        tracing_manager.enable_privacy_sanitiser(None)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
@@ -220,11 +272,8 @@ def create_app() -> FastAPI:
     app.include_router(ui_router.router)
     app.include_router(strategy_router.router)
     app.include_router(security_router.router)
-<<<<<<< HEAD
-=======
     if _MOBILE_AVAILABLE:
-        app.include_router(mobile_router)  # Sprint 1: Consolidated mobile API
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
+        app.include_router(mobile_router)
 
     research_router = APIRouter(prefix="/research", tags=["research"])
 
@@ -407,26 +456,20 @@ def create_app() -> FastAPI:
     from .routers.verification import router as verification_router
     app.include_router(verification_router)
 
-<<<<<<< HEAD
-    # Always register collaboration status endpoint; websocket route only when enabled
     try:
-        from .routers.collaboration import setup_collaboration_websocket
-        setup_collaboration_websocket(app)
-    except Exception:
-        logger.warning(
-            "Collaboration routes setup failed; status may be unavailable",
-            exc_info=True,
-        )
-=======
-    # Add collaboration WebSocket endpoint if enabled
-    from .collaboration import is_collaboration_enabled
+        from .collaboration import is_collaboration_enabled
+    except Exception:  # pragma: no cover - optional feature flag
+        is_collaboration_enabled = lambda: False  # type: ignore
+
     if is_collaboration_enabled():
         try:
             from .routers.collaboration import setup_collaboration_websocket
             setup_collaboration_websocket(app)
-        except ImportError:
-            logger.warning("Collaboration router not available. Collaboration features disabled.")
->>>>>>> 1cd0540 (chore: sync local changes (issue suite tooling, CI workflows, API flags))
+        except Exception:
+            logger.warning(
+                "Collaboration routes setup failed; status may be unavailable",
+                exc_info=True,
+            )
 
     return app
 

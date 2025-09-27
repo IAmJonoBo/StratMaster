@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from json import JSONDecodeError
@@ -24,6 +25,7 @@ from .models import (
 )
 from .providers import ProviderAdapter
 from .model_recommender import ModelRecommender, is_model_recommender_v2_enabled
+from .telemetry import build_telemetry_from_env
 
 
 class RouterService:
@@ -51,7 +53,7 @@ class RouterService:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def complete(self, payload: CompletionRequest) -> CompletionResponse:
+    async def complete(self, payload: CompletionRequest) -> CompletionResponse:
         _tenant_policy, task_policy, route = self._select_route(
             payload.tenant_id,
             payload.task,
@@ -62,19 +64,35 @@ class RouterService:
             route.provider,
             completion_model=route.model,
         )
-        result = adapter.complete(
+        complexity = "high" if len(payload.prompt) > 2000 else "medium"
+        result = await adapter.complete(
             payload.prompt,
             payload.max_tokens,
             model=route.model,
             temperature=payload.temperature,
+            tenant_id=payload.tenant_id,
+            task_type=payload.task,
+            complexity=complexity,
         )
         text = self._ensure_structured(result["text"])
-        return CompletionResponse(
+        tokens = result.get("tokens") or payload.max_tokens
+        response = CompletionResponse(
             text=text,
-            tokens=int(result["tokens"]),
+            tokens=int(tokens),
             provider=result.get("provider", route.provider),
             model=result.get("model", route.model),
         )
+        if self.model_recommender:
+            cost = float(result.get("cost_usd", 0.0))
+            latency = float(result.get("latency_ms", 0.0)) if result.get("latency_ms") else 0.0
+            await self.model_recommender.record_outcome(
+                model_name=response.model,
+                task_type=payload.task,
+                success=True,
+                latency_ms=latency,
+                cost_usd=cost,
+            )
+        return response
 
     def embed(self, payload: EmbeddingRequest) -> EmbeddingResponse:
         _tenant_policy, task_policy, route = self._select_route(
@@ -257,7 +275,11 @@ class RouterService:
             embedding_model=embedding_model,
             rerank_model=rerank_model,
         )
-        adapter = ProviderAdapter(provider_cfg)
+        adapter = ProviderAdapter(
+            provider_cfg,
+            recommender=self.model_recommender,
+            telemetry=build_telemetry_from_env(),
+        )
         self._provider_cache[key] = adapter
         return adapter
 
