@@ -1,0 +1,24 @@
+{
+  "questions": [
+    "What year-over-year revenue growth did the company report?",
+    "Which strategic pillar covers partnership expansion initiatives?"
+  ],
+  "contexts": [
+    [
+      "The Q4 shareholder letter highlighted a 20 percent year-over-year revenue growth rate with stable gross margins.",
+      "Leadership attributed revenue acceleration to improved enterprise conversion and upsell programmes."
+    ],
+    [
+      "The FY roadmap lists three strategic pillars: product depth, partnership expansion initiatives, and customer trust programs.",
+      "Partnership expansion targets regional system integrators and cloud marketplaces in 2024."
+    ]
+  ],
+  "answers": [
+    "The team reported 20 percent year-over-year revenue growth in the Q4 shareholder letter.",
+    "The partnership expansion pillar covers work with regional system integrators and marketplaces."
+  ],
+  "ground_truths": [
+    "The team reported 20 percent year-over-year revenue growth in the Q4 shareholder letter.",
+    "The partnership expansion pillar covers work with regional system integrators and marketplaces."
+  ]
+}

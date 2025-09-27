@@ -124,6 +124,25 @@ python scripts/system_health_monitor.py report --format json --output health_rep
 python scripts/system_health_monitor.py report --format text
 ```
 
+### k6 Load Testing Baseline
+
+Phase 5 of SCRATCH.md calls for continuous API load testing. The repository now
+includes a reusable smoke profile at `bench/k6/api_smoke.js` that exercises the
+model router, hybrid retrieval, and debate endpoints while tracking RED metrics.
+
+```bash
+# Basic 1 minute smoke against local stack
+API_BASE=http://localhost:8000 k6 run bench/k6/api_smoke.js
+
+# Heavier profile with custom thresholds and authentication
+VUS=25 DURATION=5m API_BASE=https://staging.stratmaster.ai \
+  API_TOKEN=$(cat ~/.config/stratmaster/token) \
+  k6 run bench/k6/api_smoke.js
+```
+
+The script emits a `k6-smoke-summary.json` artifact suitable for trend analysis
+or Grafana ingestion.
+
 **Health Check Categories:**
 - **Service Health**: HTTP endpoint monitoring with timeout detection
 - **Dependency Freshness**: Update availability and security vulnerability scanning
@@ -209,6 +228,40 @@ The enhanced CI/CD workflow (`enhanced-ci-cd.yml`) provides:
     python scripts/dependency_upgrade.py upgrade --type patch
     make test  # Validate after updates
 ```
+
+Supplement the upgrade workflow with the environment diff helper to ensure the
+runtime matches production snapshots before deploys:
+
+```bash
+python scripts/dependency_sync.py status --json
+python scripts/dependency_sync.py sync   # exits non-zero when drift remains
+```
+
+### RAG Quality Evaluation (RAGAS + TruLens)
+
+Phase 2.3 requires dual evaluation of retrieval responses using both RAGAS and
+TruLens metrics. The repository ships a golden regression dataset at
+`data/evals/golden_rag_samples.json` alongside the combined evaluator exposed via
+`stratmaster_evals`.
+
+```bash
+# Run the TruLens-backed heuristic on the golden dataset
+python - <<'PY'
+from stratmaster_evals.models import EvaluationRequest
+from stratmaster_evals.trulens import TruLensRAGEvaluator
+import json
+
+payload = json.loads(open("data/evals/golden_rag_samples.json").read())
+request = EvaluationRequest(**payload, experiment_name="golden", model_name="router/test")
+summary = TruLensRAGEvaluator().evaluate(request)
+print(summary.metrics.as_dict())
+print("passes_quality_gates=", summary.passes_quality_gates)
+PY
+```
+
+The `/eval/ragas` endpoint now emits both RAGAS and TruLens metrics to Langfuse,
+keeping SCRATCH quality gates visible inside Grafana dashboards and deployment
+reviews.
 
 ### Environment Variables
 
