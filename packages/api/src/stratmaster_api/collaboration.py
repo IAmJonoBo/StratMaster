@@ -82,11 +82,10 @@ class YjsCollaborationServer:
         self.host = host
         self.port = port
         self.redis_url = redis_url
-
-    # In-memory state (would be backed by Redis/PostgreSQL in production)
-    self.documents: dict[str, dict[str, Any]] = {}
-    self.document_subscribers: dict[str, set[Any]] = {}
-    self.user_presence: dict[str, dict[str, UserPresence]] = {}  # doc_id -> user_id -> presence
+        # In-memory state (would be backed by Redis/PostgreSQL in production)
+        self.documents: dict[str, dict[str, Any]] = {}
+        self.document_subscribers: dict[str, set[Any]] = {}
+        self.user_presence: dict[str, dict[str, UserPresence]] = {}  # doc_id -> user_id -> presence
 
         # Redis client for persistence
         self.redis_client = None
@@ -112,7 +111,7 @@ class YjsCollaborationServer:
 
         logger.info(f"Starting Yjs collaboration server on {self.host}:{self.port}")
 
-    async with ws_serve(
+        async with ws_serve(
             self.handle_connection,
             self.host,
             self.port,
@@ -204,8 +203,8 @@ class YjsCollaborationServer:
 
     async def handle_subscribe(self, data: dict[str, Any]) -> dict[str, Any]:
         """Handle document subscription request."""
-    doc_id = data.get("doc_id")
-    user_id = data.get("user_id", "anonymous")
+        doc_id = data.get("doc_id")
+        user_id = data.get("user_id", "anonymous")
 
         if not doc_id:
             return {"type": "error", "message": "doc_id required"}
@@ -473,19 +472,11 @@ class YjsCollaborationClient:
 
     async def connect(self, doc_id: str):
         """Connect to collaboration server and subscribe to document."""
-<<<<<<< HEAD
-        if websockets is None:
-            raise RuntimeError("websockets library not installed")
-
-        self.doc_id = doc_id
-        self.websocket = await websockets.connect(self.server_url)
-=======
         if ws_connect is None:
             raise RuntimeError("websockets library not installed. Run: pip install websockets>=10")
 
         self.doc_id = doc_id
         self.websocket = await ws_connect(self.server_url)
->>>>>>> 9ebce7a (feat(ci,tooling): IssueSuite portable integration (tarball vendoring, env override) + mypy coverage + CI extras lane; websockets asyncio migration; docs and LFS hints)
 
         # Subscribe to document
         await self.send_message({
