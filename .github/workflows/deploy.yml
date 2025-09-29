@@ -81,7 +81,7 @@ jobs:
         run: syft dir:. -o json > sbom.json
 
       - name: Run Trivy scan
-        uses: aquasecurity/trivy-action@v0.20.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: fs
           ignore-unfixed: true
