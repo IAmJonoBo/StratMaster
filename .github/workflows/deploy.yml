@@ -93,7 +93,7 @@ jobs:
           scanners: vuln,secret,misconfig,license
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@v3.10.0
 
       - name: Sign SBOM
         run: |
