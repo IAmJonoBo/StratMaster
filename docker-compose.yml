@@ -273,7 +273,7 @@ services:
       - "8100:8080"
 
   temporal:
-    image: temporalio/auto-setup:1.28.1
+    image: temporalio/auto-setup:1.29.0
     environment:
       DB_PORT: 5432
       DB_HOST: postgres
@@ -322,7 +322,7 @@ services:
       - "4318:4318"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.3
+    image: quay.io/keycloak/keycloak:26.4
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
